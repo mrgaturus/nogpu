@@ -4,8 +4,6 @@
 #include <string>
 #include <mutex>
 
-namespace nogpu {
-
     #ifdef _WIN32
         enum class GPUDriverOption : int {
             DRIVER_AUTO,
@@ -165,23 +163,12 @@ namespace nogpu {
         TEXTURE_PIXEL_RG8_SNORM,
         TEXTURE_PIXEL_RG16,
         TEXTURE_PIXEL_RG16_SNORM,
-        TEXTURE_PIXEL_R3_G3_B2,
-        TEXTURE_PIXEL_RGB4,
-        TEXTURE_PIXEL_RGB5,
         TEXTURE_PIXEL_RGB8,
         TEXTURE_PIXEL_RGB8_SNORM,
-        TEXTURE_PIXEL_RGB10,
-        TEXTURE_PIXEL_RGB12,
         TEXTURE_PIXEL_RGB16,
         TEXTURE_PIXEL_RGB16_SNORM,
-        TEXTURE_PIXEL_RGBA2,
-        TEXTURE_PIXEL_RGBA4,
-        TEXTURE_PIXEL_RGB5_A1,
         TEXTURE_PIXEL_RGBA8,
         TEXTURE_PIXEL_RGBA8_SNORM,
-        TEXTURE_PIXEL_RGB10_A2,
-        TEXTURE_PIXEL_RGB10_A2UI,
-        TEXTURE_PIXEL_RGBA12,
         TEXTURE_PIXEL_RGBA16,
         TEXTURE_PIXEL_RGBA16_SNORM,
         // Depth/stencil formats
@@ -630,6 +617,5 @@ namespace nogpu {
         friend GPUUniform;
         friend GPUProgram;
     };
-}
 
 #endif // NOGPU_H
