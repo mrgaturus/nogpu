@@ -1,8 +1,18 @@
 #ifndef NOGPU_H
 #define NOGPU_H
-#include <SDL3/SDL.h>
+#include <map>
 #include <string>
-#include <mutex>
+
+// Include SDL Window
+#if defined(NOGPU_SDL3)
+#include <SDL3/SDL.h>
+#else
+#include <SDL2/SDL.h>
+#endif
+
+// -------------------
+// GPU Objects: Driver
+// -------------------
 
 #ifdef _WIN32
     enum class GPUDriverOption : int {
@@ -24,12 +34,12 @@ class GPUDriver {
     friend GPUContext;
     // Global Driver Instance
     static GPUDriver *m_driver;
-    static std::mutex m_driver_mutex;
-    GPUDriverOption m_driver_option;
+    static GPUDriverOption m_driver_option;
+    static unsigned long long m_driver_lock;
 
     public: // Initialize
         static bool initialize(GPUDriverOption option);
-        virtual GPUContext *createContext(SDL_Window* win);
+        static GPUContext *createContext(SDL_Window *win);
         static bool shutdown();
     protected:
         GPUDriver();
@@ -334,7 +344,9 @@ class GPUTexture {
 // --------------------
 
 class GPUTexture2D : GPUTexture {
-    protected: GPUTexture2D();
+    protected: GPUTexture2D(
+        GPUTexturePixelType m_pixel_type,
+        GPUTexturePixelFormat m_pixel_format);
     public: // Texture Buffer Manipulation
         virtual void allocate(int w, int h, int levels);
         virtual void upload(int x, int y, int w, int h, int level, void* data);
@@ -353,7 +365,9 @@ class GPUTexture3D : GPUTexture {
         GPUTexture3DMode m_mode;
         int m_layers;
 
-    protected: GPUTexture3D();
+    protected: GPUTexture3D(
+        GPUTexturePixelType m_pixel_type,
+        GPUTexturePixelFormat m_pixel_format);
     public: // Texture Buffer Manipulation
         virtual void allocate(int w, int h, int layers, int levels);
         virtual void upload(int x, int y, int w, int h, int layer, int level, void* data);
@@ -375,7 +389,9 @@ enum class GPUTextureCubemapSide : int {
 };
 
 class GPUTextureCubemap : GPUTexture {
-    protected: GPUTextureCubemap();
+    protected: GPUTextureCubemap(
+        GPUTexturePixelType m_pixel_type,
+        GPUTexturePixelFormat m_pixel_format);
     public: // Texture Buffer Manipulation
         virtual void allocate(int w, int h, int levels);
         virtual void upload(int x, int y, int w, int h, int level, GPUTextureCubemapSide side, void* data);
@@ -420,15 +436,15 @@ class GPUFramebuffer {
 
     public:
         virtual GPUFramebufferStatus checkStatus();
-        virtual void attachColor(GPUTexture* color, int index);
-        virtual void attachDepthStencil(GPUTexture* depth_stencil);
-        virtual void attachStencil(GPUTexture* stencil);
-        virtual void attachDepth(GPUTexture* depth);
+        virtual void attachColor(GPUTexture *color, int index);
+        virtual void attachDepthStencil(GPUTexture *depth_stencil);
+        virtual void attachStencil(GPUTexture *stencil);
+        virtual void attachDepth(GPUTexture *depth);
         // GPU Renderbuffer Attachment
-        virtual void attachColor(GPURenderbuffer* color, int index);
-        virtual void attachDepthStencil(GPURenderbuffer* depth_stencil);
-        virtual void attachStencil(GPURenderbuffer* stencil);
-        virtual void attachDepth(GPURenderbuffer* depth);
+        virtual void attachColor(GPURenderbuffer *color, int index);
+        virtual void attachDepthStencil(GPURenderbuffer *depth_stencil);
+        virtual void attachStencil(GPURenderbuffer *stencil);
+        virtual void attachDepth(GPURenderbuffer *depth);
     public: // GPU Framebuffer Attributes
         GPUTexture *getColor(int index) { return m_colors[index]; }
         GPUTexture *getStencil() { return m_stencil; }
@@ -464,28 +480,38 @@ class GPUShader {
 class GPUUniform {
     protected:
         std::string m_label;
-        GPUProgram* program;
+        GPUProgram *program;
         GPUUniform(std::string label);
     public: virtual ~GPUUniform();
     public: std::string getLabel() { return m_label; };
 };
 
 class GPUUniformSampler : GPUUniform {
-    GPUTexture* m_texture;
+    GPUTexture *m_texture;
 
     protected: GPUUniformSampler(std::string label);
     public: // GPU Sampler Attributes
-        virtual void setTexture(GPUTexture* texture);
+        virtual void setTexture(GPUTexture *texture);
         GPUTexture *getTexture() { return m_texture; };
 };
 
-class GPUUniformBlock : GPUUniform {
-    GPUBuffer* m_ubo;
+enum class GPUUniformBlockType : int {
+    BLOCK_ATOMIC_COUNTER_BUFFER,
+    BLOCK_TRANSFORM_FEEDBACK_BUFFER,
+    BLOCK_UNIFORM_BUFFER,
+    BLOCK_SHADER_STORAGE_BUFFER
+};
 
-    protected: GPUUniformBlock(std::string label);
+class GPUUniformBlock : GPUUniform {
+    GPUUniformBlockType m_type;
+    GPUBuffer *m_ubo;
+    int m_index;
+
+    protected: GPUUniformBlock(std::string label, int index);
     public: // GPU Sampler Attributes
-        virtual void setBuffer(GPUBuffer* m_ubo);
+        virtual void setBuffer(GPUBuffer *m_ubo);
         GPUBuffer *getBuffer() { return m_ubo; };
+        int getIndex() { return m_index; };
 };
 
 enum class GPUUniformValueType : int {
@@ -529,8 +555,8 @@ class GPUUniformValue : GPUUniform {
 
     protected: GPUUniformValue(GPUUniformValueType type, std::string label);
     public: // GPU Sampler Attributes
-        virtual void setValue(void* value);
-        virtual void getValue(void* value);
+        virtual void setValue(void *value);
+        virtual void getValue(void *value);
         GPUUniformValueType getType() { return m_type; };
         virtual int getTypeSize();
 };
@@ -540,27 +566,154 @@ class GPUUniformValue : GPUUniform {
 // --------------------
 
 class GPUProgram {
-    protected: GPUProgram();
-    public: virtual ~GPUProgram();
-
-    public: // GPU Program Shader Attachment
-        virtual void attachVertex(GPUShader* vertex);
-        virtual void attachFragment(GPUShader* fragment);
-        virtual void attachCompute(GPUShader* compute);
-        virtual bool compileProgram();
-        virtual std::string compileReport();
-
-    public: // GPU Program Uniforms
-        virtual GPUUniformValue* uniformValue(std::string label);
-        virtual GPUUniformSampler* uniformSampler(std::string label);
-        virtual GPUUniformBlock* uniformBlock(std::string label);
-
     friend GPUShader;
     friend GPUUniform;
     friend GPUUniformSampler;
     friend GPUUniformBlock;
     friend GPUUniformValue;
+    protected:
+        std::map<std::string, GPUUniform*> m_uniform_map;
+        GPUUniformBlock *m_blocks[128]; // XXX: is this enough?
+        GPUProgram();
+    public: virtual ~GPUProgram();
+
+    public: // GPU Program Shader Attachment
+        virtual void attachVertex(GPUShader *vertex);
+        virtual void attachFragment(GPUShader *fragment);
+        virtual void attachCompute(GPUShader *compute);
+        virtual bool compileProgram();
+        virtual std::string compileReport();
+
+    public: // GPU Program Uniforms
+        virtual GPUUniformValue *uniformValue(std::string label);
+        virtual GPUUniformSampler *uniformSampler(std::string label);
+        virtual GPUUniformBlock *uniformBlock(std::string label, int index);
+        GPUUniform *getUniform(std::string label) { return m_uniform_map[label]; };
 };
+
+// -------------------------
+// GPU Context: Enum Objects
+// -------------------------
+
+enum class GPUDrawPrimitive : int {
+    PRIMITIVE_POINTS,
+    PRIMITIVE_LINES,
+    PRIMITIVE_LINE_STRIP,
+    PRIMITIVE_LINE_LOOP,
+    PRIMITIVE_TRIANGLES,
+    PRIMITIVE_TRIANGLE_STRIP,
+    PRIMITIVE_TRIANGLE_FAN,
+};
+
+enum class GPUDrawElementsType : int {
+    ELEMENTS_UNSIGNED_BYTE,
+    ELEMENTS_UNSIGNED_SHORT,
+    ELEMENTS_UNSIGNED_INT
+};
+
+enum class GPUBlendEquation : int {
+    BLEND_FUNC_ADD,
+    BLEND_FUNC_SUBSTRACT,
+    BLEND_FUNC_REVERSE_SUBSTRACT,
+    BLEND_FUNC_MIN,
+    BLEND_FUNC_MAX
+};
+
+enum class GPUBlendFactor : int {
+    BLEND_ZERO,
+    BLEND_ONE,
+    BLEND_SRC_COLOR,
+    BLEND_ONE_MINUS_SRC_COLOR,
+    BLEND_DST_COLOR,
+    BLEND_ONE_MINUS_DST_COLOR,
+    BLEND_SRC_ALPHA,
+    BLEND_ONE_MINUS_SRC_ALPHA,
+    BLEND_DST_ALPHA,
+    BLEND_ONE_MINUS_DST_ALPHA,
+    BLEND_CONSTANT_COLOR,
+    BLEND_ONE_MINUS_CONSTANT_COLOR,
+    BLEND_CONSTANT_ALPHA,
+    BLEND_ONE_MINUS_CONSTANT_ALPHA,
+    BLEND_SRC_ALPHA_SATURATE,
+};
+
+enum class GPUConditionFunc : int {
+    CONDITION_NEVER,
+    CONDITION_EQUAL,
+    CONDITION_NOTEQUAL,
+    CONDITION_LESS,
+    CONDITION_LEQUAL,
+    CONDITION_GREATER,
+    CONDITION_GEQUAL,
+    CONDITION_ALWAYS,
+};
+
+enum class GPUStencilFunc : int {
+    STENCIL_KEEP,
+    STENCIL_ZERO,
+    STENCIL_REPLACE,
+    STENCIL_INCR,
+    STENCIL_INCR_WRAP,
+    STENCIL_DECR,
+    STENCIL_DECR_WRAP,
+    STENCIL_INVERT
+};
+
+enum class GPUFaceMode : int {
+    FACE_BACK,
+    FACE_FRONT,
+    FACE_FRONT_AND_BACK
+};
+
+enum class GPUWindingMode : int {
+    WINDING_CW,
+    WINDING_CCW,
+};
+
+typedef struct {
+    bool x, y, w, h;
+} GPURectangle;
+
+typedef struct {
+    float r, g, b, a;
+} GPUColor;
+
+typedef struct {
+    bool r, g, b, a;
+} GPUColorMask;
+
+// --------------------
+// GPU Context: Structs
+// --------------------
+
+typedef struct {
+    GPUBlendEquation modeRGB, modeAlpha;
+    GPUBlendFactor srcRGB, srcAlpha;
+    GPUBlendFactor dstRGB, dstAlpha;
+    GPUColor constantColor;
+} GPUContextBlending;
+
+typedef struct {
+    GPUFaceMode faceCull;
+    GPUWindingMode faceFront;
+    GPUConditionFunc depthFunc;
+    bool depthMask;
+} GPUContextCulling;
+
+typedef struct {
+    GPUFaceMode stencilFunc_face;
+    GPUConditionFunc stencilFunc_func;
+    int stencilFunc_test;
+    unsigned int stencilFunc_mask;
+    // ------------------------
+    GPUFaceMode stencilMask_face;
+    unsigned int stencilMask_mask;
+    // ------------------------
+    GPUFaceMode stencilOp_face;
+    GPUStencilFunc stencilOp_fail;
+    GPUStencilFunc stencilOp_pass;
+    GPUStencilFunc stencilOp_depth_pass;
+} GPUContextStencil;
 
 // -----------
 // GPU Context
@@ -568,7 +721,6 @@ class GPUProgram {
 
 class GPUContext {
     static GPUContext* m_current;
-
     protected: GPUContext();
     public: virtual ~GPUContext();
 
@@ -601,21 +753,76 @@ class GPUContext {
         GPUFramebuffer *m_framebuffer_draw;
         GPUProgram *m_program;
 
-    // GPU Objects Friend
-    friend GPUDriver;
-    friend GPUBuffer;
-    friend GPUVertexArray;
-    // GPU Objects Friend: Texture
-    friend GPUTexture;
-    friend GPUTexture2D;
-    friend GPUTexture3D;
-    friend GPUTextureCubemap;
-    // GPU Objects Friend: Shader
-    friend GPURenderbuffer;
-    friend GPUFramebuffer;
-    friend GPUShader;
-    friend GPUUniform;
-    friend GPUProgram;
+    public: // GPU Context Rendering
+        virtual void drawClear();
+        virtual void drawArrays(GPUDrawPrimitive type, int offset, int count);
+        virtual void drawElements(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element);
+        virtual void drawElementsBaseVertex(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element);
+        virtual void drawArraysInstanced(GPUDrawPrimitive type, int offset, int count, int instance_count);
+        virtual void drawElementsInstanced(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element, int instance_count);
+        virtual void drawElementsBaseVertexInstanceds(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count);
+        virtual void dispatchCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z);
+
+    private: // GPU Context State: Tracking
+        GPUContextBlending m_blending;
+        GPUContextCulling m_culling;
+        GPUContextStencil m_stencil;
+        GPUColor m_clearColor;
+        GPUColorMask m_maskColor;
+        float m_lineWidth;
+        GPURectangle m_scissor;
+        GPURectangle m_viewport;
+    public: // GPU Context State: Blending
+        virtual void setBlendEquation(GPUBlendEquation mode);
+        virtual void setBlendSeparate(GPUBlendEquation modeRGB, GPUBlendEquation modeAlpha);
+        virtual void setBlendFunc(GPUBlendFactor src, GPUBlendFactor dst);
+        virtual void setBlendFuncSeparate(GPUBlendFactor srcRGB, GPUBlendFactor srcAlpha, GPUBlendFactor dstRGB, GPUBlendFactor dstAlpha);
+        virtual void setBlendColor(GPUColor constantColor);
+        // GPU Context State: Culling
+        virtual void setFaceCull(GPUFaceMode face);
+        virtual void setFaceFront(GPUWindingMode mode);
+        virtual void setDepthFunc(GPUConditionFunc func);
+        virtual void setDepthMask(bool flag);
+        // GPU Context State: Stencil
+        virtual void setStencilFunc(GPUConditionFunc func, int test, unsigned int mask);
+        virtual void setStencilFuncSeparate(GPUFaceMode face, GPUConditionFunc func, int test, unsigned int mask);
+        virtual void setStencilMask(unsigned int mask);
+        virtual void setStencilMaskSeparate(GPUFaceMode face, unsigned int mask);
+        virtual void setStencilOp(GPUStencilFunc fail, GPUStencilFunc stencil_pass, GPUStencilFunc stencil_depth_pass);
+        virtual void setStencilOpSeparate(GPUFaceMode face, GPUStencilFunc fail, GPUStencilFunc stencil_pass, GPUStencilFunc stencil_depth_pass);
+        // GPU Context State: Viewport
+        virtual void setClearColor(GPUColor color);
+        virtual void setMaskColor(GPUColorMask mask);
+        virtual void setLineWidth(float width);
+        virtual void setViewport(GPURectangle rect);
+        virtual void setScissor(GPURectangle rect);
+    public: // GPU Context State: Getter
+        GPUContextBlending getBlendingInfo() { return m_blending; }
+        GPUContextCulling getCullingInfo() { return m_culling; }
+        GPUContextStencil getStencilInfo() { return m_stencil; }
+        // GPU Context State: Viewport
+        GPUColor getClearColor() { return m_clearColor; }
+        GPUColorMask getMaskColor() { return m_maskColor; }
+        float getLineWidth() { return m_lineWidth; }
+        GPURectangle getViewport() { return m_viewport; }
+        GPURectangle getScissor() { return m_scissor; }
+
+    private: // GPU Objects Friends
+        friend GPUDriver;
+        friend GPUBuffer;
+        friend GPUVertexArray;
+        friend GPUTexture;
+        friend GPUTexture2D;
+        friend GPUTexture3D;
+        friend GPUTextureCubemap;
+        friend GPURenderbuffer;
+        friend GPUFramebuffer;
+        friend GPUShader;
+        friend GPUUniform;
+        friend GPUUniformSampler;
+        friend GPUUniformBlock;
+        friend GPUUniformValue;
+        friend GPUProgram;
 };
 
 #endif // NOGPU_H
