@@ -29,6 +29,12 @@
     };
 #endif
 
+enum class GPUDriverFeature : int {
+    DRIVER_FEATURE_RASTERIZE,
+    DRIVER_FEATURE_COMPUTE,
+    DRIVER_FEATURE_ASYNC
+};
+
 class GPUContext;
 class GPUDriver {
     friend GPUContext;
@@ -37,8 +43,14 @@ class GPUDriver {
     static GPUDriverOption m_driver_option;
     static unsigned long long m_driver_lock;
 
+    protected: // GPU Driver Specific
+        virtual bool impl__checkFeature(GPUDriverFeature feature);
+        virtual GPUContext *impl__createContext(SDL_Window *win);
+        virtual bool impl__shutdown();
+
     public: // Initialize
         static bool initialize(GPUDriverOption option);
+        static bool checkFeature(GPUDriverFeature feature);
         static GPUContext *createContext(SDL_Window *win);
         static bool shutdown();
     protected:
@@ -566,6 +578,7 @@ class GPUUniformValue : GPUUniform {
 // --------------------
 
 class GPUProgram {
+    friend GPUContext;
     friend GPUShader;
     friend GPUUniform;
     friend GPUUniformSampler;
@@ -591,9 +604,25 @@ class GPUProgram {
         GPUUniform *getUniform(std::string label) { return m_uniform_map[label]; };
 };
 
-// -------------------------
-// GPU Context: Enum Objects
-// -------------------------
+// -----------------------------
+// GPU Context: State Primitives
+// -----------------------------
+
+typedef struct {
+    bool x, y, w, h;
+} GPURectangle;
+
+typedef struct {
+    float r, g, b, a;
+} GPUColor;
+
+typedef struct {
+    bool r, g, b, a;
+} GPUColorMask;
+
+// -----------------------
+// GPU Context: State Enum
+// -----------------------
 
 enum class GPUDrawPrimitive : int {
     PRIMITIVE_POINTS,
@@ -670,49 +699,81 @@ enum class GPUWindingMode : int {
     WINDING_CCW,
 };
 
-typedef struct {
-    bool x, y, w, h;
-} GPURectangle;
+// --------------------------
+// GPU Context: State Toggles
+// --------------------------
+
+enum class GPUContextCapability : int {
+    CAPABILITY_BLENDING,
+    CAPABILITY_FACE_CULL,
+    CAPABILITY_DEPTH_TEST,
+    CAPABILITY_DEPTH_BIAS,
+    CAPABILITY_PRIMITIVE_RESTART,
+    CAPABILITY_RASTERIZER_DISCARD,
+    CAPABILITY_SCISSOR_TEST,
+    CAPABILITY_STENCIL_TEST,
+    CAPABILITY_ASYNC,
+};
+
+typedef enum {
+    SYNC_BUFFER,
+    SYNC_TEXTURE,
+    SYNC_RENDER,
+    SYNC_COMPUTE,
+} GPUContextSync;
+
+// --------------------------
+// GPU Context: State Structs
+// --------------------------
 
 typedef struct {
-    float r, g, b, a;
-} GPUColor;
+    struct GPUContextBlendingEquation {
+        GPUBlendEquation rgb;
+        GPUBlendEquation alpha;
+    } equation;
 
-typedef struct {
-    bool r, g, b, a;
-} GPUColorMask;
+    struct GPUContextBlendingFactor {
+        GPUBlendFactor srcRGB, srcAlpha;
+        GPUBlendFactor dstRGB, dstAlpha;
+    } factor;
 
-// --------------------
-// GPU Context: Structs
-// --------------------
-
-typedef struct {
-    GPUBlendEquation modeRGB, modeAlpha;
-    GPUBlendFactor srcRGB, srcAlpha;
-    GPUBlendFactor dstRGB, dstAlpha;
     GPUColor constantColor;
 } GPUContextBlending;
 
 typedef struct {
-    GPUFaceMode faceCull;
-    GPUWindingMode faceFront;
-    GPUConditionFunc depthFunc;
-    bool depthMask;
-} GPUContextCulling;
+    GPUFaceMode cull;
+    GPUWindingMode front;
+} GPUContextFace;
 
 typedef struct {
-    GPUFaceMode stencilFunc_face;
-    GPUConditionFunc stencilFunc_func;
-    int stencilFunc_test;
-    unsigned int stencilFunc_mask;
-    // ------------------------
-    GPUFaceMode stencilMask_face;
-    unsigned int stencilMask_mask;
-    // ------------------------
-    GPUFaceMode stencilOp_face;
-    GPUStencilFunc stencilOp_fail;
-    GPUStencilFunc stencilOp_pass;
-    GPUStencilFunc stencilOp_depth_pass;
+    GPUConditionFunc func;
+    bool mask;
+
+    struct GPUContextDepthBias {
+        float constantFactor;
+        float slopeFactor;
+        float clamp;
+    } bias;
+} GPUContextDepth;
+
+typedef struct {
+    struct GPUContextStencilFunc {
+        GPUFaceMode face;
+        GPUConditionFunc func;
+        int test; unsigned int mask;
+    } func;
+
+    struct GPUContextStencilMask {
+        GPUFaceMode face;
+        unsigned int mask;
+    } mask;
+
+    struct GPUContextStencilOp {
+        GPUFaceMode face;
+        GPUStencilFunc fail;
+        GPUStencilFunc pass;
+        GPUStencilFunc depth_pass;
+    } op;
 } GPUContextStencil;
 
 // -----------
@@ -753,6 +814,9 @@ class GPUContext {
         GPUFramebuffer *m_framebuffer_draw;
         GPUProgram *m_program;
 
+    public: // GPU Context Capability
+        virtual void enable(GPUContextCapability cap);
+        virtual void disable(GPUContextCapability cap);
     public: // GPU Context Rendering
         virtual void drawClear();
         virtual void drawArrays(GPUDrawPrimitive type, int offset, int count);
@@ -760,13 +824,16 @@ class GPUContext {
         virtual void drawElementsBaseVertex(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element);
         virtual void drawArraysInstanced(GPUDrawPrimitive type, int offset, int count, int instance_count);
         virtual void drawElementsInstanced(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element, int instance_count);
-        virtual void drawElementsBaseVertexInstanceds(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count);
-        virtual void dispatchCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z);
+        virtual void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count);
+        virtual void executeCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z);
+        virtual void executeSync(GPUContextSync flags);
 
     private: // GPU Context State: Tracking
         GPUContextBlending m_blending;
-        GPUContextCulling m_culling;
+        GPUContextFace m_face;
+        GPUContextDepth m_depth;
         GPUContextStencil m_stencil;
+
         GPUColor m_clearColor;
         GPUColorMask m_maskColor;
         float m_lineWidth;
@@ -782,6 +849,7 @@ class GPUContext {
         virtual void setFaceCull(GPUFaceMode face);
         virtual void setFaceFront(GPUWindingMode mode);
         virtual void setDepthFunc(GPUConditionFunc func);
+        virtual void setDepthBias(float constantFactor, float slopeFactor, float clamp);
         virtual void setDepthMask(bool flag);
         // GPU Context State: Stencil
         virtual void setStencilFunc(GPUConditionFunc func, int test, unsigned int mask);
@@ -798,7 +866,8 @@ class GPUContext {
         virtual void setScissor(GPURectangle rect);
     public: // GPU Context State: Getter
         GPUContextBlending getBlendingInfo() { return m_blending; }
-        GPUContextCulling getCullingInfo() { return m_culling; }
+        GPUContextFace getFaceInfo() { return m_face; }
+        GPUContextDepth getDepthInfo() { return m_depth; }
         GPUContextStencil getStencilInfo() { return m_stencil; }
         // GPU Context State: Viewport
         GPUColor getClearColor() { return m_clearColor; }
@@ -807,7 +876,7 @@ class GPUContext {
         GPURectangle getViewport() { return m_viewport; }
         GPURectangle getScissor() { return m_scissor; }
 
-    private: // GPU Objects Friends
+    protected: // GPU Objects Friends
         friend GPUDriver;
         friend GPUBuffer;
         friend GPUVertexArray;
