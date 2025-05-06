@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #ifndef NOGPU_H
 #define NOGPU_H
 #include <map>
@@ -808,6 +810,7 @@ class GPUContext {
     private: // GPU Object Bindings Cache
         GPUBuffer *m_buffers[16];
         GPUTexture *m_textures[64];
+        unsigned int m_capability_flags;
         GPUVertexArray *m_vertex_array;
         GPURenderbuffer *m_renderbuffer;
         GPUFramebuffer *m_framebuffer_read;
@@ -875,6 +878,8 @@ class GPUContext {
         float getLineWidth() { return m_lineWidth; }
         GPURectangle getViewport() { return m_viewport; }
         GPURectangle getScissor() { return m_scissor; }
+        bool checkEnabled(GPUContextCapability cap) {
+            return m_capability_flags & (1 << (unsigned int) cap); }
 
     protected: // GPU Objects Friends
         friend GPUDriver;
