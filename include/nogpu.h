@@ -48,6 +48,7 @@ class GPUDriver {
     protected: // Driver Virtual Internals
         virtual bool impl__checkFeature(GPUDriverFeature feature);
         virtual bool impl__shutdown();
+    protected: // Driver Avoid Create
         GPUDriver();
         ~GPUDriver();
     public: // Initialize
@@ -151,9 +152,9 @@ enum class GPUAttributeType : int {
 };
 
 class GPUVertexArray {
-    GPUBuffer* bufferArray;
-    GPUBuffer* bufferElements;
-
+    protected:
+        GPUBuffer* bufferArray;
+        GPUBuffer* bufferElements;
     protected: GPUVertexArray();
     public: virtual ~GPUVertexArray();
 
@@ -328,14 +329,15 @@ typedef struct {
 } GPUTextureSize;
 
 class GPUTexture {
-    GPUTexturePixelType m_pixel_type;
-    GPUTexturePixelFormat m_pixel_format;
-    GPUTextureSwizzle m_swizzle;
-    GPUTextureFilter m_filter;
-    GPUTextureWrap m_wrap;
-    int m_w, m_h;
-
-    private: GPUTexture();
+    protected:
+        GPUTexturePixelType m_pixel_type;
+        GPUTexturePixelFormat m_pixel_format;
+        GPUTextureSwizzle m_swizzle;
+        GPUTextureFilter m_filter;
+        GPUTextureWrap m_wrap;
+        int m_w, m_h;
+    // Texture Constructor
+    protected: GPUTexture();
     public: virtual ~GPUTexture();
 
     public: // GPU Texture Attributes
@@ -363,6 +365,7 @@ class GPUTexture2D : GPUTexture {
     protected: GPUTexture2D(
         GPUTexturePixelType m_pixel_type,
         GPUTexturePixelFormat m_pixel_format);
+
     public: // Texture Buffer Manipulation
         virtual void allocate(int w, int h, int levels);
         virtual void upload(int x, int y, int w, int h, int level, void* data);
@@ -377,13 +380,13 @@ enum class GPUTexture3DMode : int {
 };
 
 class GPUTexture3D : GPUTexture {
-    private:
+    protected:
         GPUTexture3DMode m_mode;
         int m_layers;
-
     protected: GPUTexture3D(
         GPUTexturePixelType m_pixel_type,
         GPUTexturePixelFormat m_pixel_format);
+
     public: // Texture Buffer Manipulation
         virtual void allocate(int w, int h, int layers, int levels);
         virtual void upload(int x, int y, int w, int h, int layer, int level, void* data);
@@ -421,13 +424,14 @@ class GPUTextureCubemap : GPUTexture {
 // ------------------------
 
 class GPURenderbuffer {
-    GPUTexturePixelFormat m_format;
-    int m_w, m_h;
-
+    protected:
+        GPUTexturePixelFormat m_format;
+        int m_w, m_h;
+    // GPU Renderbuffer Constructor
     protected: GPURenderbuffer(int w, int h, GPUTexturePixelFormat format, int msaa_samples = 0);
     public: virtual ~GPURenderbuffer();
 
-    public: // GPU RenderBuffer Attributes
+    public: // GPU Renderbuffer Attributes
         int getW() { return m_w; }
         int getH() { return m_h; }
         GPUTextureSize getSize() { return (GPUTextureSize) { m_w, m_h }; }
@@ -443,14 +447,15 @@ enum class GPUFramebufferStatus : int {
 };
 
 class GPUFramebuffer {
-    GPUTexture *m_colors[32];
-    GPUTexture *m_stencil;
-    GPUTexture *m_depth;
-
+    protected:
+        GPUTexture *m_colors[32];
+        GPUTexture *m_stencil;
+        GPUTexture *m_depth;
+    // GPU Framebuffer Constructor
     protected: GPUFramebuffer();
     public: virtual ~GPUFramebuffer();
 
-    public:
+    public: // GPU Texture Attach
         virtual GPUFramebufferStatus checkStatus();
         virtual void attachColor(GPUTexture *color, int index);
         virtual void attachDepthStencil(GPUTexture *depth_stencil);
@@ -479,7 +484,7 @@ enum class GPUShaderType : int {
 
 class GPUProgram;
 class GPUShader {
-    GPUShaderType m_type;
+    protected: GPUShaderType m_type;
     protected: GPUShader(GPUShaderType type, char* buffer, int size);
     public: virtual ~GPUShader();
 
@@ -503,8 +508,7 @@ class GPUUniform {
 };
 
 class GPUUniformSampler : GPUUniform {
-    GPUTexture *m_texture;
-
+    protected: GPUTexture *m_texture;
     protected: GPUUniformSampler(std::string label);
     public: // GPU Sampler Attributes
         virtual void setTexture(GPUTexture *texture);
@@ -519,9 +523,10 @@ enum class GPUUniformBlockType : int {
 };
 
 class GPUUniformBlock : GPUUniform {
-    GPUUniformBlockType m_type;
-    GPUBuffer *m_ubo;
-    int m_index;
+    protected: // GPU Uniform Block
+        GPUUniformBlockType m_type;
+        GPUBuffer *m_ubo;
+        int m_index;
 
     protected: GPUUniformBlock(std::string label, int index);
     public: // GPU Sampler Attributes
@@ -566,8 +571,9 @@ enum class GPUUniformValueType : int {
 };
 
 class GPUUniformValue : GPUUniform {
-    GPUUniformValueType m_type;
-    unsigned int m_value[16];
+    protected: // GPU Uniform Value
+        GPUUniformValueType m_type;
+        unsigned int m_value[16];
 
     protected: GPUUniformValue(GPUUniformValueType type, std::string label);
     public: // GPU Sampler Attributes
@@ -582,12 +588,6 @@ class GPUUniformValue : GPUUniform {
 // --------------------
 
 class GPUProgram {
-    friend GPUContext;
-    friend GPUShader;
-    friend GPUUniform;
-    friend GPUUniformSampler;
-    friend GPUUniformBlock;
-    friend GPUUniformValue;
     protected:
         std::map<std::string, GPUUniform*> m_uniform_map;
         GPUUniformBlock *m_blocks[128]; // XXX: is this enough?
@@ -809,7 +809,7 @@ class GPUContext {
         virtual void useFramebuffer(GPUFramebuffer* draw, GPUFramebuffer* read);
         virtual void useFramebufferContext();
         virtual void useProgram(GPUProgram *program);
-    private: // GPU Object Bindings Cache
+    protected: // GPU Object Bindings Cache
         GPUBuffer *m_buffers[16];
         GPUTexture *m_textures[64];
         unsigned int m_capability_flags;
@@ -833,7 +833,7 @@ class GPUContext {
         virtual void executeCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z);
         virtual void executeSync(GPUContextSync flags);
 
-    private: // GPU Context State: Tracking
+    protected: // GPU Context State: Tracking
         GPUContextBlending m_blending;
         GPUContextFace m_face;
         GPUContextDepth m_depth;
