@@ -45,19 +45,21 @@ class GPUDriver {
     static GPUDriverOption m_driver_option;
     static unsigned long long m_driver_lock;
 
-    protected: // GPU Driver Specific
+    protected: // Driver Virtual Internals
         virtual bool impl__checkFeature(GPUDriverFeature feature);
-        virtual GPUContext *impl__createContext(SDL_Window *win);
         virtual bool impl__shutdown();
-
+        GPUDriver();
+        ~GPUDriver();
     public: // Initialize
         static bool initialize(GPUDriverOption option);
         static bool checkFeature(GPUDriverFeature feature);
-        static GPUContext *createContext(SDL_Window *win);
         static bool shutdown();
-    protected:
-        GPUDriver();
-        ~GPUDriver();
+
+    // Context Creation: SDL2 & SDL3
+    #if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
+        protected: virtual GPUContext *impl__createContext(SDL_Window *win);
+        public: static GPUContext *createContext(SDL_Window *win);
+    #endif
 };
 
 // -------------------
