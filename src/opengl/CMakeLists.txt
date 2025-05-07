@@ -1,7 +1,19 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
-add_definitions(-DNOGPU_OPENGL)
-add_library(nogpu_opengl OBJECT
+set(NOGPU_OPENGL_SRC
     buffer.cpp
     context.cpp
-    driver.cpp)
+    framebuffer.cpp
+    program.cpp
+    texture.cpp)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    list(APPEND NOGPU_OPENGL_SRC driver_linux.cpp)
+elseif(WIN32)
+    list(APPEND NOGPU_OPENGL_SRC driver_win32.cpp)
+endif()
+
+# Define OpenGL Target
+add_definitions(-DNOGPU_OPENGL)
+add_library(nogpu_opengl OBJECT
+    ${NOGPU_OPENGL_SRC})
