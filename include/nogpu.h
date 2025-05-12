@@ -2,8 +2,6 @@
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #ifndef NOGPU_H
 #define NOGPU_H
-#include <map>
-#include <string>
 
 // Include SDL Window
 #if defined(NOGPU_SDL3)
@@ -16,14 +14,14 @@
 // GPU Objects: Driver
 // -------------------
 
-#ifdef _WIN32
+#if defined(_WIN32)
     enum class GPUDriverOption : int {
         DRIVER_AUTO,
         DRIVER_DX12,
         DRIVER_OPENGL,
         DRIVER_VULKAN
     };
-#else
+#elif defined(__unix__)
     enum class GPUDriverOption : int {
         DRIVER_AUTO,
         DRIVER_OPENGL,
@@ -34,7 +32,11 @@
 enum class GPUDriverFeature : int {
     DRIVER_FEATURE_RASTERIZE,
     DRIVER_FEATURE_COMPUTE,
-    DRIVER_FEATURE_ASYNC
+    DRIVER_FEATURE_ASYNC,
+    // Shader Compiling
+    DRIVER_FEATURE_GLSL,
+    DRIVER_FEATURE_HLSL,
+    DRIVER_FEATURE_SPIRV
 };
 
 class GPUContext;
@@ -489,7 +491,7 @@ class GPUShader {
 
     public: // GPU Shader Attributes
         virtual bool checkCompile();
-        virtual std::string checkReport();
+        virtual char* checkReport();
         GPUShaderType getType() { return m_type; };
 };
 
@@ -499,16 +501,16 @@ class GPUShader {
 
 class GPUUniform {
     protected:
-        std::string m_label;
+        char* m_label;
         GPUProgram *program;
-        GPUUniform(std::string label);
+        GPUUniform(char* label);
     public: virtual void destroy();
-    public: std::string getLabel() { return m_label; };
+    public: char* getLabel() { return m_label; };
 };
 
 class GPUUniformSampler : GPUUniform {
     protected: GPUTexture *m_texture;
-    protected: GPUUniformSampler(std::string label);
+    protected: GPUUniformSampler(char* label);
     public: // GPU Sampler Attributes
         virtual void setTexture(GPUTexture *texture);
         GPUTexture *getTexture() { return m_texture; };
@@ -527,7 +529,7 @@ class GPUUniformBlock : GPUUniform {
         GPUBuffer *m_ubo;
         int m_index;
 
-    protected: GPUUniformBlock(std::string label, int index);
+    protected: GPUUniformBlock(char* label, int index);
     public: // GPU Sampler Attributes
         virtual void setBuffer(GPUBuffer *m_ubo);
         GPUBuffer *getBuffer() { return m_ubo; };
@@ -574,7 +576,7 @@ class GPUUniformValue : GPUUniform {
         GPUUniformValueType m_type;
         unsigned int m_value[16];
 
-    protected: GPUUniformValue(GPUUniformValueType type, std::string label);
+    protected: GPUUniformValue(GPUUniformValueType type, char* label);
     public: // GPU Sampler Attributes
         virtual void setValue(void *value);
         virtual void getValue(void *value);
@@ -587,10 +589,7 @@ class GPUUniformValue : GPUUniform {
 // --------------------
 
 class GPUProgram {
-    protected:
-        std::map<std::string, GPUUniform*> m_uniform_map;
-        GPUUniformBlock *m_blocks[128]; // XXX: is this enough?
-        GPUProgram();
+    protected: GPUProgram();
     public: virtual void destroy();
 
     public: // GPU Program Shader Attachment
@@ -598,13 +597,13 @@ class GPUProgram {
         virtual void attachFragment(GPUShader *fragment);
         virtual void attachCompute(GPUShader *compute);
         virtual bool compileProgram();
-        virtual std::string compileReport();
+        virtual char* compileReport();
 
     public: // GPU Program Uniforms
-        virtual GPUUniformValue *uniformValue(std::string label);
-        virtual GPUUniformSampler *uniformSampler(std::string label);
-        virtual GPUUniformBlock *uniformBlock(std::string label, int index);
-        GPUUniform *getUniform(std::string label) { return m_uniform_map[label]; };
+        virtual GPUUniformValue *uniformValue(char* label);
+        virtual GPUUniformSampler *uniformSampler(char* label);
+        virtual GPUUniformBlock *uniformBlock(char* label, int index);
+        virtual GPUUniform *getUniform(char* label);
 };
 
 // -----------------------------

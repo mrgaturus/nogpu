@@ -40,7 +40,7 @@ class GLBuffer final : public GPUBuffer {
 
     private: // Buffer Constructor
         friend GLContext;
-        ~GLBuffer() override;
+        void destroy() override;
         GLBuffer();
 };
 
@@ -55,7 +55,7 @@ class GLVertexArray final : public GPUVertexArray {
 
     private: // Vertex Array Constructor
         friend GLContext;
-        ~GLVertexArray() override;
+        void destroy() override;
         GLVertexArray();
 };
 
@@ -72,7 +72,7 @@ class GLTexture : public GPUTexture {
 
     protected: // Texture Constructor
         friend GLContext;
-        ~GLTexture() override;
+        void destroy() override;
         GLTexture();
 };
 
@@ -125,7 +125,7 @@ class GLTextureCubemap final : public GLTexture, public GPUTextureCubemap {
 class GLRenderbuffer final : public GPURenderbuffer {
     protected: // Renderbuffer Constructor
         GLRenderbuffer(int w, int h, GPUTexturePixelFormat format, int msaa_samples = 0);
-        ~GLRenderbuffer() override;
+        void destroy() override;
         friend GLContext;
 };
 
@@ -143,7 +143,7 @@ class GLFramebuffer final : public GPUFramebuffer {
 
     protected: // Framebuffer Constructor
         GLFramebuffer();
-        ~GLFramebuffer() override;
+        void destroy() override;
         friend GLContext;
 };
 
@@ -158,14 +158,14 @@ class GLShader final : public GPUShader {
 
     protected: // Shader Constructor
         GLShader(GPUShaderType type, char* buffer, int size);
-        ~GLShader() override;
+        void destroy() override;
         friend GLContext;
 };
 
 class GLUniform : public GPUUniform {
     protected: // Uniform Constructor
         GLUniform(std::string label);
-        ~GLUniform() override;
+        void destroy() override;
         friend GLProgram;
 };
 
@@ -212,7 +212,7 @@ class GLProgram final : public GPUProgram {
 
     protected: // Program Constructor
         GLProgram();
-        ~GLProgram() override;
+        void destroy() override;
         friend GLContext;
 };
 
@@ -221,71 +221,7 @@ class GLProgram final : public GPUProgram {
 // ------------------
 
 class GLContext final : public GPUContext {
-    // GPU Objects Creation
-    void makeCurrent() override;
-    GPUBuffer* createBuffer(GPUBufferTarget m_target) override;
-    GPUVertexArray* createVertexArray() override;
-    GPUTexture2D* createTexture2D() override;
-    GPUTexture3D* createTexture3D() override;
-    GPUTextureCubemap* createTextureCubemap() override;
-    GPURenderbuffer* createRenderbuffer(int w, int h, GPUTexturePixelFormat format, int msaa_samples = 0) override;
-    GPUFramebuffer* createFramebuffer() override;
-    GPUShader* createShader(GPUShaderType type, char* buffer, int size) override;
-    GPUProgram* createProgram() override;
 
-    // GPU Objects Make Current
-    void useBuffer(GPUBuffer *buffer) override;
-    void useVertexArray(GPUVertexArray *vertex_array) override;
-    void useTexture(GPUTexture *texture, int index) override;
-    void useFramebuffer(GPUFramebuffer* draw) override;
-    void useFramebuffer(GPUFramebuffer* draw, GPUFramebuffer* read) override;
-    void useFramebufferContext() override;
-    void useProgram(GPUProgram *program) override;
-
-    // GPU Context Capability
-    void enable(GPUContextCapability cap) override;
-    void disable(GPUContextCapability cap) override;
-    // GPU Context Rendering
-    void drawClear() override;
-    void drawArrays(GPUDrawPrimitive type, int offset, int count) override;
-    void drawElements(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element) override;
-    void drawElementsBaseVertex(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element) override;
-    void drawArraysInstanced(GPUDrawPrimitive type, int offset, int count, int instance_count) override;
-    void drawElementsInstanced(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element, int instance_count) override;
-    void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count) override;
-    void executeCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) override;
-    void executeSync(GPUContextSync flags) override;
-
-    // GPU Context State: Blending
-    void setBlendEquation(GPUBlendEquation mode) override;
-    void setBlendSeparate(GPUBlendEquation modeRGB, GPUBlendEquation modeAlpha) override;
-    void setBlendFunc(GPUBlendFactor src, GPUBlendFactor dst) override;
-    void setBlendFuncSeparate(GPUBlendFactor srcRGB, GPUBlendFactor srcAlpha, GPUBlendFactor dstRGB, GPUBlendFactor dstAlpha) override;
-    void setBlendColor(GPUColor constantColor) override;
-    // GPU Context State: Culling
-    void setFaceCull(GPUFaceMode face) override;
-    void setFaceFront(GPUWindingMode mode) override;
-    void setDepthFunc(GPUConditionFunc func) override;
-    void setDepthBias(float constantFactor, float slopeFactor, float clamp) override;
-    void setDepthMask(bool flag) override;
-    // GPU Context State: Stencil
-    void setStencilFunc(GPUConditionFunc func, int test, unsigned int mask) override;
-    void setStencilFuncSeparate(GPUFaceMode face, GPUConditionFunc func, int test, unsigned int mask) override;
-    void setStencilMask(unsigned int mask) override;
-    void setStencilMaskSeparate(GPUFaceMode face, unsigned int mask) override;
-    void setStencilOp(GPUStencilFunc fail, GPUStencilFunc stencil_pass, GPUStencilFunc stencil_depth_pass) override;
-    void setStencilOpSeparate(GPUFaceMode face, GPUStencilFunc fail, GPUStencilFunc stencil_pass, GPUStencilFunc stencil_depth_pass) override;
-    // GPU Context State: Viewport
-    void setClearColor(GPUColor color) override;
-    void setMaskColor(GPUColorMask mask) override;
-    void setLineWidth(float width) override;
-    void setViewport(GPURectangle rect) override;
-    void setScissor(GPURectangle rect) override;
-
-    private: // Context Constructor
-        friend GLDriver;
-        ~GLContext() override;
-        GLContext();
 };
 
 #endif // NOGPU_OPENGL_H
