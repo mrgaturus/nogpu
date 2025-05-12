@@ -19,7 +19,7 @@
 #ifdef _WIN32
     enum class GPUDriverOption : int {
         DRIVER_AUTO,
-        DRIVER_DX11,
+        DRIVER_DX12,
         DRIVER_OPENGL,
         DRIVER_VULKAN
     };
@@ -39,8 +39,6 @@ enum class GPUDriverFeature : int {
 
 class GPUContext;
 class GPUDriver {
-    friend GPUContext;
-    // Global Driver Instance
     static GPUDriver *m_driver;
     static GPUDriverOption m_driver_option;
     static unsigned long long m_driver_lock;
@@ -108,9 +106,8 @@ class GPUBuffer {
     void* m_mapping;
     int m_bytes;
 
-    friend GPUVertexArray;
     protected: GPUBuffer(GPUBufferTarget m_target);
-    public: virtual ~GPUBuffer();
+    public: virtual void destroy();
 
     public: // GPU Buffer Usage
         virtual void setTarget(GPUBufferTarget m_target);
@@ -123,6 +120,7 @@ class GPUBuffer {
     public: // GPU Buffer Usage: Mapping
         virtual void *map(int bytes, int offset, GPUBufferMapping flags);
         virtual void unmap();
+        virtual void wait();
 
     public: // GPU Buffer Attributes
         GPUBufferTarget getTarget() { return m_target; };
@@ -156,7 +154,7 @@ class GPUVertexArray {
         GPUBuffer* bufferArray;
         GPUBuffer* bufferElements;
     protected: GPUVertexArray();
-    public: virtual ~GPUVertexArray();
+    public: virtual void destroy();
 
     public: // GPU Vertex Array: Register
         virtual void attributeArray(GPUBuffer* buffer);
@@ -338,13 +336,14 @@ class GPUTexture {
         int m_w, m_h;
     // Texture Constructor
     protected: GPUTexture();
-    public: virtual ~GPUTexture();
+    public: virtual void destroy();
 
     public: // GPU Texture Attributes
         virtual void setSwizzle(GPUTextureFilter swizzle);
         virtual void setFilter(GPUTextureFilter filter);
         virtual void setWrap(GPUTextureFilter wrap);
         virtual void generateMipmaps();
+        virtual void wait();
 
     public: // GPU Texture Attributes
         int getW() { return m_w; }
@@ -429,7 +428,7 @@ class GPURenderbuffer {
         int m_w, m_h;
     // GPU Renderbuffer Constructor
     protected: GPURenderbuffer(int w, int h, GPUTexturePixelFormat format, int msaa_samples = 0);
-    public: virtual ~GPURenderbuffer();
+    public: virtual void destroy();
 
     public: // GPU Renderbuffer Attributes
         int getW() { return m_w; }
@@ -453,7 +452,7 @@ class GPUFramebuffer {
         GPUTexture *m_depth;
     // GPU Framebuffer Constructor
     protected: GPUFramebuffer();
-    public: virtual ~GPUFramebuffer();
+    public: virtual void destroy();
 
     public: // GPU Texture Attach
         virtual GPUFramebufferStatus checkStatus();
@@ -486,7 +485,7 @@ class GPUProgram;
 class GPUShader {
     protected: GPUShaderType m_type;
     protected: GPUShader(GPUShaderType type, char* buffer, int size);
-    public: virtual ~GPUShader();
+    public: virtual void destroy();
 
     public: // GPU Shader Attributes
         virtual bool checkCompile();
@@ -503,7 +502,7 @@ class GPUUniform {
         std::string m_label;
         GPUProgram *program;
         GPUUniform(std::string label);
-    public: virtual ~GPUUniform();
+    public: virtual void destroy();
     public: std::string getLabel() { return m_label; };
 };
 
@@ -592,7 +591,7 @@ class GPUProgram {
         std::map<std::string, GPUUniform*> m_uniform_map;
         GPUUniformBlock *m_blocks[128]; // XXX: is this enough?
         GPUProgram();
-    public: virtual ~GPUProgram();
+    public: virtual void destroy();
 
     public: // GPU Program Shader Attachment
         virtual void attachVertex(GPUShader *vertex);
@@ -624,25 +623,9 @@ typedef struct {
     bool r, g, b, a;
 } GPUColorMask;
 
-// -----------------------
-// GPU Context: State Enum
-// -----------------------
-
-enum class GPUDrawPrimitive : int {
-    PRIMITIVE_POINTS,
-    PRIMITIVE_LINES,
-    PRIMITIVE_LINE_STRIP,
-    PRIMITIVE_LINE_LOOP,
-    PRIMITIVE_TRIANGLES,
-    PRIMITIVE_TRIANGLE_STRIP,
-    PRIMITIVE_TRIANGLE_FAN,
-};
-
-enum class GPUDrawElementsType : int {
-    ELEMENTS_UNSIGNED_BYTE,
-    ELEMENTS_UNSIGNED_SHORT,
-    ELEMENTS_UNSIGNED_INT
-};
+// ---------------------------
+// GPU Context: Pipeline State
+// ---------------------------
 
 enum class GPUBlendEquation : int {
     BLEND_FUNC_ADD,
@@ -703,11 +686,11 @@ enum class GPUWindingMode : int {
     WINDING_CCW,
 };
 
-// --------------------------
-// GPU Context: State Toggles
-// --------------------------
+// ---------------------
+// GPU Context: Pipeline
+// ---------------------
 
-enum class GPUContextCapability : int {
+enum class GPUPipelineCapability : int {
     CAPABILITY_BLENDING,
     CAPABILITY_FACE_CULL,
     CAPABILITY_DEPTH_TEST,
@@ -715,84 +698,204 @@ enum class GPUContextCapability : int {
     CAPABILITY_PRIMITIVE_RESTART,
     CAPABILITY_RASTERIZER_DISCARD,
     CAPABILITY_SCISSOR_TEST,
-    CAPABILITY_STENCIL_TEST,
-    CAPABILITY_ASYNC,
+    CAPABILITY_STENCIL_TEST
 };
 
-typedef enum {
-    SYNC_BUFFER,
-    SYNC_TEXTURE,
-    SYNC_RENDER,
-    SYNC_COMPUTE,
-} GPUContextSync;
-
-// --------------------------
-// GPU Context: State Structs
-// --------------------------
-
 typedef struct {
-    struct GPUContextBlendingEquation {
+    struct GPUPipelineBlendingEquation {
         GPUBlendEquation rgb;
         GPUBlendEquation alpha;
     } equation;
 
-    struct GPUContextBlendingFactor {
+    struct GPUPipelineBlendingFactor {
         GPUBlendFactor srcRGB, srcAlpha;
         GPUBlendFactor dstRGB, dstAlpha;
     } factor;
 
     GPUColor constantColor;
-} GPUContextBlending;
+} GPUPipelineBlending;
 
 typedef struct {
     GPUFaceMode cull;
     GPUWindingMode front;
-} GPUContextFace;
+} GPUPipelineFace;
 
 typedef struct {
     GPUConditionFunc func;
     bool mask;
 
-    struct GPUContextDepthBias {
+    struct GPUPipelineDepthBias {
         float constantFactor;
         float slopeFactor;
         float clamp;
     } bias;
-} GPUContextDepth;
+} GPUPipelineDepth;
 
 typedef struct {
-    struct GPUContextStencilFunc {
+    struct GPUPipelineStencilFunc {
         GPUFaceMode face;
         GPUConditionFunc func;
         int test; unsigned int mask;
     } func;
 
-    struct GPUContextStencilMask {
+    struct GPUPipelineStencilMask {
         GPUFaceMode face;
         unsigned int mask;
     } mask;
 
-    struct GPUContextStencilOp {
+    struct GPUPipelineStencilOp {
         GPUFaceMode face;
         GPUStencilFunc fail;
         GPUStencilFunc pass;
         GPUStencilFunc depth_pass;
     } op;
-} GPUContextStencil;
+} GPUPipelineStencil;
+
+class GPUPipeline {
+    GPUProgram* m_program;
+
+    unsigned int m_capabilities;
+    GPUPipelineBlending m_blending;
+    GPUPipelineFace m_face;
+    GPUPipelineDepth m_depth;
+    GPUPipelineStencil m_stencil;
+
+    float m_lineWidth;
+    GPUColor m_clearColor;
+    GPUColorMask m_maskColor;
+    GPURectangle m_scissor;
+    GPURectangle m_viewport;
+
+    // Pipeline Constructor
+    protected: GPUPipeline(GPUProgram* program);
+    public: virtual void destroy();
+
+    public: // Pipeline Capabilites
+        bool check(GPUPipelineCapability cap) { return (m_capabilities & (1 << (unsigned int) cap)) != 0; }
+        virtual void enable(GPUPipelineCapability cap) { m_capabilities |= (1 << (unsigned int) cap); }
+        virtual void disable(GPUPipelineCapability cap) { m_capabilities &= ~(1 << (unsigned int) cap); }
+
+    public: // Pipeline Attributes: Setters
+        virtual void setProgram(GPUProgram* program) { m_program = program; };
+        virtual void setBlending(GPUPipelineBlending blending) { m_blending = blending; }
+        virtual void setFace(GPUPipelineFace face) { m_face = face; }
+        virtual void setDepth(GPUPipelineDepth depth) { m_depth = depth; }
+        virtual void setStencil(GPUPipelineStencil stencil) { m_stencil = stencil; }
+        // GPU Context State: Viewport
+        virtual void setLineWidth(float width) { m_lineWidth = width; }
+        virtual void setClearColor(GPUColor color) { m_clearColor = color; }
+        virtual void setMaskColor(GPUColorMask mask) { m_maskColor = mask; }
+        virtual void setViewport(GPURectangle rect) { m_viewport = rect; }
+        virtual void setScissor(GPURectangle rect) { m_scissor = rect; }
+
+    public: // Pipeline Attributes: Getters
+        GPUPipelineBlending getBlending() { return m_blending; }
+        GPUPipelineFace getFace() { return m_face; }
+        GPUPipelineDepth getDepth() { return m_depth; }
+        GPUPipelineStencil getStencil() { return m_stencil; }
+        // GPU Context State: Viewport
+        float getLineWidth() { return m_lineWidth; }
+        GPUColor getClearColor() { return m_clearColor; }
+        GPUColorMask getMaskColor() { return m_maskColor; }
+        GPURectangle getViewport() { return m_viewport; }
+        GPURectangle getScissor() { return m_scissor; }
+};
+
+// ---------------------
+// GPU Context: Commands
+// ---------------------
+
+enum class GPUDrawPrimitive : int {
+    PRIMITIVE_POINTS,
+    PRIMITIVE_LINES,
+    PRIMITIVE_LINE_STRIP,
+    PRIMITIVE_LINE_LOOP,
+    PRIMITIVE_TRIANGLES,
+    PRIMITIVE_TRIANGLE_STRIP,
+    PRIMITIVE_TRIANGLE_FAN,
+};
+
+enum class GPUDrawElementsType : int {
+    ELEMENTS_UNSIGNED_BYTE,
+    ELEMENTS_UNSIGNED_SHORT,
+    ELEMENTS_UNSIGNED_INT
+};
+
+typedef enum {
+    BARRIER_VEXTEX_ATTRIB_ARRAY = 1 << 0,
+    BARRIER_ELEMENT_ARRAY = 1 << 1,
+    BARRIER_UNIFORM = 1 << 2,
+    BARRIER_TEXTURE_FETCH = 1 << 3,
+    BARRIER_SHADER_IMAGE_ACCESS = 1 << 4,
+    BARRIER_COMMAND = 1 << 5,
+    BARRIER_PIXEL_BUFFER = 1 << 6,
+    BARRIER_TEXTURE_UPDATE = 1 << 7,
+    BARRIER_BUFFER_UPDATE = 1 << 8,
+    BARRIER_FRAMEBUFFER = 1 << 9,
+    BARRIER_ATOMIC_COUNTER = 1 << 10,
+    BARRIER_SHADER_STORAGE = 1 << 11,
+    BARRIER_ALL = 0x7FFFFFFF,
+} GPUMemoryBarrierFlags;
+
+typedef struct {
+    GPUPipeline *pipeline;
+    GPUPipeline pipelineCache;
+    GPUBuffer *buffers[16];
+    GPUTexture *textures[64];
+    GPUVertexArray *vertexArray;
+    GPURenderbuffer *renderBuffer;
+    GPUFramebuffer *framebufferRead;
+    GPUFramebuffer *framebufferDraw;
+} GPUCommandState;
+
+class GPUCommands {
+    protected:
+        GPUCommands();
+        GPUCommandState m_state;
+        bool m_recorded;
+    public: virtual void destroy();
+
+    public: // GPU Command Record 
+        bool checkRecord() { return m_recorded; }
+        virtual void beginRecord();
+        virtual void endRecord();
+        virtual void wait();
+
+    public: // GPU Command State
+        virtual void usePipeline(GPUPipeline *pipeline);
+        virtual void useVertexArray(GPUVertexArray *vertex_array);
+        virtual void useBuffer(GPUBuffer *buffer, GPUBufferTarget target);
+        virtual void useTexture(GPUTexture *texture, int index);
+        virtual void useFramebuffer(GPUFramebuffer* draw);
+        virtual void useFramebuffer(GPUFramebuffer* draw, GPUFramebuffer* read);
+        virtual void useFramebufferContext();
+
+    public: // GPU Command Rendering
+        virtual void drawClear();
+        virtual void drawArrays(GPUDrawPrimitive type, int offset, int count);
+        virtual void drawElements(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element);
+        virtual void drawElementsBaseVertex(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element);
+        virtual void drawArraysInstanced(GPUDrawPrimitive type, int offset, int count, int instance_count);
+        virtual void drawElementsInstanced(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element, int instance_count);
+        virtual void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count);
+        virtual void executeComputeAsync(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z);
+        virtual void executeCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z);
+        virtual void memoryBarrier(GPUMemoryBarrierFlags barriers);
+};
 
 // -----------
 // GPU Context
 // -----------
 
 class GPUContext {
-    static GPUContext* m_current;
-    protected: GPUContext();
-    public: virtual ~GPUContext();
+    protected:
+        GPUContext();
+        static GPUContext* m_current;
+    public: virtual void destroy();
 
     public: // GPU Objects Creation
-        virtual void makeCurrent();
-        virtual GPUBuffer* createBuffer(GPUBufferTarget m_target);
         virtual GPUVertexArray* createVertexArray();
+        virtual GPUBuffer* createBuffer(GPUBufferTarget m_target);
         virtual GPUTexture2D* createTexture2D();
         virtual GPUTexture3D* createTexture3D();
         virtual GPUTextureCubemap* createTextureCubemap();
@@ -801,104 +904,12 @@ class GPUContext {
         virtual GPUShader* createShader(GPUShaderType type, char* buffer, int size);
         virtual GPUProgram* createProgram();
 
-    public: // GPU Objects Make Current
-        virtual void useBuffer(GPUBuffer *buffer);
-        virtual void useVertexArray(GPUVertexArray *vertex_array);
-        virtual void useTexture(GPUTexture *texture, int index);
-        virtual void useFramebuffer(GPUFramebuffer* draw);
-        virtual void useFramebuffer(GPUFramebuffer* draw, GPUFramebuffer* read);
-        virtual void useFramebufferContext();
-        virtual void useProgram(GPUProgram *program);
-    protected: // GPU Object Bindings Cache
-        GPUBuffer *m_buffers[16];
-        GPUTexture *m_textures[64];
-        unsigned int m_capability_flags;
-        GPUVertexArray *m_vertex_array;
-        GPURenderbuffer *m_renderbuffer;
-        GPUFramebuffer *m_framebuffer_read;
-        GPUFramebuffer *m_framebuffer_draw;
-        GPUProgram *m_program;
-
-    public: // GPU Context Capability
-        virtual void enable(GPUContextCapability cap);
-        virtual void disable(GPUContextCapability cap);
-    public: // GPU Context Rendering
-        virtual void drawClear();
-        virtual void drawArrays(GPUDrawPrimitive type, int offset, int count);
-        virtual void drawElements(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element);
-        virtual void drawElementsBaseVertex(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element);
-        virtual void drawArraysInstanced(GPUDrawPrimitive type, int offset, int count, int instance_count);
-        virtual void drawElementsInstanced(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element, int instance_count);
-        virtual void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count);
-        virtual void executeCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z);
-        virtual void executeSync(GPUContextSync flags);
-
-    protected: // GPU Context State: Tracking
-        GPUContextBlending m_blending;
-        GPUContextFace m_face;
-        GPUContextDepth m_depth;
-        GPUContextStencil m_stencil;
-
-        GPUColor m_clearColor;
-        GPUColorMask m_maskColor;
-        float m_lineWidth;
-        GPURectangle m_scissor;
-        GPURectangle m_viewport;
-    public: // GPU Context State: Blending
-        virtual void setBlendEquation(GPUBlendEquation mode);
-        virtual void setBlendSeparate(GPUBlendEquation modeRGB, GPUBlendEquation modeAlpha);
-        virtual void setBlendFunc(GPUBlendFactor src, GPUBlendFactor dst);
-        virtual void setBlendFuncSeparate(GPUBlendFactor srcRGB, GPUBlendFactor srcAlpha, GPUBlendFactor dstRGB, GPUBlendFactor dstAlpha);
-        virtual void setBlendColor(GPUColor constantColor);
-        // GPU Context State: Culling
-        virtual void setFaceCull(GPUFaceMode face);
-        virtual void setFaceFront(GPUWindingMode mode);
-        virtual void setDepthFunc(GPUConditionFunc func);
-        virtual void setDepthBias(float constantFactor, float slopeFactor, float clamp);
-        virtual void setDepthMask(bool flag);
-        // GPU Context State: Stencil
-        virtual void setStencilFunc(GPUConditionFunc func, int test, unsigned int mask);
-        virtual void setStencilFuncSeparate(GPUFaceMode face, GPUConditionFunc func, int test, unsigned int mask);
-        virtual void setStencilMask(unsigned int mask);
-        virtual void setStencilMaskSeparate(GPUFaceMode face, unsigned int mask);
-        virtual void setStencilOp(GPUStencilFunc fail, GPUStencilFunc stencil_pass, GPUStencilFunc stencil_depth_pass);
-        virtual void setStencilOpSeparate(GPUFaceMode face, GPUStencilFunc fail, GPUStencilFunc stencil_pass, GPUStencilFunc stencil_depth_pass);
-        // GPU Context State: Viewport
-        virtual void setClearColor(GPUColor color);
-        virtual void setMaskColor(GPUColorMask mask);
-        virtual void setLineWidth(float width);
-        virtual void setViewport(GPURectangle rect);
-        virtual void setScissor(GPURectangle rect);
-    public: // GPU Context State: Getter
-        GPUContextBlending getBlendingInfo() { return m_blending; }
-        GPUContextFace getFaceInfo() { return m_face; }
-        GPUContextDepth getDepthInfo() { return m_depth; }
-        GPUContextStencil getStencilInfo() { return m_stencil; }
-        // GPU Context State: Viewport
-        GPUColor getClearColor() { return m_clearColor; }
-        GPUColorMask getMaskColor() { return m_maskColor; }
-        float getLineWidth() { return m_lineWidth; }
-        GPURectangle getViewport() { return m_viewport; }
-        GPURectangle getScissor() { return m_scissor; }
-        bool checkEnabled(GPUContextCapability cap) {
-            return m_capability_flags & (1 << (unsigned int) cap); }
-
-    protected: // GPU Objects Friends
-        friend GPUDriver;
-        friend GPUBuffer;
-        friend GPUVertexArray;
-        friend GPUTexture;
-        friend GPUTexture2D;
-        friend GPUTexture3D;
-        friend GPUTextureCubemap;
-        friend GPURenderbuffer;
-        friend GPUFramebuffer;
-        friend GPUShader;
-        friend GPUUniform;
-        friend GPUUniformSampler;
-        friend GPUUniformBlock;
-        friend GPUUniformValue;
-        friend GPUProgram;
+    public: // GPU Object Pipeline
+        virtual GPUPipeline* createPipeline(GPUProgram* program);
+        virtual GPUCommands* createCommands();
+        virtual void submit(GPUCommands* commands);
+        virtual void recreateSurface();
+        virtual void swapSurface();
 };
 
 #endif // NOGPU_H
