@@ -901,11 +901,11 @@ class GPUContext {
         virtual GPUTextureCubemap* createTextureCubemap();
         virtual GPURenderbuffer* createRenderbuffer(int w, int h, GPUTexturePixelFormat format, int msaa_samples = 0);
         virtual GPUFramebuffer* createFramebuffer();
-        virtual GPUShader* createShader(GPUShaderType type, char* buffer, int size);
         virtual GPUProgram* createProgram();
-
-    public: // GPU Object Pipeline
+        virtual GPUShader* createShader(GPUShaderType type, char* buffer, int size);
         virtual GPUPipeline* createPipeline(GPUProgram* program);
+
+    public: // GPU Object Commands
         virtual GPUCommands* createCommands();
         virtual void submit(GPUCommands* commands);
         virtual void recreateSurface();
