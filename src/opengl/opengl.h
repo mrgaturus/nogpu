@@ -5,7 +5,7 @@
 #include <nogpu.h>
 
 class GLContext;
-class GLDriver final : public GPUDriver {
+class GLDriver : GPUDriver {
     bool impl__checkFeature(GPUDriverFeature feature) override;
     bool impl__shutdown() override;
 
@@ -25,7 +25,7 @@ class GLDriver final : public GPUDriver {
 // OpenGL GPU Buffer
 // -----------------
 
-class GLBuffer final : public GPUBuffer {
+class GLBuffer : GPUBuffer {
     // GPU Buffer Usage
     void setTarget(GPUBufferTarget m_target) override;
     void orphan(int bytes, GPUBufferUsage usage) override;
@@ -37,6 +37,7 @@ class GLBuffer final : public GPUBuffer {
     // GPU Buffer Usage: Mapping
     void *map(int bytes, int offset, GPUBufferMapping flags) override;
     void unmap() override;
+    void wait() override;
 
     private: // Buffer Constructor
         friend GLContext;
@@ -44,7 +45,7 @@ class GLBuffer final : public GPUBuffer {
         GLBuffer();
 };
 
-class GLVertexArray final : public GPUVertexArray {
+class GLVertexArray : GPUVertexArray {
     // GPU Vertex Array: Register
     void attributeArray(GPUBuffer* buffer) override;
     void attributeElements(GPUBuffer* buffer) override;
@@ -63,12 +64,13 @@ class GLVertexArray final : public GPUVertexArray {
 // OpenGL GPU Texture
 // ------------------
 
-class GLTexture : public GPUTexture {
+class GLTexture : GPUTexture {
     // GPU Texture Attributes
     void setSwizzle(GPUTextureFilter swizzle) override;
     void setFilter(GPUTextureFilter filter) override;
     void setWrap(GPUTextureFilter wrap) override;
     void generateMipmaps() override;
+    void wait() override;
 
     protected: // Texture Constructor
         friend GLContext;
@@ -76,7 +78,7 @@ class GLTexture : public GPUTexture {
         GLTexture();
 };
 
-class GLTexture2D final : public GLTexture, public GPUTexture2D {
+class GLTexture2D : GLTexture, GPUTexture2D {
     // Texture Buffer Manipulation
     void allocate(int w, int h, int levels) override;
     void upload(int x, int y, int w, int h, int level, void* data) override;
@@ -90,7 +92,7 @@ class GLTexture2D final : public GLTexture, public GPUTexture2D {
         friend GPUContext;
 };
 
-class GLTexture3D final : public GLTexture, public GPUTexture3D {
+class GLTexture3D : GLTexture, GPUTexture3D {
     // Texture Buffer Manipulation
     void allocate(int w, int h, int layers, int levels) override;
     void upload(int x, int y, int w, int h, int layer, int level, void* data) override;
@@ -104,7 +106,7 @@ class GLTexture3D final : public GLTexture, public GPUTexture3D {
         friend GLContext;
 };
 
-class GLTextureCubemap final : public GLTexture, public GPUTextureCubemap {
+class GLTextureCubemap : GLTexture, GPUTextureCubemap {
     // Texture Buffer Manipulation
     void allocate(int w, int h, int levels) override;
     void upload(int x, int y, int w, int h, int level, GPUTextureCubemapSide side, void* data) override;
@@ -122,14 +124,14 @@ class GLTextureCubemap final : public GLTexture, public GPUTextureCubemap {
 // OpenGL GPU Framebuffer
 // ----------------------
 
-class GLRenderbuffer final : public GPURenderbuffer {
+class GLRenderbuffer : GPURenderbuffer {
     protected: // Renderbuffer Constructor
         GLRenderbuffer(int w, int h, GPUTexturePixelFormat format, int msaa_samples = 0);
         void destroy() override;
         friend GLContext;
 };
 
-class GLFramebuffer final : public GPUFramebuffer {
+class GLFramebuffer : GPUFramebuffer {
     GPUFramebufferStatus checkStatus() override;
     void attachColor(GPUTexture *color, int index) override;
     void attachDepthStencil(GPUTexture *depth_stencil) override;
@@ -152,9 +154,9 @@ class GLFramebuffer final : public GPUFramebuffer {
 // -----------------
 
 class GLProgram;
-class GLShader final : public GPUShader {
+class GLShader : GPUShader {
     bool checkCompile() override;
-    std::string checkReport() override;
+    char* checkReport() override;
 
     protected: // Shader Constructor
         GLShader(GPUShaderType type, char* buffer, int size);
@@ -162,34 +164,34 @@ class GLShader final : public GPUShader {
         friend GLContext;
 };
 
-class GLUniform : public GPUUniform {
+class GLUniform : GPUUniform {
     protected: // Uniform Constructor
-        GLUniform(std::string label);
+        GLUniform(char* label);
         void destroy() override;
         friend GLProgram;
 };
 
-class GLUniformSampler final : public GLUniform, public GPUUniformSampler {
+class GLUniformSampler : GLUniform, GPUUniformSampler {
     void setTexture(GPUTexture *texture) override;
     protected: // Uniform Constructor
-        GLUniformSampler(std::string label);
+        GLUniformSampler(char* label);
         friend GPUProgram;
 };
 
-class GLUniformBlock final : public GLUniform, public GPUUniformBlock {
+class GLUniformBlock : GLUniform, GPUUniformBlock {
     void setBuffer(GPUBuffer *m_ubo) override;
     protected: // Uniform Constructor
-        GLUniformBlock(std::string label, int index);
+        GLUniformBlock(char* label, int index);
         friend GPUProgram;
 };
 
-class GLUniformValue final : public GLUniform, public GPUUniformValue {
+class GLUniformValue : GLUniform, GPUUniformValue {
     void setValue(void *value) override;
     void getValue(void *value) override;
     int getTypeSize() override;
 
     protected: // Uniform Constructor
-        GLUniformValue(GPUUniformValueType type, std::string label);
+        GLUniformValue(GPUUniformValueType type, char* label);
         friend GPUProgram;
 };
 
@@ -197,18 +199,19 @@ class GLUniformValue final : public GLUniform, public GPUUniformValue {
 // OpenGL GPU Program
 // ------------------
 
-class GLProgram final : public GPUProgram {
+class GLProgram : GPUProgram {
     // GPU Program Shader Attachment
     void attachVertex(GPUShader *vertex) override;
     void attachFragment(GPUShader *fragment) override;
     void attachCompute(GPUShader *compute) override;
     bool compileProgram() override;
-    std::string compileReport() override;
+    char* compileReport() override;
 
     // GPU Program Uniforms
-    GPUUniformValue *uniformValue(std::string label) override;
-    GPUUniformSampler *uniformSampler(std::string label) override;
-    GPUUniformBlock *uniformBlock(std::string label, int index) override;
+    GPUUniformValue *uniformValue(char* label) override;
+    GPUUniformSampler *uniformSampler(char* label) override;
+    GPUUniformBlock *uniformBlock(char* label, int index) override;
+    GPUUniform *getUniform(char* label) override;
 
     protected: // Program Constructor
         GLProgram();
@@ -216,11 +219,19 @@ class GLProgram final : public GPUProgram {
         friend GLContext;
 };
 
+// -------------------
+// OpenGL GPU Commands
+// -------------------
+
+class GLCommands : GPUCommands {
+
+};
+
 // ------------------
 // OpenGL GPU Context
 // ------------------
 
-class GLContext final : public GPUContext {
+class GLContext : GPUContext {
 
 };
 
