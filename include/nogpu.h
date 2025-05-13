@@ -41,14 +41,15 @@ enum class GPUDriverFeature : int {
 
 class GPUContext;
 class GPUDriver {
-    static GPUDriver *m_driver;
-    static GPUDriverOption m_driver_option;
-    static unsigned long long m_driver_lock;
-
-    protected: // Driver Virtual Internals
+    protected: 
+        static GPUDriver *m_driver;
+        static GPUDriverOption m_driver_option;
+        static unsigned long long m_driver_lock;
+        // Driver Virtual Implementation
         virtual bool impl__checkFeature(GPUDriverFeature feature) = 0;
         virtual bool impl__shutdown() = 0;
-    protected: // Driver Avoid Create
+
+    protected: // Avoid Instance
         GPUDriver();
         ~GPUDriver();
     public: // Initialize
@@ -104,11 +105,12 @@ enum class GPUBufferMapping : int {
 
 class GPUVertexArray;
 class GPUBuffer {
-    GPUBufferTarget m_target;
-    void* m_mapping;
-    int m_bytes;
-
+    protected:
+        GPUBufferTarget m_target;
+        void* m_mapping;
+        int m_bytes;
     protected: GPUBuffer(GPUBufferTarget m_target);
+    protected: ~GPUBuffer();
     public: virtual void destroy() = 0;
 
     public: // GPU Buffer Usage
@@ -156,6 +158,7 @@ class GPUVertexArray {
         GPUBuffer* bufferArray;
         GPUBuffer* bufferElements;
     protected: GPUVertexArray();
+    protected: ~GPUVertexArray();
     public: virtual void destroy() = 0;
 
     public: // GPU Vertex Array: Register
@@ -338,6 +341,7 @@ class GPUTexture {
         int m_w, m_h;
     // Texture Constructor
     protected: GPUTexture();
+    protected: ~GPUTexture();
     public: virtual void destroy() = 0;
 
     public: // GPU Texture Attributes
@@ -430,6 +434,7 @@ class GPURenderbuffer {
         int m_w, m_h;
     // GPU Renderbuffer Constructor
     protected: GPURenderbuffer(int w, int h, GPUTexturePixelFormat format, int msaa_samples = 0);
+    protected: ~GPURenderbuffer();
     public: virtual void destroy() = 0;
 
     public: // GPU Renderbuffer Attributes
@@ -454,6 +459,7 @@ class GPUFramebuffer {
         GPUTexture *m_depth;
     // GPU Framebuffer Constructor
     protected: GPUFramebuffer();
+    protected: ~GPUFramebuffer();
     public: virtual void destroy() = 0;
 
     public: // GPU Texture Attach
@@ -487,6 +493,7 @@ class GPUProgram;
 class GPUShader {
     protected: GPUShaderType m_type;
     protected: GPUShader(GPUShaderType type, char* buffer, int size);
+    protected: ~GPUShader();
     public: virtual void destroy() = 0;
 
     public: // GPU Shader Attributes
@@ -504,6 +511,7 @@ class GPUUniform {
         char* m_label;
         GPUProgram *program;
         GPUUniform(char* label);
+        ~GPUUniform();
     public: virtual void destroy() = 0;
     public: char* getLabel() { return m_label; };
 };
@@ -588,7 +596,9 @@ class GPUUniformValue : GPUUniform {
 // --------------------
 
 class GPUProgram {
-    protected: GPUProgram();
+    protected:
+        GPUProgram();
+        ~GPUProgram();
     public: virtual void destroy() = 0;
 
     public: // GPU Program Shader Attachment
@@ -602,6 +612,7 @@ class GPUProgram {
         virtual GPUUniformValue *uniformValue(char* label) = 0;
         virtual GPUUniformSampler *uniformSampler(char* label) = 0;
         virtual GPUUniformBlock *uniformBlock(char* label, int index) = 0;
+        virtual GPUUniform *removeUniform(char* label) = 0;
         virtual GPUUniform *getUniform(char* label) = 0;
 };
 
@@ -765,7 +776,9 @@ class GPUPipeline {
     GPURectangle m_viewport;
 
     // Pipeline Constructor
-    protected: GPUPipeline(GPUProgram* program);
+    protected:
+        GPUPipeline(GPUProgram* program);
+        ~GPUPipeline();
     public: virtual void destroy() { delete this; };
 
     public: // Pipeline Capabilites
@@ -849,6 +862,7 @@ typedef struct {
 class GPUCommands {
     protected:
         GPUCommands();
+        ~GPUCommands();
         GPUCommandState m_state;
         bool m_recorded;
     public: virtual void destroy() = 0;
@@ -876,7 +890,7 @@ class GPUCommands {
         virtual void drawArraysInstanced(GPUDrawPrimitive type, int offset, int count, int instance_count) = 0;
         virtual void drawElementsInstanced(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element, int instance_count) = 0;
         virtual void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count) = 0;
-        virtual void executeComputeAsync(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) = 0;
+        virtual void executeComputeSync(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) = 0;
         virtual void executeCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) = 0;
         virtual void memoryBarrier(GPUMemoryBarrierFlags barriers) = 0;
 };
@@ -888,6 +902,7 @@ class GPUCommands {
 class GPUContext {
     protected:
         GPUContext();
+        ~GPUContext();
         static GPUContext* m_current;
     public: virtual void destroy() = 0;
 

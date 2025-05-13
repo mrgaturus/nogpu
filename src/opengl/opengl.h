@@ -211,6 +211,7 @@ class GLProgram : GPUProgram {
     GPUUniformValue *uniformValue(char* label) override;
     GPUUniformSampler *uniformSampler(char* label) override;
     GPUUniformBlock *uniformBlock(char* label, int index) override;
+    GPUUniform *removeUniform(char* label) override;
     GPUUniform *getUniform(char* label) override;
 
     protected: // Program Constructor
@@ -224,7 +225,36 @@ class GLProgram : GPUProgram {
 // -------------------
 
 class GLCommands : GPUCommands {
+    // GPU Command Record
+    void beginRecord() override;
+    void endRecord() override;
+    void wait() override;
 
+    // GPU Command State
+    void usePipeline(GPUPipeline *pipeline) override;
+    void useVertexArray(GPUVertexArray *vertex_array) override;
+    void useBuffer(GPUBuffer *buffer, GPUBufferTarget target) override;
+    void useTexture(GPUTexture *texture, int index) override;
+    void useFramebuffer(GPUFramebuffer* draw) override;
+    void useFramebuffer(GPUFramebuffer* draw, GPUFramebuffer* read) override;
+    void useFramebufferContext() override;
+
+    // GPU Command Rendering
+    void drawClear() override;
+    void drawArrays(GPUDrawPrimitive type, int offset, int count) override;
+    void drawElements(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element) override;
+    void drawElementsBaseVertex(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element) override;
+    void drawArraysInstanced(GPUDrawPrimitive type, int offset, int count, int instance_count) override;
+    void drawElementsInstanced(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element, int instance_count) override;
+    void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count) override;
+    void executeComputeSync(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) override;
+    void executeCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) override;
+    void memoryBarrier(GPUMemoryBarrierFlags barriers) override;
+
+    protected: // Commands Constructor
+        GLCommands();
+        void destroy() override;
+        friend GLContext;
 };
 
 // ------------------
@@ -232,7 +262,28 @@ class GLCommands : GPUCommands {
 // ------------------
 
 class GLContext : GPUContext {
+    // GPU Object Creation
+    GPUVertexArray* createVertexArray() override;
+    GPUBuffer* createBuffer(GPUBufferTarget m_target) override;
+    GPUTexture2D* createTexture2D() override;
+    GPUTexture3D* createTexture3D() override;
+    GPUTextureCubemap* createTextureCubemap() override;
+    GPURenderbuffer* createRenderbuffer(int w, int h, GPUTexturePixelFormat format, int msaa_samples = 0) override;
+    GPUFramebuffer* createFramebuffer() override;
+    GPUProgram* createProgram() override;
+    GPUShader* createShader(GPUShaderType type, char* buffer, int size) override;
+    GPUPipeline* createPipeline(GPUProgram* program) override;
 
+    // GPU Object Commands
+    GPUCommands* createCommands() override;
+    void submit(GPUCommands* commands) override;
+    void recreateSurface() override;
+    void swapSurface() override;
+
+    protected: // Commands Constructor
+        GLContext();
+        void destroy() override;
+        friend GPUDriver;
 };
 
 #endif // NOGPU_OPENGL_H

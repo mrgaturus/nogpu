@@ -1,8 +1,10 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
-set(NOGPU_OPENGL_SRC
-    glad/gl.c
+add_definitions(-DNOGPU_OPENGL)
+add_library(nogpu_opengl OBJECT
+    glad/glad.c
     buffer.cpp
+    commands.cpp
     context.cpp
     framebuffer.cpp
     program.cpp
@@ -10,12 +12,12 @@ set(NOGPU_OPENGL_SRC
 )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    list(APPEND NOGPU_OPENGL_SRC driver_linux.cpp)
+    find_package(PkgConfig REQUIRED)
+    pkg_search_module(EGL REQUIRED egl)
+    # libglvnd libegl.so dependency
+    target_include_directories(nogpu_opengl PRIVATE ${EGL_INCLUDE_DIRS})
+    target_link_libraries(nogpu_opengl PRIVATE ${EGL_LIBRARIES})
+    target_sources(nogpu_opengl PRIVATE driver_linux.cpp)    
 elseif(WIN32)
-    list(APPEND NOGPU_OPENGL_SRC driver_win32.cpp)
+    target_sources(nogpu_opengl PRIVATE driver_win32.cpp)
 endif()
-
-# Define OpenGL Target
-add_definitions(-DNOGPU_OPENGL)
-add_library(nogpu_opengl OBJECT
-    ${NOGPU_OPENGL_SRC})
