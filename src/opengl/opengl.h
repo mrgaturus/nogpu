@@ -4,20 +4,35 @@
 #define NOGPU_OPENGL_H
 #include <nogpu.h>
 
+#if defined(__unix__)
+#include <EGL/egl.h>
+#endif
+
 class GLContext;
 class GLDriver : GPUDriver {
+    #if defined(__unix__) // X11 & Wayland
+        EGLDisplay egl_display;
+        EGLConfig egl_config;
+        EGLContext egl_context;
+        EGLSurface egl_surface;
+    #endif
+
     bool impl__checkFeature(GPUDriverFeature feature) override;
+    bool impl__checkInitialized() override;
+    GPUDriverOption impl__getDriverOption() override;
+    int impl__getMultisamplesCount() override;
     bool impl__shutdown() override;
 
     // Context Creation: SDL2 & SDL3
     #if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
         GPUContext *impl__createContext(SDL_Window *win) override;
+        SDL_Window* sdl_window;
     #endif
 
     // GL Driver Initialize
     protected:
         friend GPUDriver;
-        GLDriver();
+        GLDriver(int msaa_samples = 0);
         ~GLDriver();
 };
 

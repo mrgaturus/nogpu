@@ -49,21 +49,23 @@ class GPUContext;
 class GPUDriver {
     protected: 
         static GPUDriver *m_driver;
-        static GPUDriverOption m_driver_option;
-        static unsigned long long m_driver_lock;
+        static thread_local GPUDriver *m_driver_lock;
         // Driver Virtual Implementation
         virtual bool impl__checkFeature(GPUDriverFeature feature) = 0;
         virtual bool impl__checkInitialized() = 0;
+        virtual GPUDriverOption impl__getDriverOption() = 0;
+        virtual int impl__getMultisamplesCount() = 0;
         virtual bool impl__shutdown() = 0;
 
     protected: // Avoid Instance
         GPUDriver();
         ~GPUDriver();
     public: // Initialize
-        static GPUDriverOption getDriverOption();
-        static bool initialize(GPUDriverOption option);
+        static bool initialize(GPUDriverOption option, int msaa_samples = 0);
         static bool checkFeature(GPUDriverFeature feature);
         static bool checkInitialized();
+        static GPUDriverOption getDriverOption();
+        static int getMultisamplesCount();
         static bool shutdown();
 
     // Context Creation: SDL2 & SDL3
@@ -716,7 +718,8 @@ enum class GPUPipelineCapability : int {
     CAPABILITY_PRIMITIVE_RESTART,
     CAPABILITY_RASTERIZER_DISCARD,
     CAPABILITY_SCISSOR_TEST,
-    CAPABILITY_STENCIL_TEST
+    CAPABILITY_STENCIL_TEST,
+    CAPABILITY_MULTISAMPLE,
 };
 
 typedef struct {

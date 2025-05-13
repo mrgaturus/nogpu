@@ -3,10 +3,11 @@
 #include <nogpu.h>
 
 GPUDriverOption GPUDriver::getDriverOption() {
-    return m_driver_option;
+    if (!m_driver) return GPUDriverOption::DRIVER_NONE;
+    return m_driver->impl__getDriverOption();
 }
 
-bool GPUDriver::initialize(GPUDriverOption option) {
+bool GPUDriver::initialize(GPUDriverOption option, int msaa_samples) {
     return false;
 }
 
@@ -15,7 +16,7 @@ bool GPUDriver::initialize(GPUDriverOption option) {
 // ----------------
 
 bool GPUDriver::checkFeature(GPUDriverFeature feature) {
-    return m_driver->impl__checkFeature(feature);
+    return (m_driver) && m_driver->impl__checkFeature(feature);
 }
 
 bool GPUDriver::checkInitialized() {
@@ -23,7 +24,7 @@ bool GPUDriver::checkInitialized() {
 }
 
 bool GPUDriver::shutdown() {
-    return m_driver->impl__shutdown();
+    return (m_driver) && m_driver->impl__shutdown();
 }
 
 // -----------------------------

@@ -15,6 +15,7 @@ if (NOGPU_DEBUG)
     FetchContent_MakeAvailable(cpptrace)
     target_link_libraries(nogpu PRIVATE cpptrace::cpptrace)
     add_definitions(-DNOGPU_DEBUG)
+    add_definitions(-g)
 
     # cpptrace.dll in win32
     if(WIN32)
