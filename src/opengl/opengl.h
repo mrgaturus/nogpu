@@ -249,7 +249,7 @@ class GLCommands : GPUCommands {
     void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count) override;
     void executeComputeSync(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) override;
     void executeCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) override;
-    void memoryBarrier(GPUMemoryBarrierFlags barriers) override;
+    void memoryBarrier(GPUMemoryBarrierFlags from, GPUMemoryBarrierFlags to) override;
 
     protected: // Commands Constructor
         GLCommands();

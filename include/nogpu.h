@@ -16,6 +16,7 @@
 
 #if defined(_WIN32)
     enum class GPUDriverOption : int {
+        DRIVER_NONE,
         DRIVER_AUTO,
         DRIVER_DX12,
         DRIVER_OPENGL,
@@ -23,6 +24,7 @@
     };
 #elif defined(__unix__)
     enum class GPUDriverOption : int {
+        DRIVER_NONE,
         DRIVER_AUTO,
         DRIVER_OPENGL,
         DRIVER_VULKAN
@@ -32,11 +34,15 @@
 enum class GPUDriverFeature : int {
     DRIVER_FEATURE_RASTERIZE,
     DRIVER_FEATURE_COMPUTE,
-    DRIVER_FEATURE_ASYNC,
     // Shader Compiling
-    DRIVER_FEATURE_GLSL,
-    DRIVER_FEATURE_HLSL,
-    DRIVER_FEATURE_SPIRV
+    DRIVER_SHADER_GLSL,
+    DRIVER_SHADER_HLSL,
+    DRIVER_SHADER_SPIRV,
+    DRIVER_SHADER_LOW_SPIRV,
+#if defined(_WIN32)
+    DRIVER_SHADER_LOW_DXBC, // SM 5_1
+    DRIVER_SHADER_LOW_DXIL, // SM 6_0
+#endif
 };
 
 class GPUContext;
@@ -47,14 +53,17 @@ class GPUDriver {
         static unsigned long long m_driver_lock;
         // Driver Virtual Implementation
         virtual bool impl__checkFeature(GPUDriverFeature feature) = 0;
+        virtual bool impl__checkInitialized() = 0;
         virtual bool impl__shutdown() = 0;
 
     protected: // Avoid Instance
         GPUDriver();
         ~GPUDriver();
     public: // Initialize
+        static GPUDriverOption getDriverOption();
         static bool initialize(GPUDriverOption option);
         static bool checkFeature(GPUDriverFeature feature);
+        static bool checkInitialized();
         static bool shutdown();
 
     // Context Creation: SDL2 & SDL3
@@ -892,7 +901,7 @@ class GPUCommands {
         virtual void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count) = 0;
         virtual void executeComputeSync(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) = 0;
         virtual void executeCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) = 0;
-        virtual void memoryBarrier(GPUMemoryBarrierFlags barriers) = 0;
+        virtual void memoryBarrier(GPUMemoryBarrierFlags from, GPUMemoryBarrierFlags to) = 0;
 };
 
 // -----------

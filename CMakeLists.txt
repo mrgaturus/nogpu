@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(nogpu
     VERSION 0.1.0
-    DESCRIPTION "simple gpu api abstraction focused in compatibility"
+    DESCRIPTION "simple gpu api abstraction library"
     LANGUAGES C CXX)
 
 set(CMAKE_C_STANDARD 11)
@@ -17,7 +17,8 @@ add_subdirectory(src/opengl)
 add_subdirectory(src/vulkan)
 # Compile nogpu library
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_library(nogpu STATIC src/nogpu.cpp)
+add_library(nogpu STATIC src/nogpu.cpp src/logger.cpp)
+target_include_directories(nogpu PRIVATE src)
 target_link_libraries(nogpu PRIVATE nogpu_opengl)
 target_link_libraries(nogpu PRIVATE nogpu_vulkan)
 # Compile nogpu dependencies
