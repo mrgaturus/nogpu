@@ -3,6 +3,12 @@
 #ifndef NOGPU_PRIVATE_H
 #define NOGPU_PRIVATE_H
 
+unsigned long next_power_of_two(unsigned long v);
+
+// ------------------
+// GPU Logger Console
+// ------------------
+
 class GPULogger {
     #if defined(__clang__) || defined(__GNUC__)
         public:
@@ -18,8 +24,7 @@ class GPULogger {
             // Stacktrace Debugging
             static void debug(const char* format, ...)
                 __attribute__ ((format (printf, 1, 2)));
-            static void debug_stacktrace(const char* format, ...)
-                __attribute__ ((format (printf, 1, 2)));
+            static void stacktrace();
     #else
         public:
             static void info(const char* format, ...);

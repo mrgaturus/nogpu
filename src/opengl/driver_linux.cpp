@@ -38,7 +38,7 @@ static EGLint attr_surface[] = {
 // Linux OpenGL Driver: Constructor
 // --------------------------------
 
-GLDriver::GLDriver(int msaa_samples) {
+GLDriver::GLDriver(int msaa_samples, bool rgba) {
     EGLDisplay egl_display;
     EGLConfig egl_config;
     EGLContext egl_context;
@@ -87,17 +87,21 @@ GLDriver::GLDriver(int msaa_samples) {
             feature__flag(GPUDriverFeature::DRIVER_SHADER_GLSL) |
             feature__flag(GPUDriverFeature::DRIVER_SHADER_LOW_GLSL);
         // Check Extra Extensions
-        if (GLAD_GL_ARB_compute_shader) // Check Compute Shader Feature
+        if (GLAD_GL_ARB_debug_output) // Debug Feature
+            features |= feature__flag(GPUDriverFeature::DRIVER_FEATURE_DEBUG);
+        if (GLAD_GL_ARB_compute_shader) // Compute Shader Feature
             features |= feature__flag(GPUDriverFeature::DRIVER_FEATURE_COMPUTE);
-        if (GLAD_GL_ARB_shader_image_load_store) // Check Memory Barrier Feature
+        if (GLAD_GL_ARB_shader_image_load_store) // Memory Barrier Feature
             features |= feature__flag(GPUDriverFeature::DRIVER_FEATURE_BARRIER);
-        if (GLAD_GL_ARB_gl_spirv) { // Check SPIR-V Shader Feature
+        if (GLAD_GL_ARB_gl_spirv) { // SPIR-V Shader Feature
             features |= feature__flag(GPUDriverFeature::DRIVER_SHADER_SPIRV);
             features |= feature__flag(GPUDriverFeature::DRIVER_SHADER_LOW_SPIRV);
         }
 
+        // Define Features
         m_features = features;
         m_msaa_samples = msaa_samples;
+        m_rgba = rgba;
         // Output EGL and OpenGL Information
         const char* vendor = (const char*) glGetString(0x1F02);
         GPULogger::success("[opengl] EGL version: %d %d", egl_major, egl_minor);
@@ -114,18 +118,18 @@ TERMINATE_EGL:
 bool GLDriver::impl__shutdown() {
     bool result = true;
     // Shutdown EGL Context
-    if (m_egl_display_x11)
-        result &= eglTerminate(m_egl_display_x11);
-    if (m_egl_display_wayland)
-        result &= eglTerminate(m_egl_display_wayland);
+    if (m_egl_wayland.display)
+        result &= eglTerminate(m_egl_wayland.display);
+    if (m_egl_x11.display)
+        result &= eglTerminate(m_egl_x11.display);
 
     // Reset EGL Context
-    m_egl_config_wayland = nullptr;
-    m_egl_context_wayland = nullptr;
-    m_egl_display_wayland = nullptr;
-    m_egl_config_x11 = nullptr;
-    m_egl_context_x11 = nullptr;
-    m_egl_display_x11 = nullptr;
+    m_egl_wayland.config = nullptr;
+    m_egl_wayland.context = nullptr;
+    m_egl_wayland.display = nullptr;
+    m_egl_x11.config = nullptr;
+    m_egl_x11.context = nullptr;
+    m_egl_x11.display = nullptr;
     // Reset Private
     m_features = 0;
     m_msaa_samples = 0;
@@ -156,9 +160,129 @@ int GLDriver::impl__getMultisamplesCount() {
     return m_msaa_samples;
 }
 
+bool GLDriver::impl__getTransparency() {
+    return m_rgba;
+}
+
+// ---------------------------
+// Linux OpenGL Context: Debug
+// ---------------------------
+
+#ifdef NOGPU_DEBUG
+void GLAD_API_PTR nogpu_debug_callback(
+    GLenum source, 
+    GLenum type, 
+    unsigned int id, 
+    GLenum severity, 
+    GLsizei length, 
+    const char *message, 
+    const void *user)
+{
+    int level = 0;
+    switch (severity) {
+        case GL_DEBUG_SEVERITY_HIGH_ARB: level = 3; break;
+        case GL_DEBUG_SEVERITY_MEDIUM_ARB: level = 2; break;
+        case GL_DEBUG_SEVERITY_LOW_ARB: level = 1; break;
+    }
+
+    switch (type)
+    {
+        case GL_DEBUG_TYPE_ERROR_ARB:
+            GPULogger::error("[opengl:debug %d %d] %s", id, level, message);
+            GPULogger::stacktrace();
+            break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB:
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:
+            GPULogger::warning("[opengl:debug %d %d] %s", id, level, message);
+            GPULogger::stacktrace();
+            break;
+        case GL_DEBUG_TYPE_PORTABILITY_ARB:
+        case GL_DEBUG_TYPE_PERFORMANCE_ARB:
+        case GL_DEBUG_TYPE_OTHER_ARB:
+            GPULogger::info("[opengl:debug %d %d] %s", id, level, message);
+            break;
+        default: break;
+    }
+}
+#endif
+
 // -------------------------
-// Linux OpenGL Context: SDL
+// Linux OpenGL Context: EGL
 // -------------------------
+
+enum class LinuxEGLOption : EGLenum {
+    LINUX_WAYLAND = 0x31D8,
+    LINUX_X11 = 0x31D5
+};
+
+static LinuxEGLDriver createLinuxEGL(void* display, LinuxEGLOption option, int msaa_samples) {
+    LinuxEGLDriver egl = {};
+    int egl_num_config;
+    int egl_major, egl_minor;
+    EGLenum egl_option = (EGLenum) option;
+
+    // Create Native Specific EGL Display
+    egl.display = eglGetPlatformDisplay(egl_option, display, nullptr);
+    if (egl.display == EGL_NO_DISPLAY) {
+        GPULogger::error("[opengl] failed create EGL display");
+        return egl;
+    }
+
+    // Initialize EGL Display
+    if (eglInitialize(egl.display, &egl_major, &egl_minor) == EGL_FALSE) {
+        GPULogger::error("[opengl] failed initialize EGL for %x", egl_option);
+        goto TERMINATE_EGL;
+    }
+
+    // Configure EGL Display
+    if (msaa_samples > 0) {
+        attr_egl[17] = next_power_of_two(msaa_samples);
+        attr_egl[15] = 1;
+    }
+    if (eglChooseConfig(egl.display, attr_egl, &egl.config, 1, &egl_num_config) == EGL_FALSE) {
+        GPULogger::error("[opengl] failed configure EGL");
+        goto TERMINATE_EGL;
+    }
+
+    #ifdef NOGPU_DEBUG
+        if (GLAD_GL_ARB_debug_output) {
+            attr_context[7] = EGL_TRUE;
+        }
+    #endif
+
+    // Create EGL Native Context
+    egl.context = eglCreateContext(egl.display, egl.config, EGL_NO_CONTEXT, attr_context);
+    if (egl.context == EGL_NO_CONTEXT) {
+        GPULogger::error("[opengl] device doesn't support OpenGL 3.3");
+        goto TERMINATE_EGL;
+    }
+
+    #ifdef NOGPU_DEBUG
+        if (GLAD_GL_ARB_debug_output) {
+            eglMakeCurrent(egl.display,
+                EGL_NO_SURFACE, EGL_NO_SURFACE, egl.context);
+
+            glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB); 
+            glDebugMessageCallbackARB(nogpu_debug_callback, nullptr);
+            glDebugMessageControlARB( // Enable All Messages
+                GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE,
+                0, nullptr, GL_TRUE);
+
+            eglMakeCurrent(egl.display,
+                EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        }
+    #endif
+
+    // Return Created EGL
+    return egl;
+TERMINATE_EGL:
+    eglTerminate(egl.display);
+    return (LinuxEGLDriver) {};
+}
+
+// -------------------------------
+// Linux OpenGL Context: Windowing
+// -------------------------------
 
 #if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
 GPUContext* impl__createContext(SDL_Window *win) {

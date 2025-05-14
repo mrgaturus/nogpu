@@ -6,22 +6,24 @@
 
 #if defined(__unix__)
 #include <EGL/egl.h>
+
+typedef struct {
+    EGLDisplay display;
+    EGLConfig config;
+    EGLContext context;
+} LinuxEGLDriver;
 #endif
 
 class GLContext;
 class GLDriver : GPUDriver {
     unsigned int m_features = 0;
     int m_msaa_samples = 0;
+    bool m_rgba = false;
 
     #if defined(__unix__)
-        // X11 EGL Context
-        EGLDisplay m_egl_display_x11;
-        EGLConfig m_egl_config_x11;
-        EGLContext m_egl_context_x11;
-        // Wayland EGL Context
-        EGLDisplay m_egl_display_wayland;
-        EGLConfig m_egl_config_wayland;
-        EGLContext m_egl_context_wayland;
+        // Linux EGL Context
+        LinuxEGLDriver m_egl_wayland;
+        LinuxEGLDriver m_egl_x11;
         // Current EGL Context/Surface
         EGLContext m_egl_context;
         EGLSurface m_egl_surface;
@@ -31,6 +33,7 @@ class GLDriver : GPUDriver {
     bool impl__checkFeature(GPUDriverFeature feature) override;
     GPUDriverOption impl__getDriverOption() override;
     int impl__getMultisamplesCount() override;
+    bool impl__getTransparency() override;
     bool impl__shutdown() override;
 
     // Context Creation: SDL2 & SDL3
@@ -41,7 +44,7 @@ class GLDriver : GPUDriver {
     // GL Driver Initialize
     protected:
         friend GPUDriver;
-        GLDriver(int msaa_samples = 0);
+        GLDriver(int msaa_samples, bool rgba);
         ~GLDriver();
 };
 

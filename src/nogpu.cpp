@@ -7,7 +7,7 @@ GPUDriverOption GPUDriver::getDriverOption() {
     return m_driver->impl__getDriverOption();
 }
 
-bool GPUDriver::initialize(GPUDriverOption option, int msaa_samples) {
+bool GPUDriver::initialize(GPUDriverOption option, int msaa_samples, bool rgba) {
     return false;
 }
 
@@ -21,6 +21,16 @@ bool GPUDriver::checkFeature(GPUDriverFeature feature) {
 
 bool GPUDriver::checkInitialized() {
     return (m_driver) && m_driver->impl__checkInitialized();
+}
+
+int GPUDriver::getMultisamplesCount() {
+    if (!m_driver) return 0;
+    return m_driver->impl__getMultisamplesCount();
+}
+
+bool GPUDriver::getTransparency() {
+    if (!m_driver) return 0;
+    return m_driver->impl__getTransparency();
 }
 
 bool GPUDriver::shutdown() {

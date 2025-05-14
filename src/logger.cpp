@@ -24,47 +24,41 @@ const char* log_headers[] = {
     "\e[0;37m[nogpu: debug]\033[0m",
 };
 
-static void inline printf_level(GPULoggerLevel level, bool stacktrace, char *format, va_list args) {
+static void inline printf_level(GPULoggerLevel level, const char *format, va_list args) {
     printf("%s ", log_headers[level]);
     vprintf(format, args);
     puts("\n");
-
-    // Print Stacktrace
-    #ifdef NOGPU_DEBUG
-    if (stacktrace)
-        cpptrace::generate_trace().print();
-    #endif
 }
 
 // -----------------
 // Basic GPU Logging
 // -----------------
 
-void GPULogger::info(char *format, ...) {
+void GPULogger::info(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    printf_level(LOG_INFO, false, format, args);
+    printf_level(LOG_INFO, format, args);
     va_end(args);
 }
 
-void GPULogger::success(char *format, ...) {
+void GPULogger::success(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    printf_level(LOG_SUCCESS, false, format, args);
+    printf_level(LOG_SUCCESS, format, args);
     va_end(args);
 }
 
-void GPULogger::warning(char *format, ...) {
+void GPULogger::warning(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    printf_level(LOG_WARNING, false, format, args);
+    printf_level(LOG_WARNING, format, args);
     va_end(args);
 }
 
-void GPULogger::error(char *format, ...) {
+void GPULogger::error(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    printf_level(LOG_ERROR, true, format, args);
+    printf_level(LOG_ERROR, format, args);
     va_end(args);
 }
 
@@ -72,21 +66,17 @@ void GPULogger::error(char *format, ...) {
 // Debug GPU Logging
 // -----------------
 
-
-void GPULogger::debug(char *format, ...) {
+void GPULogger::debug(const char *format, ...) {
 #ifdef NOGPU_DEBUG
     va_list args;
     va_start(args, format);
-    printf_level(LOG_DEBUG, false, format, args);
+    printf_level(LOG_DEBUG, format, args);
     va_end(args);
 #endif
 }
 
-void GPULogger::debug_stacktrace(char *format, ...) {
+void GPULogger::stacktrace() {
 #ifdef NOGPU_DEBUG
-    va_list args;
-    va_start(args, format);
-    printf_level(LOG_DEBUG, true, format, args);
-    va_end(args);
+    cpptrace::generate_trace().print();
 #endif
 }
