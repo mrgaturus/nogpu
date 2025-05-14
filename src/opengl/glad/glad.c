@@ -36,11 +36,15 @@ int GLAD_GL_VERSION_3_1 = 0;
 int GLAD_GL_VERSION_3_2 = 0;
 int GLAD_GL_VERSION_3_3 = 0;
 int GLAD_GL_ARB_compute_shader = 0;
+int GLAD_GL_ARB_debug_output = 0;
+int GLAD_GL_ARB_gl_spirv = 0;
 int GLAD_GL_ARB_shader_atomic_counters = 0;
 int GLAD_GL_ARB_shader_image_load_store = 0;
 int GLAD_GL_ARB_shader_image_size = 0;
 int GLAD_GL_ARB_shader_storage_buffer_object = 0;
+int GLAD_GL_ARB_spirv_extensions = 0;
 int GLAD_GL_ARB_texture_storage = 0;
+int GLAD_GL_ARB_texture_storage_multisample = 0;
 
 
 
@@ -98,6 +102,9 @@ PFNGLCOPYTEXSUBIMAGE3DPROC glad_glCopyTexSubImage3D = NULL;
 PFNGLCREATEPROGRAMPROC glad_glCreateProgram = NULL;
 PFNGLCREATESHADERPROC glad_glCreateShader = NULL;
 PFNGLCULLFACEPROC glad_glCullFace = NULL;
+PFNGLDEBUGMESSAGECALLBACKARBPROC glad_glDebugMessageCallbackARB = NULL;
+PFNGLDEBUGMESSAGECONTROLARBPROC glad_glDebugMessageControlARB = NULL;
+PFNGLDEBUGMESSAGEINSERTARBPROC glad_glDebugMessageInsertARB = NULL;
 PFNGLDELETEBUFFERSPROC glad_glDeleteBuffers = NULL;
 PFNGLDELETEFRAMEBUFFERSPROC glad_glDeleteFramebuffers = NULL;
 PFNGLDELETEPROGRAMPROC glad_glDeleteProgram = NULL;
@@ -168,6 +175,7 @@ PFNGLGETBUFFERPARAMETERIVPROC glad_glGetBufferParameteriv = NULL;
 PFNGLGETBUFFERPOINTERVPROC glad_glGetBufferPointerv = NULL;
 PFNGLGETBUFFERSUBDATAPROC glad_glGetBufferSubData = NULL;
 PFNGLGETCOMPRESSEDTEXIMAGEPROC glad_glGetCompressedTexImage = NULL;
+PFNGLGETDEBUGMESSAGELOGARBPROC glad_glGetDebugMessageLogARB = NULL;
 PFNGLGETDOUBLEVPROC glad_glGetDoublev = NULL;
 PFNGLGETERRORPROC glad_glGetError = NULL;
 PFNGLGETFLOATVPROC glad_glGetFloatv = NULL;
@@ -266,6 +274,7 @@ PFNGLSAMPLERPARAMETERIVPROC glad_glSamplerParameteriv = NULL;
 PFNGLSCISSORPROC glad_glScissor = NULL;
 PFNGLSHADERSOURCEPROC glad_glShaderSource = NULL;
 PFNGLSHADERSTORAGEBLOCKBINDINGPROC glad_glShaderStorageBlockBinding = NULL;
+PFNGLSPECIALIZESHADERARBPROC glad_glSpecializeShaderARB = NULL;
 PFNGLSTENCILFUNCPROC glad_glStencilFunc = NULL;
 PFNGLSTENCILFUNCSEPARATEPROC glad_glStencilFuncSeparate = NULL;
 PFNGLSTENCILMASKPROC glad_glStencilMask = NULL;
@@ -286,7 +295,9 @@ PFNGLTEXPARAMETERIPROC glad_glTexParameteri = NULL;
 PFNGLTEXPARAMETERIVPROC glad_glTexParameteriv = NULL;
 PFNGLTEXSTORAGE1DPROC glad_glTexStorage1D = NULL;
 PFNGLTEXSTORAGE2DPROC glad_glTexStorage2D = NULL;
+PFNGLTEXSTORAGE2DMULTISAMPLEPROC glad_glTexStorage2DMultisample = NULL;
 PFNGLTEXSTORAGE3DPROC glad_glTexStorage3D = NULL;
+PFNGLTEXSTORAGE3DMULTISAMPLEPROC glad_glTexStorage3DMultisample = NULL;
 PFNGLTEXSUBIMAGE1DPROC glad_glTexSubImage1D = NULL;
 PFNGLTEXSUBIMAGE2DPROC glad_glTexSubImage2D = NULL;
 PFNGLTEXSUBIMAGE3DPROC glad_glTexSubImage3D = NULL;
@@ -787,6 +798,17 @@ static void glad_gl_load_GL_ARB_compute_shader( GLADuserptrloadfunc load, void* 
     glad_glDispatchCompute = (PFNGLDISPATCHCOMPUTEPROC) load(userptr, "glDispatchCompute");
     glad_glDispatchComputeIndirect = (PFNGLDISPATCHCOMPUTEINDIRECTPROC) load(userptr, "glDispatchComputeIndirect");
 }
+static void glad_gl_load_GL_ARB_debug_output( GLADuserptrloadfunc load, void* userptr) {
+    if(!GLAD_GL_ARB_debug_output) return;
+    glad_glDebugMessageCallbackARB = (PFNGLDEBUGMESSAGECALLBACKARBPROC) load(userptr, "glDebugMessageCallbackARB");
+    glad_glDebugMessageControlARB = (PFNGLDEBUGMESSAGECONTROLARBPROC) load(userptr, "glDebugMessageControlARB");
+    glad_glDebugMessageInsertARB = (PFNGLDEBUGMESSAGEINSERTARBPROC) load(userptr, "glDebugMessageInsertARB");
+    glad_glGetDebugMessageLogARB = (PFNGLGETDEBUGMESSAGELOGARBPROC) load(userptr, "glGetDebugMessageLogARB");
+}
+static void glad_gl_load_GL_ARB_gl_spirv( GLADuserptrloadfunc load, void* userptr) {
+    if(!GLAD_GL_ARB_gl_spirv) return;
+    glad_glSpecializeShaderARB = (PFNGLSPECIALIZESHADERARBPROC) load(userptr, "glSpecializeShaderARB");
+}
 static void glad_gl_load_GL_ARB_shader_atomic_counters( GLADuserptrloadfunc load, void* userptr) {
     if(!GLAD_GL_ARB_shader_atomic_counters) return;
     glad_glGetActiveAtomicCounterBufferiv = (PFNGLGETACTIVEATOMICCOUNTERBUFFERIVPROC) load(userptr, "glGetActiveAtomicCounterBufferiv");
@@ -805,6 +827,11 @@ static void glad_gl_load_GL_ARB_texture_storage( GLADuserptrloadfunc load, void*
     glad_glTexStorage1D = (PFNGLTEXSTORAGE1DPROC) load(userptr, "glTexStorage1D");
     glad_glTexStorage2D = (PFNGLTEXSTORAGE2DPROC) load(userptr, "glTexStorage2D");
     glad_glTexStorage3D = (PFNGLTEXSTORAGE3DPROC) load(userptr, "glTexStorage3D");
+}
+static void glad_gl_load_GL_ARB_texture_storage_multisample( GLADuserptrloadfunc load, void* userptr) {
+    if(!GLAD_GL_ARB_texture_storage_multisample) return;
+    glad_glTexStorage2DMultisample = (PFNGLTEXSTORAGE2DMULTISAMPLEPROC) load(userptr, "glTexStorage2DMultisample");
+    glad_glTexStorage3DMultisample = (PFNGLTEXSTORAGE3DMULTISAMPLEPROC) load(userptr, "glTexStorage3DMultisample");
 }
 
 
@@ -902,11 +929,15 @@ static int glad_gl_find_extensions_gl(void) {
     if (!glad_gl_get_extensions(&exts, &exts_i)) return 0;
 
     GLAD_GL_ARB_compute_shader = glad_gl_has_extension(exts, exts_i, "GL_ARB_compute_shader");
+    GLAD_GL_ARB_debug_output = glad_gl_has_extension(exts, exts_i, "GL_ARB_debug_output");
+    GLAD_GL_ARB_gl_spirv = glad_gl_has_extension(exts, exts_i, "GL_ARB_gl_spirv");
     GLAD_GL_ARB_shader_atomic_counters = glad_gl_has_extension(exts, exts_i, "GL_ARB_shader_atomic_counters");
     GLAD_GL_ARB_shader_image_load_store = glad_gl_has_extension(exts, exts_i, "GL_ARB_shader_image_load_store");
     GLAD_GL_ARB_shader_image_size = glad_gl_has_extension(exts, exts_i, "GL_ARB_shader_image_size");
     GLAD_GL_ARB_shader_storage_buffer_object = glad_gl_has_extension(exts, exts_i, "GL_ARB_shader_storage_buffer_object");
+    GLAD_GL_ARB_spirv_extensions = glad_gl_has_extension(exts, exts_i, "GL_ARB_spirv_extensions");
     GLAD_GL_ARB_texture_storage = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_storage");
+    GLAD_GL_ARB_texture_storage_multisample = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_storage_multisample");
 
     glad_gl_free_extensions(exts_i);
 
@@ -975,10 +1006,13 @@ int gladLoadGLUserPtr( GLADuserptrloadfunc load, void *userptr) {
 
     if (!glad_gl_find_extensions_gl()) return 0;
     glad_gl_load_GL_ARB_compute_shader(load, userptr);
+    glad_gl_load_GL_ARB_debug_output(load, userptr);
+    glad_gl_load_GL_ARB_gl_spirv(load, userptr);
     glad_gl_load_GL_ARB_shader_atomic_counters(load, userptr);
     glad_gl_load_GL_ARB_shader_image_load_store(load, userptr);
     glad_gl_load_GL_ARB_shader_storage_buffer_object(load, userptr);
     glad_gl_load_GL_ARB_texture_storage(load, userptr);
+    glad_gl_load_GL_ARB_texture_storage_multisample(load, userptr);
 
 
 
@@ -994,172 +1028,6 @@ int gladLoadGL( GLADloadfunc load) {
 
  
 
-#ifdef GLAD_GL
-
-#ifndef GLAD_LOADER_LIBRARY_C_
-#define GLAD_LOADER_LIBRARY_C_
-
-#include <stddef.h>
-#include <stdlib.h>
-
-#if GLAD_PLATFORM_WIN32
-#include <windows.h>
-#else
-#include <dlfcn.h>
-#endif
-
-
-static void* glad_get_dlopen_handle(const char *lib_names[], int length) {
-    void *handle = NULL;
-    int i;
-
-    for (i = 0; i < length; ++i) {
-#if GLAD_PLATFORM_WIN32
-  #if GLAD_PLATFORM_UWP
-        size_t buffer_size = (strlen(lib_names[i]) + 1) * sizeof(WCHAR);
-        LPWSTR buffer = (LPWSTR) malloc(buffer_size);
-        if (buffer != NULL) {
-            int ret = MultiByteToWideChar(CP_ACP, 0, lib_names[i], -1, buffer, buffer_size);
-            if (ret != 0) {
-                handle = (void*) LoadPackagedLibrary(buffer, 0);
-            }
-            free((void*) buffer);
-        }
-  #else
-        handle = (void*) LoadLibraryA(lib_names[i]);
-  #endif
-#else
-        handle = dlopen(lib_names[i], RTLD_LAZY | RTLD_LOCAL);
-#endif
-        if (handle != NULL) {
-            return handle;
-        }
-    }
-
-    return NULL;
-}
-
-static void glad_close_dlopen_handle(void* handle) {
-    if (handle != NULL) {
-#if GLAD_PLATFORM_WIN32
-        FreeLibrary((HMODULE) handle);
-#else
-        dlclose(handle);
-#endif
-    }
-}
-
-static GLADapiproc glad_dlsym_handle(void* handle, const char *name) {
-    if (handle == NULL) {
-        return NULL;
-    }
-
-#if GLAD_PLATFORM_WIN32
-    return (GLADapiproc) GetProcAddress((HMODULE) handle, name);
-#else
-    return GLAD_GNUC_EXTENSION (GLADapiproc) dlsym(handle, name);
-#endif
-}
-
-#endif /* GLAD_LOADER_LIBRARY_C_ */
-
-typedef void* (GLAD_API_PTR *GLADglprocaddrfunc)(const char*);
-struct _glad_gl_userptr {
-    void *handle;
-    GLADglprocaddrfunc gl_get_proc_address_ptr;
-};
-
-static GLADapiproc glad_gl_get_proc(void *vuserptr, const char *name) {
-    struct _glad_gl_userptr userptr = *(struct _glad_gl_userptr*) vuserptr;
-    GLADapiproc result = NULL;
-
-    if(userptr.gl_get_proc_address_ptr != NULL) {
-        result = GLAD_GNUC_EXTENSION (GLADapiproc) userptr.gl_get_proc_address_ptr(name);
-    }
-    if(result == NULL) {
-        result = glad_dlsym_handle(userptr.handle, name);
-    }
-
-    return result;
-}
-
-static void* _glad_GL_loader_handle = NULL;
-
-static void* glad_gl_dlopen_handle(void) {
-#if GLAD_PLATFORM_APPLE
-    static const char *NAMES[] = {
-        "../Frameworks/OpenGL.framework/OpenGL",
-        "/Library/Frameworks/OpenGL.framework/OpenGL",
-        "/System/Library/Frameworks/OpenGL.framework/OpenGL",
-        "/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL"
-    };
-#elif GLAD_PLATFORM_WIN32
-    static const char *NAMES[] = {"opengl32.dll"};
-#else
-    static const char *NAMES[] = {
-  #if defined(__CYGWIN__)
-        "libGL-1.so",
-  #endif
-        "libGL.so.1",
-        "libGL.so"
-    };
-#endif
-
-    if (_glad_GL_loader_handle == NULL) {
-        _glad_GL_loader_handle = glad_get_dlopen_handle(NAMES, sizeof(NAMES) / sizeof(NAMES[0]));
-    }
-
-    return _glad_GL_loader_handle;
-}
-
-static struct _glad_gl_userptr glad_gl_build_userptr(void *handle) {
-    struct _glad_gl_userptr userptr;
-
-    userptr.handle = handle;
-#if GLAD_PLATFORM_APPLE || defined(__HAIKU__)
-    userptr.gl_get_proc_address_ptr = NULL;
-#elif GLAD_PLATFORM_WIN32
-    userptr.gl_get_proc_address_ptr =
-        (GLADglprocaddrfunc) glad_dlsym_handle(handle, "wglGetProcAddress");
-#else
-    userptr.gl_get_proc_address_ptr =
-        (GLADglprocaddrfunc) glad_dlsym_handle(handle, "glXGetProcAddressARB");
-#endif
-
-    return userptr;
-}
-
-int gladLoaderLoadGL(void) {
-    int version = 0;
-    void *handle;
-    int did_load = 0;
-    struct _glad_gl_userptr userptr;
-
-    did_load = _glad_GL_loader_handle == NULL;
-    handle = glad_gl_dlopen_handle();
-    if (handle) {
-        userptr = glad_gl_build_userptr(handle);
-
-        version = gladLoadGLUserPtr(glad_gl_get_proc, &userptr);
-
-        if (did_load) {
-            gladLoaderUnloadGL();
-        }
-    }
-
-    return version;
-}
-
-
-
-void gladLoaderUnloadGL(void) {
-    if (_glad_GL_loader_handle != NULL) {
-        glad_close_dlopen_handle(_glad_GL_loader_handle);
-        _glad_GL_loader_handle = NULL;
-    }
-}
-
-#endif /* GLAD_GL */
 
 #ifdef __cplusplus
 }

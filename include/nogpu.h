@@ -6,7 +6,7 @@
 // Include SDL Window
 #if defined(NOGPU_SDL3)
 #include <SDL3/SDL.h>
-#else
+#elif defined(NOGPU_SDL2)
 #include <SDL2/SDL.h>
 #endif
 
@@ -14,35 +14,31 @@
 // GPU Objects: Driver
 // -------------------
 
-#if defined(_WIN32)
-    enum class GPUDriverOption : int {
-        DRIVER_NONE,
-        DRIVER_AUTO,
-        DRIVER_DX12,
-        DRIVER_OPENGL,
-        DRIVER_VULKAN
-    };
-#elif defined(__unix__)
-    enum class GPUDriverOption : int {
-        DRIVER_NONE,
-        DRIVER_AUTO,
-        DRIVER_OPENGL,
-        DRIVER_VULKAN
-    };
-#endif
+enum class GPUDriverOption : int {
+    DRIVER_NONE,
+    DRIVER_AUTO,
+    // Driver Options
+    DRIVER_OPENGL,
+    DRIVER_VULKAN,
+    DRIVER_DX12,
+    DRIVER_METAL
+};
 
 enum class GPUDriverFeature : int {
     DRIVER_FEATURE_RASTERIZE,
     DRIVER_FEATURE_COMPUTE,
+    DRIVER_FEATURE_BARRIER,
+    DRIVER_FEATURE_DEBUG,
     // Shader Compiling
     DRIVER_SHADER_GLSL,
     DRIVER_SHADER_HLSL,
     DRIVER_SHADER_SPIRV,
-    DRIVER_SHADER_LOW_SPIRV,
-#if defined(_WIN32)
+    // Built-in Shader Compiling
+    DRIVER_SHADER_LOW_GLSL, // OpenGL
+    DRIVER_SHADER_LOW_SPIRV, // Vulkan
     DRIVER_SHADER_LOW_DXBC, // SM 5_1
     DRIVER_SHADER_LOW_DXIL, // SM 6_0
-#endif
+    DRIVER_SHADER_LOW_MTL, // Metal
 };
 
 class GPUContext;
@@ -50,9 +46,13 @@ class GPUDriver {
     protected: 
         static GPUDriver *m_driver;
         static thread_local GPUDriver *m_driver_lock;
+        static unsigned int feature__flag(GPUDriverFeature feature) {
+            return ((unsigned int) 1 << (unsigned int) feature);
+        }
+
         // Driver Virtual Implementation
-        virtual bool impl__checkFeature(GPUDriverFeature feature) = 0;
         virtual bool impl__checkInitialized() = 0;
+        virtual bool impl__checkFeature(GPUDriverFeature feature) = 0;
         virtual GPUDriverOption impl__getDriverOption() = 0;
         virtual int impl__getMultisamplesCount() = 0;
         virtual bool impl__shutdown() = 0;
@@ -556,9 +556,9 @@ class GPUUniformBlock : GPUUniform {
 
 enum class GPUUniformValueType : int {
     UNIFORM_INT,
-    UNIFORM_INTx2,
-    UNIFORM_INTx3,
-    UNIFORM_INTx4,
+    UNIFORM_INT_x2,
+    UNIFORM_INT_x3,
+    UNIFORM_INT_x4,
     UNIFORM_UNSIGNED_INT,
     UNIFORM_UNSIGNED_INT_x2,
     UNIFORM_UNSIGNED_INT_x3,

@@ -10,15 +10,25 @@
 
 class GLContext;
 class GLDriver : GPUDriver {
-    #if defined(__unix__) // X11 & Wayland
-        EGLDisplay egl_display;
-        EGLConfig egl_config;
-        EGLContext egl_context;
-        EGLSurface egl_surface;
+    unsigned int m_features = 0;
+    int m_msaa_samples = 0;
+
+    #if defined(__unix__)
+        // X11 EGL Context
+        EGLDisplay m_egl_display_x11;
+        EGLConfig m_egl_config_x11;
+        EGLContext m_egl_context_x11;
+        // Wayland EGL Context
+        EGLDisplay m_egl_display_wayland;
+        EGLConfig m_egl_config_wayland;
+        EGLContext m_egl_context_wayland;
+        // Current EGL Context/Surface
+        EGLContext m_egl_context;
+        EGLSurface m_egl_surface;
     #endif
 
-    bool impl__checkFeature(GPUDriverFeature feature) override;
     bool impl__checkInitialized() override;
+    bool impl__checkFeature(GPUDriverFeature feature) override;
     GPUDriverOption impl__getDriverOption() override;
     int impl__getMultisamplesCount() override;
     bool impl__shutdown() override;
@@ -26,7 +36,6 @@ class GLDriver : GPUDriver {
     // Context Creation: SDL2 & SDL3
     #if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
         GPUContext *impl__createContext(SDL_Window *win) override;
-        SDL_Window* sdl_window;
     #endif
 
     // GL Driver Initialize
@@ -277,6 +286,9 @@ class GLCommands : GPUCommands {
 // ------------------
 
 class GLContext : GPUContext {
+    void* m_window;
+    EGLSurface egl_context;
+    EGLSurface egl_surface;
     // GPU Object Creation
     GPUVertexArray* createVertexArray() override;
     GPUBuffer* createBuffer(GPUBufferTarget m_target) override;
