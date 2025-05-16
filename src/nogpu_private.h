@@ -22,6 +22,8 @@ class GPULogger {
                 __attribute__ ((format (printf, 1, 2)));
 
             // Stacktrace Debugging
+            static void assert(bool condition, const char* format, ...)
+                __attribute__ ((format (printf, 2, 3)));
             static void debug(const char* format, ...)
                 __attribute__ ((format (printf, 1, 2)));
             static void stacktrace();

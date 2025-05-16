@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include <nogpu_private.h>
+#include <cstdlib>
+// Include OpenGL
 #include "glad/glad.h"
 #include "opengl.h"
 
@@ -11,7 +13,6 @@ static EGLint attr_egl[] = {
     EGL_GREEN_SIZE, 8,
     EGL_BLUE_SIZE, 8,
     EGL_ALPHA_SIZE, 8,
-    // EGL Special Buffers
     EGL_DEPTH_SIZE, 24,
     EGL_STENCIL_SIZE, 8,
     // Optional MSAA
@@ -118,18 +119,17 @@ TERMINATE_EGL:
 bool GLDriver::impl__shutdown() {
     bool result = true;
     // Shutdown EGL Context
-    if (m_egl_wayland.display)
-        result &= eglTerminate(m_egl_wayland.display);
-    if (m_egl_x11.display)
-        result &= eglTerminate(m_egl_x11.display);
+    LinuxEGL *egl = m_egl_list;
+    while (egl) {
+        LinuxEGL* next = egl->next;
+        result &= eglTerminate(egl);
+        free(egl); egl = next;
+    }
 
-    // Reset EGL Context
-    m_egl_wayland.config = nullptr;
-    m_egl_wayland.context = nullptr;
-    m_egl_wayland.display = nullptr;
-    m_egl_x11.config = nullptr;
-    m_egl_x11.context = nullptr;
-    m_egl_x11.display = nullptr;
+    // Clear Driver Attributes
+    m_egl_list = nullptr;
+    m_egl_current = nullptr;
+    m_egl_surface = nullptr;
     // Reset Private
     m_features = 0;
     m_msaa_samples = 0;
@@ -164,6 +164,38 @@ bool GLDriver::impl__getTransparency() {
     return m_rgba;
 }
 
+// -----------------------------
+// Linux OpenGL Context: Current
+// -----------------------------
+
+void GLDriver::makeCurrent(GLContext* ctx) {
+    if (m_egl_current != ctx->m_egl || m_egl_surface != ctx->m_egl_surface) {
+        EGLSurface egl_surface = ctx->m_egl_surface;
+        EGLContext egl_ctx = ctx->m_egl->context;
+
+        // Change Current EGL Connection
+        eglMakeCurrent(ctx->m_egl->display,
+            egl_surface, egl_surface, egl_ctx);
+        m_egl_current = ctx->m_egl;
+        m_egl_surface = egl_surface;
+    }
+}
+
+void GLDriver::makeDestroyed(GLContext* ctx) {
+    if (m_egl_current == ctx->m_egl && m_egl_surface == ctx->m_egl_surface) {
+        eglMakeCurrent(ctx->m_egl->display,
+            EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        // Cache Current EGL Connection
+        m_egl_current = nullptr;
+        m_egl_surface = nullptr;
+    }
+
+    // Destroy Context Surface
+    this->cached__remove(ctx);
+    if (eglDestroySurface(ctx->m_egl->display, ctx->m_egl_surface) == EGL_FALSE)
+        GPULogger::error("[opengl] failed destroying EGL surface");
+}
+
 // ---------------------------
 // Linux OpenGL Context: Debug
 // ---------------------------
@@ -188,44 +220,47 @@ void GLAD_API_PTR nogpu_debug_callback(
     switch (type)
     {
         case GL_DEBUG_TYPE_ERROR_ARB:
-            GPULogger::error("[opengl:debug %d %d] %s", id, level, message);
+            GPULogger::error("[opengl:debug %d %d - %p] %s",
+                id, level, user, message);
             GPULogger::stacktrace();
             break;
         case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB:
         case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:
-            GPULogger::warning("[opengl:debug %d %d] %s", id, level, message);
+            GPULogger::warning("[opengl:debug %d %d - %p] %s",
+                id, level, user, message);
             GPULogger::stacktrace();
             break;
         case GL_DEBUG_TYPE_PORTABILITY_ARB:
         case GL_DEBUG_TYPE_PERFORMANCE_ARB:
         case GL_DEBUG_TYPE_OTHER_ARB:
-            GPULogger::info("[opengl:debug %d %d] %s", id, level, message);
+            GPULogger::info("[opengl:debug %d %d - %p] %s",
+                id, level, user, message);
             break;
         default: break;
     }
 }
 #endif
 
-// -------------------------
-// Linux OpenGL Context: EGL
-// -------------------------
+// ---------------------------------
+// Linux OpenGL Context: EGL Display
+// ---------------------------------
 
 enum class LinuxEGLOption : EGLenum {
     LINUX_WAYLAND = 0x31D8,
     LINUX_X11 = 0x31D5
 };
 
-static LinuxEGLDriver createLinuxEGL(void* display, LinuxEGLOption option, int msaa_samples) {
-    LinuxEGLDriver egl = {};
+static LinuxEGL* createLinuxEGL(void* display, LinuxEGLOption option, int msaa_samples) {
+    LinuxEGL egl = {.native = display};
+    EGLenum egl_option = (EGLenum) option;
     int egl_num_config;
     int egl_major, egl_minor;
-    EGLenum egl_option = (EGLenum) option;
 
     // Create Native Specific EGL Display
     egl.display = eglGetPlatformDisplay(egl_option, display, nullptr);
     if (egl.display == EGL_NO_DISPLAY) {
         GPULogger::error("[opengl] failed create EGL display");
-        return egl;
+        return nullptr;
     }
 
     // Initialize EGL Display
@@ -235,10 +270,8 @@ static LinuxEGLDriver createLinuxEGL(void* display, LinuxEGLOption option, int m
     }
 
     // Configure EGL Display
-    if (msaa_samples > 0) {
-        attr_egl[17] = next_power_of_two(msaa_samples);
-        attr_egl[15] = 1;
-    }
+    attr_egl[15] = 1;
+    attr_egl[17] = next_power_of_two(msaa_samples);
     if (eglChooseConfig(egl.display, attr_egl, &egl.config, 1, &egl_num_config) == EGL_FALSE) {
         GPULogger::error("[opengl] failed configure EGL");
         goto TERMINATE_EGL;
@@ -263,7 +296,7 @@ static LinuxEGLDriver createLinuxEGL(void* display, LinuxEGLOption option, int m
                 EGL_NO_SURFACE, EGL_NO_SURFACE, egl.context);
 
             glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB); 
-            glDebugMessageCallbackARB(nogpu_debug_callback, nullptr);
+            glDebugMessageCallbackARB(nogpu_debug_callback, egl.display);
             glDebugMessageControlARB( // Enable All Messages
                 GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE,
                 0, nullptr, GL_TRUE);
@@ -273,19 +306,134 @@ static LinuxEGLDriver createLinuxEGL(void* display, LinuxEGLOption option, int m
         }
     #endif
 
-    // Return Created EGL
-    return egl;
+    { // Return Created EGL
+        LinuxEGL* egl_display = (LinuxEGL*)
+            malloc(sizeof(LinuxEGL));
+        *egl_display = egl;
+        egl_display->next = nullptr;
+        return egl_display;
+    }
+
+    // Terminate Display
 TERMINATE_EGL:
     eglTerminate(egl.display);
-    return (LinuxEGLDriver) {};
+    return nullptr;
 }
 
-// -------------------------------
-// Linux OpenGL Context: Windowing
-// -------------------------------
+// ---------------------------------
+// Linux OpenGL Context: EGL Surface
+// ---------------------------------
 
-#if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
+static LinuxEGL* getLinuxEGL(LinuxEGL** egl, void* display, LinuxEGLOption option, int msaa_samples) {
+    LinuxEGL* egl_found = *egl;
+    // Find Already Created EGL
+    while (egl_found) {
+        if (egl_found->native == display)
+            return egl_found;
+        egl_found = egl_found->next;
+    }
+
+    // Create Linux EGL Display
+    egl_found = createLinuxEGL(display, option, msaa_samples);
+    if (egl_found) {
+        egl_found->next = *egl;
+        egl_found->prev = nullptr;
+        *egl = egl_found;
+    }
+
+    // Return Created Display
+    return egl_found;
+}
+
+static EGLSurface createLinuxEGLSurface(LinuxEGL* egl, void* native, bool rgba) {
+    attr_surface[3] = (rgba) ? EGL_TEXTURE_RGBA : EGL_TEXTURE_RGB;
+    EGLSurface surface = eglCreateWindowSurface(
+        egl->display, egl->config,
+        (EGLNativeWindowType) native,
+        attr_surface);
+
+    // Check if the Surface was Created
+    if (surface == EGL_NO_SURFACE) {
+        GPULogger::error("[opengl] failed create EGL surface for %p", native);
+        return surface;
+    }
+
+    // Return Created
+    return surface;
+}
+
+// -----------------------------------
+// Linux OpenGL Context: SDL Windowing
+// -----------------------------------
+
+#if defined(NOGPU_SDL3)
+
 GPUContext* impl__createContext(SDL_Window *win) {
     return nullptr;
 }
+
+#elif defined(NOGPU_SDL2)
+#include <SDL2/SDL_syswm.h>
+
+GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
+    SDL_SysWMinfo syswm;
+    GPUContext* ctx = nullptr;
+    // Get SDL2 Native Info
+    if (!win || !SDL_GetWindowWMInfo(win, &syswm)) {
+        GPULogger::error("invalid SDL2 window");
+        return ctx;
+    }
+
+    // Check Window Flags
+    if (SDL_GetWindowFlags(win) & (SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL)) {
+        GPULogger::error("SDL2 window flags must not have SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL");
+        return ctx;
+    } else if (SDL_HasWindowSurface(win) || SDL_GetRenderer(win)) {
+        GPULogger::error("SDL2 window must not have a SDL_Surface or SDL_Renderer");
+        return ctx;
+    }
+
+    // Create EGL Context
+    LinuxEGL* egl = nullptr;
+    EGLSurface surface = nullptr;
+    switch (syswm.subsystem) {
+        case SDL_SYSWM_WAYLAND:
+            egl = getLinuxEGL(&m_egl_list, syswm.info.wl.display,
+                LinuxEGLOption::LINUX_WAYLAND, m_msaa_samples);
+            // Create EGL Surface
+            if (egl) {
+                GPULogger::success("[opengl] EGL Wayland context created");
+                surface = createLinuxEGLSurface(egl,
+                    syswm.info.wl.surface, m_rgba);
+            } break;
+        case SDL_SYSWM_X11:
+            egl = getLinuxEGL(&m_egl_list, syswm.info.x11.display,
+                LinuxEGLOption::LINUX_X11, m_msaa_samples);
+            // Create EGL Surface
+            if (egl) {
+                GPULogger::success("[opengl] EGL X11 context created");
+                surface = createLinuxEGLSurface(egl,
+                    (void*) syswm.info.x11.window, m_rgba);
+            } break;
+        default: // Invalid Windowing
+            GPULogger::error("SDL2 window is not Wayland or X11");
+            return nullptr;
+    }
+
+    // Create GLContext
+    if (egl && surface) {
+        GLContext* gl_ctx = new GLContext();
+        gl_ctx->m_driver = this;
+        gl_ctx->m_window = win;
+        gl_ctx->m_egl = egl;
+        gl_ctx->m_egl_surface = surface;
+        // Return GPUContext
+        ctx = (GPUContext*) gl_ctx;
+        this->cached__add(ctx);
+    }
+
+    // Return Created Context
+    return ctx;
+}
+
 #endif

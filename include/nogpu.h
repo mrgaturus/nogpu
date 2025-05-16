@@ -43,7 +43,12 @@ enum class GPUDriverFeature : int {
 
 class GPUContext;
 class GPUDriver {
-    protected: 
+    protected:
+        GPUContext* m_ctx_cache;
+        GPUContext* cached__find(void* window);
+        void cached__add(GPUContext* ctx);
+        void cached__remove(GPUContext* ctx);
+
         static GPUDriver *m_driver;
         static thread_local GPUDriver *m_driver_lock;
         static unsigned int feature__flag(GPUDriverFeature feature) {
@@ -915,6 +920,11 @@ class GPUCommands {
 // -----------
 
 class GPUContext {
+    protected:
+        friend GPUDriver;
+        GPUContext* m_next;
+        GPUContext* m_prev;
+        void* m_window;
     protected:
         GPUContext();
         ~GPUContext();

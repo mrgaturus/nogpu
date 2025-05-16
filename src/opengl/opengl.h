@@ -7,26 +7,29 @@
 #if defined(__unix__)
 #include <EGL/egl.h>
 
-typedef struct {
+typedef struct LinuxEGLDisplay {
+    struct LinuxEGLDisplay* next;
+    struct LinuxEGLDisplay* prev;
+    // Linux EGL Attributes
+    void* native;
     EGLDisplay display;
     EGLConfig config;
     EGLContext context;
-} LinuxEGLDriver;
+} LinuxEGL;
 #endif
 
 class GLContext;
 class GLDriver : GPUDriver {
+    GLContext* m_context_list = nullptr;
     unsigned int m_features = 0;
     int m_msaa_samples = 0;
     bool m_rgba = false;
 
+    // Linux EGL Context
     #if defined(__unix__)
-        // Linux EGL Context
-        LinuxEGLDriver m_egl_wayland;
-        LinuxEGLDriver m_egl_x11;
-        // Current EGL Context/Surface
-        EGLContext m_egl_context;
-        EGLSurface m_egl_surface;
+        LinuxEGL* m_egl_list = nullptr;
+        LinuxEGL* m_egl_current = nullptr;
+        EGLSurface m_egl_surface = nullptr;
     #endif
 
     bool impl__checkInitialized() override;
@@ -41,10 +44,12 @@ class GLDriver : GPUDriver {
         GPUContext *impl__createContext(SDL_Window *win) override;
     #endif
 
-    // GL Driver Initialize
-    protected:
-        friend GPUDriver;
+    public: // GL Context Current
+        void makeCurrent(GLContext* ctx);
+        void makeDestroyed(GLContext* ctx);
+    protected: // GL Driver Initialize
         GLDriver(int msaa_samples, bool rgba);
+        friend GPUDriver;
         ~GLDriver();
 };
 
@@ -289,9 +294,13 @@ class GLCommands : GPUCommands {
 // ------------------
 
 class GLContext : GPUContext {
-    void* m_window;
-    EGLSurface egl_context;
-    EGLSurface egl_surface;
+    inline void gl__makeCurrent();
+    #if defined(__unix__)
+        LinuxEGL* m_egl;
+        EGLSurface m_egl_surface;
+        GLDriver* m_driver;
+    #endif
+
     // GPU Object Creation
     GPUVertexArray* createVertexArray() override;
     GPUBuffer* createBuffer(GPUBufferTarget m_target) override;
@@ -312,8 +321,9 @@ class GLContext : GPUContext {
 
     protected: // Commands Constructor
         GLContext();
+        ~GLContext();
         void destroy() override;
-        friend GPUDriver;
+        friend GLDriver;
 };
 
 #endif // NOGPU_OPENGL_H

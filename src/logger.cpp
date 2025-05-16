@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include "nogpu_private.h"
+#include <cstdlib>
 #include <cstdarg>
 #include <cstdio>
 // Stacktrace Debug
@@ -13,6 +14,7 @@ typedef enum {
     LOG_SUCCESS,
     LOG_WARNING,
     LOG_ERROR,
+    LOG_ASSERT,
     LOG_DEBUG,
 } GPULoggerLevel;
 
@@ -21,6 +23,7 @@ const char* log_headers[] = {
     "\e[0;32m[nogpu: ok]\033[0m",
     "\e[0;33m[nogpu: warning]\033[0m",
     "\e[0;31m[nogpu: error]\033[0m",
+    "\e[0;31m[nogpu: assert]\033[0m",
     "\e[0;37m[nogpu: debug]\033[0m",
 };
 
@@ -65,6 +68,23 @@ void GPULogger::error(const char *format, ...) {
 // -----------------
 // Debug GPU Logging
 // -----------------
+
+void GPULogger::assert(bool condition, const char *format, ...) {
+#ifdef NOGPU_DEBUG
+    if (condition)
+        return;
+
+    // Print Error Message
+    va_list args;
+    va_start(args, format);
+    printf_level(LOG_ASSERT, format, args);
+    va_end(args);
+
+    // Exit Program
+    cpptrace::generate_trace();
+    exit(~0);
+#endif
+}
 
 void GPULogger::debug(const char *format, ...) {
 #ifdef NOGPU_DEBUG

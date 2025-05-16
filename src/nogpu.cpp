@@ -37,6 +37,44 @@ bool GPUDriver::shutdown() {
     return (m_driver) && m_driver->impl__shutdown();
 }
 
+// -------------------------------
+// Context Creation: Window Cached
+// -------------------------------
+
+GPUContext* GPUDriver::cached__find(void* window) {
+    GPUContext* ctx = m_ctx_cache;
+    // Find if there is already a Context
+    while (ctx) {
+        if (ctx->m_window == window)
+            return ctx;
+        ctx = ctx->m_next;
+    }
+
+    // Return Context
+    return ctx;
+}
+
+void GPUDriver::cached__add(GPUContext* ctx) {
+    if (!m_ctx_cache)
+        m_ctx_cache->m_prev = ctx;
+
+    // Add Context at First
+    ctx->m_next = m_ctx_cache;
+    ctx->m_prev = nullptr;
+    m_ctx_cache = ctx;
+}
+
+void GPUDriver::cached__remove(GPUContext* ctx) {
+    if (m_ctx_cache == ctx)
+        m_ctx_cache = m_ctx_cache->m_next;
+    if (ctx->m_next) ctx->m_next->m_prev = ctx->m_prev;
+    if (ctx->m_prev) ctx->m_prev->m_next = ctx->m_next;
+
+    // Detach GPU Context
+    ctx->m_next = nullptr;
+    ctx->m_prev = nullptr;
+}
+
 // -----------------------------
 // Context Creation: SDL2 & SDL3
 // -----------------------------
@@ -44,6 +82,9 @@ bool GPUDriver::shutdown() {
 #if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
 GPUContext* GPUDriver::createContext(SDL_Window *win) {
     if (!m_driver) return nullptr;
-    return m_driver->impl__createContext(win);
+    // Find or Create New Context
+    GPUContext* ctx = m_driver->cached__find(win);
+    if (!ctx) ctx = m_driver->impl__createContext(win);
+    return ctx;
 }
 #endif // SDL2 & SDL3
