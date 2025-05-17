@@ -3,7 +3,7 @@
 #ifndef NOGPU_PRIVATE_H
 #define NOGPU_PRIVATE_H
 
-unsigned long next_power_of_two(unsigned long v);
+unsigned int next_power_of_two(unsigned int v);
 
 // ------------------
 // GPU Logger Console

@@ -44,7 +44,7 @@ enum class GPUDriverFeature : int {
 class GPUContext;
 class GPUDriver {
     protected:
-        GPUContext* m_ctx_cache;
+        GPUContext* m_ctx_cache = nullptr;
         GPUContext* cached__find(void* window);
         void cached__add(GPUContext* ctx);
         void cached__remove(GPUContext* ctx);
@@ -63,9 +63,6 @@ class GPUDriver {
         virtual bool impl__getTransparency() = 0;
         virtual bool impl__shutdown() = 0;
 
-    protected: // Avoid Instance
-        GPUDriver();
-        ~GPUDriver();
     public: // Initialize
         static bool initialize(GPUDriverOption option,
             int msaa_samples = 0, bool rgba = false);
@@ -925,10 +922,7 @@ class GPUContext {
         GPUContext* m_next;
         GPUContext* m_prev;
         void* m_window;
-    protected:
-        GPUContext();
-        ~GPUContext();
-        static GPUContext* m_current;
+    protected: static GPUContext* m_current;
     public: virtual void destroy() = 0;
 
     public: // GPU Objects Creation

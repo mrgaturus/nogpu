@@ -50,7 +50,6 @@ class GLDriver : GPUDriver {
     protected: // GL Driver Initialize
         GLDriver(int msaa_samples, bool rgba);
         friend GPUDriver;
-        ~GLDriver();
 };
 
 // -----------------
@@ -320,8 +319,6 @@ class GLContext : GPUContext {
     void swapSurface() override;
 
     protected: // Commands Constructor
-        GLContext();
-        ~GLContext();
         void destroy() override;
         friend GLDriver;
 };

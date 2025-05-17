@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
+#include <opengl/opengl.h>
 #include <nogpu.h>
+
+// Global Driver Definition
+GPUDriver* GPUDriver::m_driver = nullptr;
+thread_local GPUDriver* GPUDriver::m_driver_lock = nullptr;
 
 GPUDriverOption GPUDriver::getDriverOption() {
     if (!m_driver) return GPUDriverOption::DRIVER_NONE;
@@ -8,7 +13,17 @@ GPUDriverOption GPUDriver::getDriverOption() {
 }
 
 bool GPUDriver::initialize(GPUDriverOption option, int msaa_samples, bool rgba) {
-    return false;
+    // XXX: for now OpenGL Linux to design the api before whole abstraction
+    #if defined(__unix__)
+    OPENGL_DRIVER: {
+        GLDriver* gl = new GLDriver(msaa_samples, rgba);
+        if (gl) m_driver = gl;
+        else delete gl;
+    }
+    #endif
+
+    // Check Driver Initialized
+    return !! m_driver;
 }
 
 // ----------------
@@ -55,7 +70,7 @@ GPUContext* GPUDriver::cached__find(void* window) {
 }
 
 void GPUDriver::cached__add(GPUContext* ctx) {
-    if (!m_ctx_cache)
+    if (m_ctx_cache)
         m_ctx_cache->m_prev = ctx;
 
     // Add Context at First

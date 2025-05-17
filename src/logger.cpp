@@ -30,7 +30,7 @@ const char* log_headers[] = {
 static void inline printf_level(GPULoggerLevel level, const char *format, va_list args) {
     printf("%s ", log_headers[level]);
     vprintf(format, args);
-    puts("\n");
+    printf("\n");
 }
 
 // -----------------

@@ -31,7 +31,6 @@ static EGLint attr_context[] = {
 
 static EGLint attr_surface[] = {
     EGL_RENDER_BUFFER, EGL_BACK_BUFFER,
-    EGL_TEXTURE_FORMAT, EGL_TEXTURE_RGB,
     EGL_NONE
 };
 
@@ -105,8 +104,8 @@ GLDriver::GLDriver(int msaa_samples, bool rgba) {
         m_rgba = rgba;
         // Output EGL and OpenGL Information
         const char* vendor = (const char*) glGetString(0x1F02);
-        GPULogger::success("[opengl] EGL version: %d %d", egl_major, egl_minor);
-        GPULogger::success("[opengl] OpenGL version %s", vendor);
+        GPULogger::success("[opengl] EGL version: %d.%d", egl_major, egl_minor);
+        GPULogger::success("[opengl] OpenGL version: %s", vendor);
     } else {
         GPULogger::error("[opengl] failed loading OpenGL functions"); goto TERMINATE_EGL;
     }
@@ -346,7 +345,6 @@ static LinuxEGL* getLinuxEGL(LinuxEGL** egl, void* display, LinuxEGLOption optio
 }
 
 static EGLSurface createLinuxEGLSurface(LinuxEGL* egl, void* native, bool rgba) {
-    attr_surface[3] = (rgba) ? EGL_TEXTURE_RGBA : EGL_TEXTURE_RGB;
     EGLSurface surface = eglCreateWindowSurface(
         egl->display, egl->config,
         (EGLNativeWindowType) native,
@@ -368,7 +366,7 @@ static EGLSurface createLinuxEGLSurface(LinuxEGL* egl, void* native, bool rgba) 
 
 #if defined(NOGPU_SDL3)
 
-GPUContext* impl__createContext(SDL_Window *win) {
+GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
     return nullptr;
 }
 
@@ -402,7 +400,7 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
                 LinuxEGLOption::LINUX_WAYLAND, m_msaa_samples);
             // Create EGL Surface
             if (egl) {
-                GPULogger::success("[opengl] EGL Wayland context created");
+                GPULogger::success("[opengl] EGL Wayland context created for SDL2");
                 surface = createLinuxEGLSurface(egl,
                     syswm.info.wl.surface, m_rgba);
             } break;
@@ -411,7 +409,7 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
                 LinuxEGLOption::LINUX_X11, m_msaa_samples);
             // Create EGL Surface
             if (egl) {
-                GPULogger::success("[opengl] EGL X11 context created");
+                GPULogger::success("[opengl] EGL X11 context created for SDL2");
                 surface = createLinuxEGLSurface(egl,
                     (void*) syswm.info.x11.window, m_rgba);
             } break;
