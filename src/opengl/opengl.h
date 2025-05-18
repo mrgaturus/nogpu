@@ -32,12 +32,12 @@ class GLDriver : GPUDriver {
         EGLSurface m_egl_surface = nullptr;
     #endif
 
+    bool impl__shutdown() override;
     bool impl__checkInitialized() override;
     bool impl__checkFeature(GPUDriverFeature feature) override;
-    GPUDriverOption impl__getDriverOption() override;
+    bool impl__checkRGBASurface() override;
     int impl__getMultisamplesCount() override;
-    bool impl__getTransparency() override;
-    bool impl__shutdown() override;
+    GPUDriverOption impl__getDriverOption() override;
 
     // Context Creation: SDL2 & SDL3
     #if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
@@ -294,6 +294,8 @@ class GLCommands : GPUCommands {
 
 class GLContext : GPUContext {
     inline void gl__makeCurrent();
+    bool m_rgba = false;
+
     #if defined(__unix__)
         LinuxEGL* m_egl;
         EGLSurface m_egl_surface;
@@ -319,6 +321,7 @@ class GLContext : GPUContext {
     void swapSurface() override;
 
     protected: // Commands Constructor
+        bool isRGBASurface() override;
         void destroy() override;
         friend GLDriver;
 };

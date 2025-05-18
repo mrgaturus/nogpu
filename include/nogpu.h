@@ -55,23 +55,24 @@ class GPUDriver {
             return ((unsigned int) 1 << (unsigned int) feature);
         }
 
-        // Driver Virtual Implementation
+        // Driver Abstract Implementation
+        virtual bool impl__shutdown() = 0;
         virtual bool impl__checkInitialized() = 0;
         virtual bool impl__checkFeature(GPUDriverFeature feature) = 0;
-        virtual GPUDriverOption impl__getDriverOption() = 0;
+        virtual bool impl__checkRGBASurface() = 0;
         virtual int impl__getMultisamplesCount() = 0;
-        virtual bool impl__getTransparency() = 0;
-        virtual bool impl__shutdown() = 0;
+        virtual GPUDriverOption impl__getDriverOption() = 0;
 
-    public: // Initialize
+    public: // Driver Initialize
         static bool initialize(GPUDriverOption option,
             int msaa_samples = 0, bool rgba = false);
-        static bool checkFeature(GPUDriverFeature feature);
-        static bool checkInitialized();
-        static GPUDriverOption getDriverOption();
-        static int getMultisamplesCount();
-        static bool getTransparency();
         static bool shutdown();
+        // Driver Information
+        static bool checkInitialized();
+        static bool checkFeature(GPUDriverFeature feature);
+        static bool checkRGBASurface();
+        static int getMultisamplesCount();
+        static GPUDriverOption getDriverOption();
 
     // Context Creation: SDL2 & SDL3
     #if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
@@ -924,6 +925,7 @@ class GPUContext {
         void* m_window;
     protected: static GPUContext* m_current;
     public: virtual void destroy() = 0;
+    public: virtual bool isRGBASurface() = 0;
 
     public: // GPU Objects Creation
         virtual GPUVertexArray* createVertexArray() = 0;

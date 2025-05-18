@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include <opengl/opengl.h>
+#include <nogpu_private.h>
 #include <nogpu.h>
-
 // Global Driver Definition
 GPUDriver* GPUDriver::m_driver = nullptr;
 thread_local GPUDriver* GPUDriver::m_driver_lock = nullptr;
 
-GPUDriverOption GPUDriver::getDriverOption() {
-    if (!m_driver) return GPUDriverOption::DRIVER_NONE;
-    return m_driver->impl__getDriverOption();
-}
-
 bool GPUDriver::initialize(GPUDriverOption option, int msaa_samples, bool rgba) {
+    if (m_driver) {
+        GPULogger::error("driver already initialized");
+        return false;
+    }
+
     // XXX: for now OpenGL Linux to design the api before whole abstraction
     #if defined(__unix__)
     OPENGL_DRIVER: {
@@ -26,16 +26,29 @@ bool GPUDriver::initialize(GPUDriverOption option, int msaa_samples, bool rgba) 
     return !! m_driver;
 }
 
-// ----------------
-// Context Checking
-// ----------------
+bool GPUDriver::shutdown() {
+    bool result = (m_driver) &&
+        m_driver->impl__shutdown();
+    // Remove Current Driver
+    if (result) m_driver = nullptr;
+    return result;
+}
+
+// ----------------------
+// GPU Driver Information
+// ----------------------
+
+bool GPUDriver::checkInitialized() {
+    return (m_driver) && m_driver->impl__checkInitialized();
+}
 
 bool GPUDriver::checkFeature(GPUDriverFeature feature) {
     return (m_driver) && m_driver->impl__checkFeature(feature);
 }
 
-bool GPUDriver::checkInitialized() {
-    return (m_driver) && m_driver->impl__checkInitialized();
+bool GPUDriver::checkRGBASurface() {
+    if (!m_driver) return 0;
+    return m_driver->impl__checkRGBASurface();
 }
 
 int GPUDriver::getMultisamplesCount() {
@@ -43,13 +56,9 @@ int GPUDriver::getMultisamplesCount() {
     return m_driver->impl__getMultisamplesCount();
 }
 
-bool GPUDriver::getTransparency() {
-    if (!m_driver) return 0;
-    return m_driver->impl__getTransparency();
-}
-
-bool GPUDriver::shutdown() {
-    return (m_driver) && m_driver->impl__shutdown();
+GPUDriverOption GPUDriver::getDriverOption() {
+    if (!m_driver) return GPUDriverOption::DRIVER_NONE;
+    return m_driver->impl__getDriverOption();
 }
 
 // -------------------------------

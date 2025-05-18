@@ -3,6 +3,10 @@
 #include "opengl.h"
 #include "glad/glad.h"
 
+bool GLContext::isRGBASurface() {
+    return false;
+}
+
 // -------------------
 // GPU Object Creation
 // -------------------

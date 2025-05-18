@@ -151,16 +151,16 @@ bool GLDriver::impl__checkFeature(GPUDriverFeature feature) {
     return m_features & feature__flag(feature);
 }
 
-GPUDriverOption GLDriver::impl__getDriverOption() {
-    return GPUDriverOption::DRIVER_OPENGL;
+bool GLDriver::impl__checkRGBASurface() {
+    return m_rgba;
 }
 
 int GLDriver::impl__getMultisamplesCount() {
     return m_msaa_samples;
 }
 
-bool GLDriver::impl__getTransparency() {
-    return m_rgba;
+GPUDriverOption GLDriver::impl__getDriverOption() {
+    return GPUDriverOption::DRIVER_OPENGL;
 }
 
 // -----------------------------
@@ -305,7 +305,8 @@ static LinuxEGL* createLinuxEGL(void* display, LinuxEGLOption option, int msaa_s
         }
     #endif
 
-    { // Return Created EGL
+    // Return Created EGL
+    RETURN_EGL: {
         LinuxEGL* egl_display = (LinuxEGL*)
             malloc(sizeof(LinuxEGL));
         *egl_display = egl;
