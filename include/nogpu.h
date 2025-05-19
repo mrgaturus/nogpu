@@ -942,7 +942,7 @@ class GPUContext {
     public: // GPU Object Commands
         virtual GPUCommands* createCommands() = 0;
         virtual void submit(GPUCommands* commands) = 0;
-        virtual void recreateSurface() = 0;
+        virtual void recreateSurface(int w, int h) = 0;
         virtual void swapSurface() = 0;
 };
 

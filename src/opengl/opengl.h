@@ -7,16 +7,32 @@
 #if defined(__unix__)
 #include <EGL/egl.h>
 
-typedef struct LinuxEGLDisplay {
-    struct LinuxEGLDisplay* next;
-    struct LinuxEGLDisplay* prev;
+typedef struct LinuxEGL {
+    struct LinuxEGL* next;
+    struct LinuxEGL* prev;
     // Linux EGL Attributes
     void* native;
     EGLDisplay display;
     EGLConfig config;
     EGLContext context;
 } LinuxEGL;
-#endif
+
+typedef struct LinuxEGLContext {
+    LinuxEGL* egl;
+    EGLDisplay display;
+    EGLSurface surface;
+} LinuxEGLContext;
+
+typedef struct LinuxEGLDriver {
+    void* so_wayland;
+    void* so_x11;
+    // EGL Instance
+    LinuxEGL* list;
+    LinuxEGL* current;
+    EGLSurface surface;
+} LinuxEGLDriver;
+
+#endif // defined(__unix__)
 
 class GLContext;
 class GLDriver : GPUDriver {
@@ -27,9 +43,7 @@ class GLDriver : GPUDriver {
 
     // Linux EGL Context
     #if defined(__unix__)
-        LinuxEGL* m_egl_list = nullptr;
-        LinuxEGL* m_egl_current = nullptr;
-        EGLSurface m_egl_surface = nullptr;
+        LinuxEGLDriver m_egl = {};
     #endif
 
     bool impl__shutdown() override;
@@ -297,8 +311,7 @@ class GLContext : GPUContext {
     bool m_rgba = false;
 
     #if defined(__unix__)
-        LinuxEGL* m_egl;
-        EGLSurface m_egl_surface;
+        LinuxEGLContext m_gtx;
         GLDriver* m_driver;
     #endif
 
@@ -317,7 +330,7 @@ class GLContext : GPUContext {
     // GPU Object Commands
     GPUCommands* createCommands() override;
     void submit(GPUCommands* commands) override;
-    void recreateSurface() override;
+    void recreateSurface(int w, int h) override;
     void swapSurface() override;
 
     protected: // Commands Constructor

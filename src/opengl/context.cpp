@@ -69,7 +69,7 @@ void GLContext::submit(GPUCommands* commands) {
 
 }
 
-void GLContext::recreateSurface() {
+void GLContext::recreateSurface(int w, int h) {
 
 }
 
@@ -77,7 +77,9 @@ void GLContext::swapSurface() {
     gl__makeCurrent();
     glClearColor(0.2, 0.2, 0.3, 0.5);
     glClear(GL_COLOR_BUFFER_BIT);
-    eglSwapBuffers(m_egl->display, m_egl_surface);
+    // Swap Context Buffer
+    LinuxEGLContext *gtx = &m_gtx;
+    eglSwapBuffers(gtx->display, gtx->surface);
 }
 
 // ---------------------

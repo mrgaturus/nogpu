@@ -2,19 +2,21 @@
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include <nogpu_private.h>
 #include <cstdlib>
+#include <dlfcn.h>
 // Include OpenGL
 #include "glad/glad.h"
 #include "opengl.h"
 
 static EGLint attr_egl[] = {
     EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+    EGL_DEPTH_SIZE, 24,
+    EGL_STENCIL_SIZE, 8,
     // EGL Color Channels
     EGL_RED_SIZE, 8,
     EGL_GREEN_SIZE, 8,
     EGL_BLUE_SIZE, 8,
-    EGL_ALPHA_SIZE, 8,
-    EGL_DEPTH_SIZE, 24,
-    EGL_STENCIL_SIZE, 8,
+    EGL_ALPHA_SIZE, 0,
+    EGL_BUFFER_SIZE, 24,
     // Optional MSAA
     EGL_SAMPLES, 0,
     EGL_SAMPLE_BUFFERS, 0,
@@ -37,6 +39,23 @@ static EGLint attr_surface[] = {
 // --------------------------------
 // Linux OpenGL Driver: Constructor
 // --------------------------------
+
+static void egl_configure_attributes(int msaa_samples, bool rgba) {
+    if (msaa_samples < 0) msaa_samples = 0;
+    if (msaa_samples > 16) msaa_samples = 16;
+    // Configure Multisample Rendering
+    attr_egl[17] = !! msaa_samples;
+    attr_egl[19] = next_power_of_two(msaa_samples);
+
+    // Configure RGBA Surface
+    if (rgba) {
+        attr_egl[13] = 8;
+        attr_egl[15] = 32;
+    } else {
+        attr_egl[13] = 0;
+        attr_egl[15] = 24;
+    }
+}
 
 GLDriver::GLDriver(int msaa_samples, bool rgba) {
     EGLDisplay egl_display;
@@ -62,6 +81,8 @@ GLDriver::GLDriver(int msaa_samples, bool rgba) {
     if (eglInitialize(egl_display, &egl_major, &egl_minor) == EGL_FALSE) {
         GPULogger::error("[opengl] failed initialize EGL"); goto TERMINATE_EGL;
     }
+
+    egl_configure_attributes(msaa_samples, rgba);
     if (eglChooseConfig(egl_display, attr_egl, &egl_config, 1, &egl_num_config) == EGL_FALSE) {
         GPULogger::error("[opengl] failed configure EGL"); goto TERMINATE_EGL;
     }
@@ -118,7 +139,8 @@ TERMINATE_EGL:
 bool GLDriver::impl__shutdown() {
     bool result = true;
     // Shutdown EGL Context
-    LinuxEGL *egl = m_egl_list;
+    LinuxEGLDriver* driver = &m_egl;
+    LinuxEGL *egl = driver->list;
     while (egl) {
         LinuxEGL* next = egl->next;
         result &= eglTerminate(egl);
@@ -126,12 +148,13 @@ bool GLDriver::impl__shutdown() {
     }
 
     // Clear Driver Attributes
-    m_egl_list = nullptr;
-    m_egl_current = nullptr;
-    m_egl_surface = nullptr;
+    driver->list = nullptr;
+    driver->current = nullptr;
+    driver->surface = nullptr;
     // Reset Private
     m_features = 0;
     m_msaa_samples = 0;
+    m_rgba = false;
 
     // Return Driver Shutdown Status
     if (result) GPULogger::success("[opengl] terminated EGL & OpenGL");
@@ -168,30 +191,36 @@ GPUDriverOption GLDriver::impl__getDriverOption() {
 // -----------------------------
 
 void GLDriver::makeCurrent(GLContext* ctx) {
-    if (m_egl_current != ctx->m_egl || m_egl_surface != ctx->m_egl_surface) {
-        EGLSurface egl_surface = ctx->m_egl_surface;
-        EGLContext egl_ctx = ctx->m_egl->context;
+    LinuxEGLDriver* driver = &m_egl;
+    LinuxEGLContext gtx = ctx->m_gtx;
+
+    if (driver->current != gtx.egl || driver->surface != gtx.surface) {
+        EGLSurface egl_surface = gtx.surface;
+        EGLContext egl_ctx = gtx.egl->context;
 
         // Change Current EGL Connection
-        eglMakeCurrent(ctx->m_egl->display,
+        eglMakeCurrent(gtx.display,
             egl_surface, egl_surface, egl_ctx);
-        m_egl_current = ctx->m_egl;
-        m_egl_surface = egl_surface;
+
+        driver->current = gtx.egl;
+        driver->surface = egl_surface;
     }
 }
 
 void GLDriver::makeDestroyed(GLContext* ctx) {
-    if (m_egl_current == ctx->m_egl && m_egl_surface == ctx->m_egl_surface) {
-        eglMakeCurrent(ctx->m_egl->display,
-            EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    LinuxEGLDriver* driver = &m_egl;
+    LinuxEGLContext gtx = ctx->m_gtx;
+
+    if (driver->current == gtx.egl && driver->surface == gtx.surface) {
+        eglMakeCurrent(gtx.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         // Cache Current EGL Connection
-        m_egl_current = nullptr;
-        m_egl_surface = nullptr;
+        driver->current = nullptr;
+        driver->surface = nullptr;
     }
 
     // Destroy Context Surface
     this->cached__remove(ctx);
-    if (eglDestroySurface(ctx->m_egl->display, ctx->m_egl_surface) == EGL_FALSE)
+    if (eglDestroySurface(gtx.display, gtx.surface) == EGL_FALSE)
         GPULogger::error("[opengl] failed destroying EGL surface");
 }
 
@@ -268,9 +297,6 @@ static LinuxEGL* createLinuxEGL(void* display, LinuxEGLOption option, int msaa_s
         goto TERMINATE_EGL;
     }
 
-    // Configure EGL Display
-    attr_egl[15] = 1;
-    attr_egl[17] = next_power_of_two(msaa_samples);
     if (eglChooseConfig(egl.display, attr_egl, &egl.config, 1, &egl_num_config) == EGL_FALSE) {
         GPULogger::error("[opengl] failed configure EGL");
         goto TERMINATE_EGL;
@@ -320,12 +346,39 @@ TERMINATE_EGL:
     return nullptr;
 }
 
+// ----------------------------------
+// Linux OpenGL Context: X11 Specific
+// ----------------------------------
+
+typedef struct {
+	int x, y;
+	int width, height;
+	int border_width;
+	int depth;
+	void *visual_raw;
+    char unused[224];
+} x11_window_attributes_t;
+
+typedef void (x11_XGetWindowAttributes_t)(
+    void* display,
+    unsigned long window,
+    x11_window_attributes_t* result
+);
+
+typedef unsigned long (x11_XVisualIDFromVisual_t)(
+    void* visual_raw
+);
+
+static EGLConfig chooseX11EGLConfig(LinuxEGL* egl, unsigned long window) {
+    return nullptr;
+}
+
 // ---------------------------------
 // Linux OpenGL Context: EGL Surface
 // ---------------------------------
 
-static LinuxEGL* getLinuxEGL(LinuxEGL** egl, void* display, LinuxEGLOption option, int msaa_samples) {
-    LinuxEGL* egl_found = *egl;
+static LinuxEGL* getLinuxEGL(LinuxEGLDriver* driver, void* display, LinuxEGLOption option, int msaa_samples) {
+    LinuxEGL* egl_found = driver->list;
     // Find Already Created EGL
     while (egl_found) {
         if (egl_found->native == display)
@@ -336,9 +389,9 @@ static LinuxEGL* getLinuxEGL(LinuxEGL** egl, void* display, LinuxEGLOption optio
     // Create Linux EGL Display
     egl_found = createLinuxEGL(display, option, msaa_samples);
     if (egl_found) {
-        egl_found->next = *egl;
+        egl_found->next = driver->list;
         egl_found->prev = nullptr;
-        *egl = egl_found;
+        driver->list = egl_found;
     }
 
     // Return Created Display
@@ -393,25 +446,24 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
     }
 
     // Create EGL Context
-    LinuxEGL* egl = nullptr;
-    EGLSurface surface = nullptr;
+    LinuxEGLContext gtx = {};
     switch (syswm.subsystem) {
         case SDL_SYSWM_WAYLAND:
-            egl = getLinuxEGL(&m_egl_list, syswm.info.wl.display,
+            gtx.egl = getLinuxEGL(&m_egl, syswm.info.wl.display,
                 LinuxEGLOption::LINUX_WAYLAND, m_msaa_samples);
             // Create EGL Surface
-            if (egl) {
+            if (gtx.egl) {
                 GPULogger::success("[opengl] EGL Wayland context created for SDL2");
-                surface = createLinuxEGLSurface(egl,
+                gtx.surface = createLinuxEGLSurface(gtx.egl,
                     syswm.info.wl.surface, m_rgba);
             } break;
         case SDL_SYSWM_X11:
-            egl = getLinuxEGL(&m_egl_list, syswm.info.x11.display,
+            gtx.egl = getLinuxEGL(&m_egl, syswm.info.x11.display,
                 LinuxEGLOption::LINUX_X11, m_msaa_samples);
             // Create EGL Surface
-            if (egl) {
+            if (gtx.egl) {
                 GPULogger::success("[opengl] EGL X11 context created for SDL2");
-                surface = createLinuxEGLSurface(egl,
+                gtx.surface = createLinuxEGLSurface(gtx.egl,
                     (void*) syswm.info.x11.window, m_rgba);
             } break;
         default: // Invalid Windowing
@@ -420,14 +472,14 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
     }
 
     // Create GLContext
-    if (egl && surface) {
-        GLContext* gl_ctx = new GLContext();
-        gl_ctx->m_driver = this;
-        gl_ctx->m_window = win;
-        gl_ctx->m_egl = egl;
-        gl_ctx->m_egl_surface = surface;
+    if (gtx.egl && gtx.surface) {
+        gtx.display = gtx.egl->display;
+        GLContext* ctx0 = new GLContext();
+        ctx0->m_driver = this;
+        ctx0->m_window = win;
+        ctx0->m_gtx = gtx;
         // Return GPUContext
-        ctx = (GPUContext*) gl_ctx;
+        ctx = (GPUContext*) ctx0;
         this->cached__add(ctx);
     }
 
