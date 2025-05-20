@@ -35,8 +35,9 @@ class GPULogger {
             static void error(const char* format, ...);
 
             // Stacktrace Debugging
+            static void assert(bool condition, const char* format, ...);
             static void debug(const char* format, ...);
-            static void debug_stacktrace(const char* format, ...);
+            static void stacktrace();
     #endif
 };
 
