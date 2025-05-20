@@ -15,8 +15,7 @@ static EGLint attr_egl[] = {
     EGL_RED_SIZE, 8,
     EGL_GREEN_SIZE, 8,
     EGL_BLUE_SIZE, 8,
-    EGL_ALPHA_SIZE, 0,
-    EGL_BUFFER_SIZE, 24,
+    EGL_ALPHA_SIZE, 8,
     // Optional MSAA
     EGL_SAMPLES, 0,
     EGL_SAMPLE_BUFFERS, 0,
@@ -40,24 +39,15 @@ static EGLint attr_surface[] = {
 // Linux OpenGL Driver: Constructor
 // --------------------------------
 
-static void egl_configure_attributes(int msaa_samples, bool rgba) {
+static void egl_configure_msaa(int msaa_samples) {
     if (msaa_samples < 0) msaa_samples = 0;
     if (msaa_samples > 16) msaa_samples = 16;
     // Configure Multisample Rendering
-    attr_egl[17] = !! msaa_samples;
-    attr_egl[19] = next_power_of_two(msaa_samples);
-
-    // Configure RGBA Surface
-    if (rgba) {
-        attr_egl[13] = 8;
-        attr_egl[15] = 32;
-    } else {
-        attr_egl[13] = 0;
-        attr_egl[15] = 24;
-    }
+    attr_egl[15] = !! msaa_samples;
+    attr_egl[17] = next_power_of_two(msaa_samples);
 }
 
-GLDriver::GLDriver(int msaa_samples, bool rgba) {
+GLDriver::GLDriver(int msaa_samples) {
     EGLDisplay egl_display;
     EGLConfig egl_config;
     EGLContext egl_context;
@@ -82,7 +72,7 @@ GLDriver::GLDriver(int msaa_samples, bool rgba) {
         GPULogger::error("[opengl] failed initialize EGL"); goto TERMINATE_EGL;
     }
 
-    egl_configure_attributes(msaa_samples, rgba);
+    egl_configure_msaa(msaa_samples);
     if (eglChooseConfig(egl_display, attr_egl, &egl_config, 1, &egl_num_config) == EGL_FALSE) {
         GPULogger::error("[opengl] failed configure EGL"); goto TERMINATE_EGL;
     }
@@ -122,7 +112,6 @@ GLDriver::GLDriver(int msaa_samples, bool rgba) {
         // Define Features
         m_features = features;
         m_msaa_samples = msaa_samples;
-        m_rgba = rgba;
         // Output EGL and OpenGL Information
         const char* vendor = (const char*) glGetString(0x1F02);
         GPULogger::success("[opengl] EGL version: %d.%d", egl_major, egl_minor);
@@ -154,7 +143,6 @@ bool GLDriver::impl__shutdown() {
     // Reset Private
     m_features = 0;
     m_msaa_samples = 0;
-    m_rgba = false;
 
     // Return Driver Shutdown Status
     if (result) GPULogger::success("[opengl] terminated EGL & OpenGL");
@@ -172,10 +160,6 @@ bool GLDriver::impl__checkInitialized() {
 
 bool GLDriver::impl__checkFeature(GPUDriverFeature feature) {
     return m_features & feature__flag(feature);
-}
-
-bool GLDriver::impl__checkRGBASurface() {
-    return m_rgba;
 }
 
 int GLDriver::impl__getMultisamplesCount() {
@@ -369,8 +353,8 @@ typedef unsigned long (x11_XVisualIDFromVisual_t)(
     void* visual_raw
 );
 
-static EGLConfig chooseX11EGLConfig(LinuxEGL* egl, unsigned long window) {
-    return nullptr;
+static bool checkX11Transparent(LinuxEGL* egl, unsigned long window) {
+    return false;
 }
 
 // ---------------------------------
@@ -398,7 +382,7 @@ static LinuxEGL* getLinuxEGL(LinuxEGLDriver* driver, void* display, LinuxEGLOpti
     return egl_found;
 }
 
-static EGLSurface createLinuxEGLSurface(LinuxEGL* egl, void* native, bool rgba) {
+static EGLSurface createLinuxEGLSurface(LinuxEGL* egl, void* native) {
     EGLSurface surface = eglCreateWindowSurface(
         egl->display, egl->config,
         (EGLNativeWindowType) native,
@@ -455,7 +439,7 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
             if (gtx.egl) {
                 GPULogger::success("[opengl] EGL Wayland context created for SDL2");
                 gtx.surface = createLinuxEGLSurface(gtx.egl,
-                    syswm.info.wl.surface, m_rgba);
+                    syswm.info.wl.surface);
             } break;
         case SDL_SYSWM_X11:
             gtx.egl = getLinuxEGL(&m_egl, syswm.info.x11.display,
@@ -464,7 +448,7 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
             if (gtx.egl) {
                 GPULogger::success("[opengl] EGL X11 context created for SDL2");
                 gtx.surface = createLinuxEGLSurface(gtx.egl,
-                    (void*) syswm.info.x11.window, m_rgba);
+                    (void*) syswm.info.x11.window);
             } break;
         default: // Invalid Windowing
             GPULogger::error("SDL2 window is not Wayland or X11");

@@ -3,7 +3,7 @@
 #include "opengl.h"
 #include "glad/glad.h"
 
-bool GLContext::isRGBASurface() {
+bool GLContext::isTransparent() {
     return false;
 }
 

@@ -7,7 +7,7 @@
 GPUDriver* GPUDriver::m_driver = nullptr;
 thread_local GPUDriver* GPUDriver::m_driver_lock = nullptr;
 
-bool GPUDriver::initialize(GPUDriverOption option, int msaa_samples, bool rgba) {
+bool GPUDriver::initialize(GPUDriverOption option, int msaa_samples) {
     if (m_driver) {
         GPULogger::error("driver already initialized");
         return false;
@@ -16,7 +16,7 @@ bool GPUDriver::initialize(GPUDriverOption option, int msaa_samples, bool rgba) 
     // XXX: for now OpenGL Linux to design the api before whole abstraction
     #if defined(__unix__)
     OPENGL_DRIVER: {
-        GLDriver* gl = new GLDriver(msaa_samples, rgba);
+        GLDriver* gl = new GLDriver(msaa_samples);
         if (gl) m_driver = gl;
         else delete gl;
     }
@@ -44,11 +44,6 @@ bool GPUDriver::checkInitialized() {
 
 bool GPUDriver::checkFeature(GPUDriverFeature feature) {
     return (m_driver) && m_driver->impl__checkFeature(feature);
-}
-
-bool GPUDriver::checkRGBASurface() {
-    if (!m_driver) return 0;
-    return m_driver->impl__checkRGBASurface();
 }
 
 int GPUDriver::getMultisamplesCount() {

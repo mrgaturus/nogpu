@@ -59,18 +59,15 @@ class GPUDriver {
         virtual bool impl__shutdown() = 0;
         virtual bool impl__checkInitialized() = 0;
         virtual bool impl__checkFeature(GPUDriverFeature feature) = 0;
-        virtual bool impl__checkRGBASurface() = 0;
         virtual int impl__getMultisamplesCount() = 0;
         virtual GPUDriverOption impl__getDriverOption() = 0;
 
     public: // Driver Initialize
-        static bool initialize(GPUDriverOption option,
-            int msaa_samples = 0, bool rgba = false);
+        static bool initialize(GPUDriverOption option, int msaa_samples = 0);
         static bool shutdown();
         // Driver Information
         static bool checkInitialized();
         static bool checkFeature(GPUDriverFeature feature);
-        static bool checkRGBASurface();
         static int getMultisamplesCount();
         static GPUDriverOption getDriverOption();
 
@@ -925,7 +922,7 @@ class GPUContext {
         void* m_window;
     protected: static GPUContext* m_current;
     public: virtual void destroy() = 0;
-    public: virtual bool isRGBASurface() = 0;
+    public: virtual bool isTransparent() = 0;
 
     public: // GPU Objects Creation
         virtual GPUVertexArray* createVertexArray() = 0;
