@@ -10,18 +10,13 @@
 typedef struct LinuxEGL {
     struct LinuxEGL* next;
     struct LinuxEGL* prev;
-    // Linux EGL Attributes
-    void* native;
+    // EGL Attributes
     EGLDisplay display;
     EGLConfig config;
     EGLContext context;
+    void* linux_display;
+    bool linux_is_x11;
 } LinuxEGL;
-
-typedef struct LinuxEGLContext {
-    LinuxEGL* egl;
-    EGLDisplay display;
-    EGLSurface surface;
-} LinuxEGLContext;
 
 typedef struct LinuxEGLDriver {
     void* so_wayland;
@@ -31,6 +26,17 @@ typedef struct LinuxEGLDriver {
     LinuxEGL* current;
     EGLSurface surface;
 } LinuxEGLDriver;
+
+typedef struct LinuxEGLContext {
+    LinuxEGLDriver* driver;
+    LinuxEGL* egl;
+    // EGL Attributes
+    EGLDisplay display;
+    EGLSurface surface;
+    void* egl_surface;
+    bool linux_is_x11;
+    bool linux_is_rgba;
+} LinuxEGLContext;
 
 #endif // defined(__unix__)
 
@@ -305,9 +311,6 @@ class GLCommands : GPUCommands {
 // ------------------
 
 class GLContext : GPUContext {
-    inline void gl__makeCurrent();
-    bool m_rgba = false;
-
     #if defined(__unix__)
         LinuxEGLContext m_gtx;
         GLDriver* m_driver;
@@ -332,6 +335,7 @@ class GLContext : GPUContext {
     void swapSurface() override;
 
     protected: // Commands Constructor
+        inline void gl__makeCurrent();
         bool isTransparent() override;
         void destroy() override;
         friend GLDriver;

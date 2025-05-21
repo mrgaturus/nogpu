@@ -132,9 +132,15 @@ bool GLDriver::impl__shutdown() {
     LinuxEGL *egl = driver->list;
     while (egl) {
         LinuxEGL* next = egl->next;
-        result &= eglTerminate(egl);
+        result &= eglTerminate(egl->display);
         free(egl); egl = next;
     }
+
+    // Unload Native Modules
+    if (driver->so_wayland) dlclose(driver->so_wayland);
+    if (driver->so_x11) dlclose(driver->so_x11);
+    driver->so_wayland = nullptr;
+    driver->so_x11 = nullptr;
 
     // Clear Driver Attributes
     driver->list = nullptr;
@@ -145,7 +151,7 @@ bool GLDriver::impl__shutdown() {
     m_msaa_samples = 0;
 
     // Return Driver Shutdown Status
-    if (result) GPULogger::success("[opengl] terminated EGL & OpenGL");
+    if (result) GPULogger::success("[opengl] terminated EGL display");
     else GPULogger::error("[opengl] failed terminating EGL & OpenGL");
     return result;
 }
@@ -262,8 +268,12 @@ enum class LinuxEGLOption : EGLenum {
     LINUX_X11 = 0x31D5
 };
 
-static LinuxEGL* createLinuxEGL(void* display, LinuxEGLOption option, int msaa_samples) {
-    LinuxEGL egl = {.native = display};
+static LinuxEGL* createLinuxEGL(void* display, LinuxEGLOption option) {
+    LinuxEGL egl = {
+        .linux_display = display,
+        .linux_is_x11 = option == LinuxEGLOption::LINUX_X11
+    };
+
     EGLenum egl_option = (EGLenum) option;
     int egl_num_config;
     int egl_major, egl_minor;
@@ -330,6 +340,14 @@ TERMINATE_EGL:
     return nullptr;
 }
 
+// --------------------------------------
+// Linux OpenGL Context: Wayland Specific
+// --------------------------------------
+
+static void configureWaylandSurface(LinuxEGLContext* gtx, void* window) {
+    
+}
+
 // ----------------------------------
 // Linux OpenGL Context: X11 Specific
 // ----------------------------------
@@ -337,65 +355,96 @@ TERMINATE_EGL:
 typedef struct {
 	int x, y;
 	int width, height;
-	int border_width;
+	int egl_depth;
 	int depth;
-	void *visual_raw;
-    char unused[224];
+    // Unused X11 Attributes
+    char unused[252];
 } x11_window_attributes_t;
 
-typedef void (x11_XGetWindowAttributes_t)(
+typedef void (*x11_XGetWindowAttributes_t)(
     void* display,
     unsigned long window,
     x11_window_attributes_t* result
 );
 
-typedef unsigned long (x11_XVisualIDFromVisual_t)(
-    void* visual_raw
-);
+static void configureX11Surface(LinuxEGLContext* gtx, void* window) {
+    LinuxEGLDriver* driver = gtx->driver;
+    LinuxEGL* egl = gtx->egl;
 
-static bool checkX11Transparent(LinuxEGL* egl, unsigned long window) {
-    return false;
+    // Open X11 Module
+    if (!driver->so_x11) driver->so_x11 =
+        dlopen("libX11.so", RTLD_LAZY | RTLD_GLOBAL);
+    if (!driver->so_x11) return;
+
+    x11_window_attributes_t attribs;
+    x11_XGetWindowAttributes_t XGetWindowAttributes =
+        (x11_XGetWindowAttributes_t) dlsym(driver->so_x11, "XGetWindowAttributes");
+    // Get X11 & EGL Relevant Attributes
+    XGetWindowAttributes(egl->linux_display, (unsigned long) window, &attribs);
+    eglGetConfigAttrib(egl->display, egl->config, EGL_BUFFER_SIZE, &attribs.egl_depth);
+
+    // Check if Window is Transparent
+    // WEIRD BEHAVIOUR: x11 window depth forces EGL depth
+    //                  so EGL depth is quite useless for X11
+    if (attribs.depth != attribs.egl_depth)
+        GPULogger::warning("[opengl] color depth mismatch, EGL: %d ~ X11 window: %d",
+            attribs.egl_depth, attribs.depth);
+    gtx->linux_is_rgba = attribs.depth == 32;
 }
 
 // ---------------------------------
 // Linux OpenGL Context: EGL Surface
 // ---------------------------------
 
-static LinuxEGL* getLinuxEGL(LinuxEGLDriver* driver, void* display, LinuxEGLOption option, int msaa_samples) {
-    LinuxEGL* egl_found = driver->list;
+static void configureEGLSurface(LinuxEGLContext* gtx, void* window, LinuxEGLOption option) {
+    LinuxEGL* egl = gtx->egl;
+    EGLSurface surface = nullptr;
+
+    if (egl != nullptr) {
+        switch (option) {
+            case LinuxEGLOption::LINUX_WAYLAND:
+                configureWaylandSurface(gtx, window); break;
+            case LinuxEGLOption::LINUX_X11:
+                configureX11Surface(gtx, window); break;
+        }
+
+        // Create EGL Surface
+        surface = eglCreateWindowSurface(
+            egl->display, egl->config,
+            (EGLNativeWindowType) window,
+            attr_surface);
+    }
+
+    // Check if the Surface was Created
+    if (surface != EGL_NO_SURFACE) {
+        gtx->surface = surface;
+        gtx->linux_is_x11 = egl->linux_is_x11;
+    } else GPULogger::error("[opengl] failed create EGL surface for %p", window);
+}
+
+static void configureEGLContext(LinuxEGLContext* gtx, void* display, LinuxEGLOption option) {
+    LinuxEGL* list = gtx->driver->list;
+    LinuxEGL* egl_found = list;
     // Find Already Created EGL
     while (egl_found) {
-        if (egl_found->native == display)
-            return egl_found;
+        if (egl_found->linux_display == display)
+            goto FOUND_EGL;
+        // Next EGL Context
         egl_found = egl_found->next;
     }
 
     // Create Linux EGL Display
-    egl_found = createLinuxEGL(display, option, msaa_samples);
+    egl_found = createLinuxEGL(display, option);
     if (egl_found) {
-        egl_found->next = driver->list;
+        egl_found->next = list;
         egl_found->prev = nullptr;
-        driver->list = egl_found;
+        gtx->driver->list = egl_found;
     }
 
-    // Return Created Display
-    return egl_found;
-}
-
-static EGLSurface createLinuxEGLSurface(LinuxEGL* egl, void* native) {
-    EGLSurface surface = eglCreateWindowSurface(
-        egl->display, egl->config,
-        (EGLNativeWindowType) native,
-        attr_surface);
-
-    // Check if the Surface was Created
-    if (surface == EGL_NO_SURFACE) {
-        GPULogger::error("[opengl] failed create EGL surface for %p", native);
-        return surface;
-    }
-
-    // Return Created
-    return surface;
+    FOUND_EGL: // Return Created Display
+        gtx->egl = egl_found;
+        gtx->display = (egl_found) ?
+            egl_found->display : nullptr;
 }
 
 // -----------------------------------
@@ -430,25 +479,19 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
     }
 
     // Create EGL Context
-    LinuxEGLContext gtx = {};
+    LinuxEGLContext gtx = {.driver = &m_egl};
     switch (syswm.subsystem) {
         case SDL_SYSWM_WAYLAND:
-            gtx.egl = getLinuxEGL(&m_egl, syswm.info.wl.display,
-                LinuxEGLOption::LINUX_WAYLAND, m_msaa_samples);
-            // Create EGL Surface
-            if (gtx.egl) {
-                GPULogger::success("[opengl] EGL Wayland context created for SDL2");
-                gtx.surface = createLinuxEGLSurface(gtx.egl,
-                    syswm.info.wl.surface);
+            configureEGLContext(&gtx, syswm.info.wl.display, LinuxEGLOption::LINUX_WAYLAND);
+            configureEGLSurface(&gtx, syswm.info.wl.surface, LinuxEGLOption::LINUX_WAYLAND);
+            if (gtx.egl && gtx.surface) {
+                GPULogger::success("[opengl] EGL Wayland surface created for SDL2:%p", win);
             } break;
         case SDL_SYSWM_X11:
-            gtx.egl = getLinuxEGL(&m_egl, syswm.info.x11.display,
-                LinuxEGLOption::LINUX_X11, m_msaa_samples);
-            // Create EGL Surface
-            if (gtx.egl) {
-                GPULogger::success("[opengl] EGL X11 context created for SDL2");
-                gtx.surface = createLinuxEGLSurface(gtx.egl,
-                    (void*) syswm.info.x11.window);
+            configureEGLContext(&gtx, (void*) syswm.info.x11.display, LinuxEGLOption::LINUX_X11);
+            configureEGLSurface(&gtx, (void*) syswm.info.x11.window, LinuxEGLOption::LINUX_X11);
+            if (gtx.egl && gtx.surface) {
+                GPULogger::success("[opengl] EGL X11 surface created for SDL2:%p", win);
             } break;
         default: // Invalid Windowing
             GPULogger::error("SDL2 window is not Wayland or X11");
@@ -457,7 +500,6 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
 
     // Create GLContext
     if (gtx.egl && gtx.surface) {
-        gtx.display = gtx.egl->display;
         GLContext* ctx0 = new GLContext();
         ctx0->m_driver = this;
         ctx0->m_window = win;
