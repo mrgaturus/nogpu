@@ -45,6 +45,7 @@ class GLDriver : GPUDriver {
     GLContext* m_context_list = nullptr;
     unsigned int m_features = 0;
     int m_msaa_samples = 0;
+    bool m_rgba = false;
 
     // Linux EGL Context
     #if defined(__unix__)
@@ -53,6 +54,7 @@ class GLDriver : GPUDriver {
 
     bool impl__shutdown() override;
     bool impl__checkInitialized() override;
+    bool impl__checkRGBASurface() override;
     bool impl__checkFeature(GPUDriverFeature feature) override;
     int impl__getMultisamplesCount() override;
     GPUDriverOption impl__getDriverOption() override;
@@ -66,7 +68,7 @@ class GLDriver : GPUDriver {
         void makeCurrent(GLContext* ctx);
         void makeDestroyed(GLContext* ctx);
     protected: // GL Driver Initialize
-        GLDriver(int msaa_samples);
+        GLDriver(int msaa_samples, bool rgba);
         friend GPUDriver;
 };
 

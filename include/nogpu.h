@@ -58,15 +58,18 @@ class GPUDriver {
         // Driver Abstract Implementation
         virtual bool impl__shutdown() = 0;
         virtual bool impl__checkInitialized() = 0;
+        virtual bool impl__checkRGBASurface() = 0;
         virtual bool impl__checkFeature(GPUDriverFeature feature) = 0;
         virtual int impl__getMultisamplesCount() = 0;
         virtual GPUDriverOption impl__getDriverOption() = 0;
 
     public: // Driver Initialize
-        static bool initialize(GPUDriverOption option, int msaa_samples = 0);
+        static bool initialize(GPUDriverOption option,
+            int msaa_samples = 0, bool rgba = false);
         static bool shutdown();
         // Driver Information
         static bool checkInitialized();
+        static bool checkRGBASurface();
         static bool checkFeature(GPUDriverFeature feature);
         static int getMultisamplesCount();
         static GPUDriverOption getDriverOption();

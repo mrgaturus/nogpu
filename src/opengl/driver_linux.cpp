@@ -15,7 +15,8 @@ static EGLint attr_egl[] = {
     EGL_RED_SIZE, 8,
     EGL_GREEN_SIZE, 8,
     EGL_BLUE_SIZE, 8,
-    EGL_ALPHA_SIZE, 8,
+    EGL_ALPHA_SIZE, 0,
+    EGL_BUFFER_SIZE, 24,
     // Optional MSAA
     EGL_SAMPLES, 0,
     EGL_SAMPLE_BUFFERS, 0,
@@ -39,15 +40,25 @@ static EGLint attr_surface[] = {
 // Linux OpenGL Driver: Constructor
 // --------------------------------
 
-static void egl_configure_msaa(int msaa_samples) {
+static void egl_configure_msaa(int msaa_samples, bool rgba) {
     if (msaa_samples < 0) msaa_samples = 0;
     if (msaa_samples > 16) msaa_samples = 16;
+
+   // Configure RGBA Surface
+    if (rgba) {
+        attr_egl[13] = 8;
+        attr_egl[15] = 32;
+    } else {
+        attr_egl[13] = 0;
+        attr_egl[15] = 24;
+    }
+
     // Configure Multisample Rendering
-    attr_egl[15] = !! msaa_samples;
-    attr_egl[17] = next_power_of_two(msaa_samples);
+    attr_egl[17] = !! msaa_samples;
+    attr_egl[19] = next_power_of_two(msaa_samples);
 }
 
-GLDriver::GLDriver(int msaa_samples) {
+GLDriver::GLDriver(int msaa_samples, bool rgba) {
     EGLDisplay egl_display;
     EGLConfig egl_config;
     EGLContext egl_context;
@@ -72,7 +83,7 @@ GLDriver::GLDriver(int msaa_samples) {
         GPULogger::error("[opengl] failed initialize EGL"); goto TERMINATE_EGL;
     }
 
-    egl_configure_msaa(msaa_samples);
+    egl_configure_msaa(msaa_samples, rgba);
     if (eglChooseConfig(egl_display, attr_egl, &egl_config, 1, &egl_num_config) == EGL_FALSE) {
         GPULogger::error("[opengl] failed configure EGL"); goto TERMINATE_EGL;
     }
@@ -112,6 +123,8 @@ GLDriver::GLDriver(int msaa_samples) {
         // Define Features
         m_features = features;
         m_msaa_samples = msaa_samples;
+        m_rgba = rgba;
+
         // Output EGL and OpenGL Information
         const char* vendor = (const char*) glGetString(0x1F02);
         GPULogger::success("[opengl] EGL version: %d.%d", egl_major, egl_minor);
@@ -149,6 +162,7 @@ bool GLDriver::impl__shutdown() {
     // Reset Private
     m_features = 0;
     m_msaa_samples = 0;
+    m_rgba = false;
 
     // Return Driver Shutdown Status
     if (result) GPULogger::success("[opengl] terminated EGL display");
@@ -162,6 +176,10 @@ bool GLDriver::impl__shutdown() {
 
 bool GLDriver::impl__checkInitialized() {
     return m_features > 0;
+}
+
+bool GLDriver::impl__checkRGBASurface() {
+    return m_rgba;
 }
 
 bool GLDriver::impl__checkFeature(GPUDriverFeature feature) {
