@@ -33,7 +33,11 @@ typedef struct LinuxEGLContext {
     // EGL Attributes
     EGLDisplay display;
     EGLSurface surface;
-    void* egl_surface;
+    void* wl_surface;
+    void* wl_resize_proc;
+    void* wl_destroy_proc;
+    void* wl_dimensions_proc;
+    // EGL Linux Features
     bool linux_is_x11;
     bool linux_is_rgba;
 } LinuxEGLContext;
@@ -62,6 +66,12 @@ class GLDriver : GPUDriver {
     // Context Creation: SDL2 & SDL3
     #if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
         GPUContext *impl__createContext(SDL_Window *win) override;
+    #endif
+
+    // Context Creation: Raw Platform
+    #if defined(__unix__)
+        GPUContext *impl__createContext(GPUWindowX11 win) override;
+        GPUContext *impl__createContext(GPUWindowWayland win) override;
     #endif
 
     public: // GL Context Current

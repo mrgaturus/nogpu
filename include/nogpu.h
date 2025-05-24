@@ -10,6 +10,26 @@
 #include <SDL2/SDL.h>
 #endif
 
+// -------------------------
+// GPU Objects: Window Linux
+// -------------------------
+
+#if defined(__unix__)
+
+typedef struct {
+    void* display; // Xlib.h :: Display
+    unsigned long window; // Xlib.h :: Window
+    int w, h;
+} GPUWindowX11;
+
+typedef struct {
+    void* display; // wayland-client.h :: wl_display
+    void* surface; // wayland-client.h :: wl_surface
+    int w, h;
+} GPUWindowWayland;
+
+#endif
+
 // -------------------
 // GPU Objects: Driver
 // -------------------
@@ -74,10 +94,22 @@ class GPUDriver {
         static int getMultisamplesCount();
         static GPUDriverOption getDriverOption();
 
+    // ----------------------------
+    // GPU Driver: Context Creation
+    // ----------------------------
+
     // Context Creation: SDL2 & SDL3
     #if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
         protected: virtual GPUContext *impl__createContext(SDL_Window *win) = 0;
         public: static GPUContext *createContext(SDL_Window *win);
+    #endif
+
+    // Context Creation: Raw Platform
+    #if defined(__unix__)
+        protected: virtual GPUContext *impl__createContext(GPUWindowX11 win) = 0;
+        protected: virtual GPUContext *impl__createContext(GPUWindowWayland win) = 0;
+        public: static GPUContext *createContext(GPUWindowX11 win);
+        public: static GPUContext *createContext(GPUWindowWayland win);
     #endif
 };
 

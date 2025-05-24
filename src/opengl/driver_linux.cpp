@@ -194,6 +194,96 @@ GPUDriverOption GLDriver::impl__getDriverOption() {
     return GPUDriverOption::DRIVER_OPENGL;
 }
 
+// --------------------------------------
+// Linux OpenGL Context: Wayland Specific
+// --------------------------------------
+
+typedef struct wl_egl_window wl_egl_window;
+typedef wl_egl_window* (*wl_egl_window_create_t) (void* surface, int w, int h);
+typedef void (*wl_egl_window_resize_t) (wl_egl_window* win, int w, int h, int dx, int dy);
+typedef void (*wl_egl_window_get_attached_size_t) (wl_egl_window* win, int *w, int *h);
+typedef void (*wl_egl_window_destroy_t) (wl_egl_window* win);
+
+static void configureWaylandSurface(LinuxEGLContext* gtx, void* window) {
+    LinuxEGLDriver* driver = gtx->driver;
+    LinuxEGL* egl = gtx->egl;
+
+    // Open Wayland Module
+    if (!driver->so_wayland) driver->so_wayland =
+        dlopen("libwayland-egl.so.1", RTLD_LAZY | RTLD_GLOBAL);
+    if (!driver->so_wayland) {
+        GPULogger::error("[opengl] failed load libwayland-egl.so.1");
+        return;
+    }
+
+    // Create Wayland EGL Window Surface
+    wl_egl_window_create_t wl_egl_window_create = (wl_egl_window_create_t)
+        dlsym(driver->so_wayland, "wl_egl_window_create");
+    gtx->wl_surface = (void*) wl_egl_window_create(window, 64, 64);
+    if (!gtx->wl_surface) {
+        GPULogger::error("[opengl] failed creating wayland EGL window");
+        return;
+    }
+
+    // Cache Wayland EGL Proc Symbols
+    gtx->wl_resize_proc = dlsym(driver->so_wayland, "wl_egl_window_resize");
+    gtx->wl_dimensions_proc = dlsym(driver->so_wayland, "wl_egl_window_get_attached_size");
+    gtx->wl_destroy_proc = dlsym(driver->so_wayland, "wl_egl_window_destroy");
+
+}
+
+static void resizeWaylandSurface(LinuxEGLContext* gtx, int w, int h) {
+    wl_egl_window_resize_t wl_egl_window_resize = (wl_egl_window_resize_t) gtx->wl_resize_proc;
+    wl_egl_window_resize((wl_egl_window*) gtx->wl_surface, w, h, 0, 0);
+}
+
+// ----------------------------------
+// Linux OpenGL Context: X11 Specific
+// ----------------------------------
+
+typedef struct {
+	int x, y;
+	int width, height;
+	int egl_depth;
+	int depth;
+    // Unused X11 Attributes
+    char unused[232];
+} x11_window_attributes_t;
+
+typedef void (*x11_XGetWindowAttributes_t)(
+    void* display,
+    unsigned long window,
+    x11_window_attributes_t* result
+);
+
+static void configureX11Surface(LinuxEGLContext* gtx, void* window) {
+    LinuxEGLDriver* driver = gtx->driver;
+    LinuxEGL* egl = gtx->egl;
+
+    // Open X11 Module
+    if (!driver->so_x11) driver->so_x11 =
+        dlopen("libX11.so.6", RTLD_LAZY | RTLD_GLOBAL);
+    if (!driver->so_x11) {
+        GPULogger::error("[opengl] failed load libX11.so.6");
+        return;
+    }
+
+    x11_window_attributes_t attribs;
+    x11_XGetWindowAttributes_t XGetWindowAttributes =
+        (x11_XGetWindowAttributes_t) dlsym(driver->so_x11, "XGetWindowAttributes");
+    // Get X11 & EGL Relevant Attributes
+    XGetWindowAttributes(egl->linux_display, (unsigned long) window, &attribs);
+    eglGetConfigAttrib(egl->display, egl->config, EGL_BUFFER_SIZE, &attribs.egl_depth);
+
+    // Check if Window is Transparent
+    // WEIRD BEHAVIOUR: x11 window depth forces EGL depth
+    //                  so EGL depth is quite useless for X11
+    if (attribs.depth != attribs.egl_depth)
+        GPULogger::warning("[opengl] color depth mismatch, EGL: %d ~ X11 window: %d",
+            attribs.egl_depth, attribs.depth);
+    gtx->linux_is_rgba = attribs.depth == 32;
+}
+
 // -----------------------------
 // Linux OpenGL Context: Current
 // -----------------------------
@@ -217,10 +307,10 @@ void GLDriver::makeCurrent(GLContext* ctx) {
 
 void GLDriver::makeDestroyed(GLContext* ctx) {
     LinuxEGLDriver* driver = &m_egl;
-    LinuxEGLContext gtx = ctx->m_gtx;
+    LinuxEGLContext* gtx = &ctx->m_gtx;
 
-    if (driver->current == gtx.egl && driver->surface == gtx.surface) {
-        eglMakeCurrent(gtx.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    if (driver->current == gtx->egl && driver->surface == gtx->surface) {
+        eglMakeCurrent(gtx->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         // Cache Current EGL Connection
         driver->current = nullptr;
         driver->surface = nullptr;
@@ -228,8 +318,15 @@ void GLDriver::makeDestroyed(GLContext* ctx) {
 
     // Destroy Context Surface
     this->cached__remove(ctx);
-    if (eglDestroySurface(gtx.display, gtx.surface) == EGL_FALSE)
+    if (eglDestroySurface(gtx->display, gtx->surface) == EGL_FALSE)
         GPULogger::error("[opengl] failed destroying EGL surface");
+
+    // Destroy Wayland Context Surface
+    if (gtx->wl_surface) {
+        wl_egl_window_destroy_t wl_egl_window_destroy =
+            (wl_egl_window_destroy_t) gtx->wl_destroy_proc;
+        wl_egl_window_destroy((wl_egl_window*) gtx->wl_surface);
+    }
 }
 
 // ---------------------------
@@ -358,58 +455,6 @@ TERMINATE_EGL:
     return nullptr;
 }
 
-// --------------------------------------
-// Linux OpenGL Context: Wayland Specific
-// --------------------------------------
-
-static void configureWaylandSurface(LinuxEGLContext* gtx, void* window) {
-    
-}
-
-// ----------------------------------
-// Linux OpenGL Context: X11 Specific
-// ----------------------------------
-
-typedef struct {
-	int x, y;
-	int width, height;
-	int egl_depth;
-	int depth;
-    // Unused X11 Attributes
-    char unused[252];
-} x11_window_attributes_t;
-
-typedef void (*x11_XGetWindowAttributes_t)(
-    void* display,
-    unsigned long window,
-    x11_window_attributes_t* result
-);
-
-static void configureX11Surface(LinuxEGLContext* gtx, void* window) {
-    LinuxEGLDriver* driver = gtx->driver;
-    LinuxEGL* egl = gtx->egl;
-
-    // Open X11 Module
-    if (!driver->so_x11) driver->so_x11 =
-        dlopen("libX11.so", RTLD_LAZY | RTLD_GLOBAL);
-    if (!driver->so_x11) return;
-
-    x11_window_attributes_t attribs;
-    x11_XGetWindowAttributes_t XGetWindowAttributes =
-        (x11_XGetWindowAttributes_t) dlsym(driver->so_x11, "XGetWindowAttributes");
-    // Get X11 & EGL Relevant Attributes
-    XGetWindowAttributes(egl->linux_display, (unsigned long) window, &attribs);
-    eglGetConfigAttrib(egl->display, egl->config, EGL_BUFFER_SIZE, &attribs.egl_depth);
-
-    // Check if Window is Transparent
-    // WEIRD BEHAVIOUR: x11 window depth forces EGL depth
-    //                  so EGL depth is quite useless for X11
-    if (attribs.depth != attribs.egl_depth)
-        GPULogger::warning("[opengl] color depth mismatch, EGL: %d ~ X11 window: %d",
-            attribs.egl_depth, attribs.depth);
-    gtx->linux_is_rgba = attribs.depth == 32;
-}
-
 // ---------------------------------
 // Linux OpenGL Context: EGL Surface
 // ---------------------------------
@@ -421,7 +466,9 @@ static void configureEGLSurface(LinuxEGLContext* gtx, void* window, LinuxEGLOpti
     if (egl != nullptr) {
         switch (option) {
             case LinuxEGLOption::LINUX_WAYLAND:
-                configureWaylandSurface(gtx, window); break;
+                configureWaylandSurface(gtx, window);
+                window = gtx->wl_surface;
+                break;
             case LinuxEGLOption::LINUX_X11:
                 configureX11Surface(gtx, window); break;
         }
@@ -466,6 +513,18 @@ static void configureEGLContext(LinuxEGLContext* gtx, void* display, LinuxEGLOpt
 }
 
 // -----------------------------------
+// Linux OpenGL Context: Raw Windowing
+// -----------------------------------
+
+GPUContext* GLDriver::impl__createContext(GPUWindowX11 win) {
+    return nullptr;
+}
+
+GPUContext* GLDriver::impl__createContext(GPUWindowWayland win) {
+    return nullptr;
+}
+
+// -----------------------------------
 // Linux OpenGL Context: SDL Windowing
 // -----------------------------------
 
@@ -504,6 +563,9 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
             configureEGLSurface(&gtx, syswm.info.wl.surface, LinuxEGLOption::LINUX_WAYLAND);
             if (gtx.egl && gtx.surface) {
                 GPULogger::success("[opengl] EGL Wayland surface created for SDL2:%p", win);
+                // Resize Wayland Surface
+                int w, h; SDL_GetWindowSize(win, &w, &h);
+                resizeWaylandSurface(&gtx, w, h);
             } break;
         case SDL_SYSWM_X11:
             configureEGLContext(&gtx, (void*) syswm.info.x11.display, LinuxEGLOption::LINUX_X11);

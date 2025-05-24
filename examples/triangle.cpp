@@ -5,7 +5,7 @@
 #include <SDL2/SDL.h>
 
 int main() {
-    if (SDL_VideoInit("x11") != 0)
+    if (SDL_VideoInit(NULL) != 0)
         printf("failed initialize video driver\n");
     SDL_Window* win = SDL_CreateWindow("nogpu triangle",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, SDL_WINDOW_HIDDEN);
