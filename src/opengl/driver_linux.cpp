@@ -580,6 +580,65 @@ GPUContext* GLDriver::impl__createContext(GPUWindowWayland win) {
 #if defined(NOGPU_SDL3)
 
 GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
+    SDL_PropertiesID win_props;
+    LinuxEGLContext gtx = {.driver = &m_egl};
+
+    // Check Valid SDL3 Window
+    if (!win || (win_props = SDL_GetWindowProperties(win)) == 0) {
+        GPULogger::error("invalid SDL3 window");
+        return nullptr;
+    }
+
+    // Check SDL3 Window Flags
+    if (SDL_GetWindowFlags(win) & (SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL)) {
+        GPULogger::error("SDL3 window flags must not have SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL");
+        return nullptr;
+    } else if (SDL_WindowHasSurface(win) || SDL_GetRenderer(win)) {
+        GPULogger::error("SDL3 window must not have a SDL_Surface or SDL_Renderer");
+        return nullptr;
+    }
+
+    // Try Wayland Surface
+    void* display = SDL_GetPointerProperty(win_props,
+        SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr);
+    if (display != nullptr) {
+        if (SDL_HasProperty(win_props, SDL_PROP_WINDOW_WAYLAND_EGL_WINDOW_POINTER)) {
+            GPULogger::error("SDL3 window must not have an egl_window");
+            return nullptr;
+        }
+
+        void* surface = SDL_GetPointerProperty(win_props,
+            SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr);
+        // Create Wayland EGL Context for SDL3 Window
+        configureEGLContext(&gtx, display, LinuxEGLOption::LINUX_WAYLAND);
+        configureEGLSurface(&gtx, surface, LinuxEGLOption::LINUX_WAYLAND);
+        if (gtx.egl && gtx.surface) {
+            GPULogger::success("[opengl] EGL Wayland surface created for SDL3:%p", win);
+            // Resize Wayland Surface
+            int w, h; SDL_GetWindowSize(win, &w, &h);
+            resizeWaylandSurface(&gtx, w, h);
+            return makeLinuxContext(gtx);
+        }
+    }
+
+    // Try X11 Surface
+    display = SDL_GetPointerProperty(win_props,
+        SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr);
+    if (display != nullptr) {
+        unsigned long xid = SDL_GetNumberProperty(win_props,
+            SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
+
+        // Create X11 EGL Context for SDL3 Window
+        configureEGLContext(&gtx, (void*) display, LinuxEGLOption::LINUX_X11);
+        configureEGLSurface(&gtx, (void*) xid, LinuxEGLOption::LINUX_X11);
+        if (gtx.egl && gtx.surface) {
+            GPULogger::success("[opengl] EGL X11 surface created for SDL3:%p", win);
+            return makeLinuxContext(gtx);
+        }
+    }
+
+    // No Valid SDL3 Window Found
+    GPULogger::error("SDL3 window is not Wayland or X11");
     return nullptr;
 }
 
@@ -594,7 +653,7 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
         return nullptr;
     }
 
-    // Check Window Flags
+    // Check SDL2 Window Flags
     if (SDL_GetWindowFlags(win) & (SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL)) {
         GPULogger::error("SDL2 window flags must not have SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL");
         return nullptr;
@@ -607,6 +666,11 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
     LinuxEGLContext gtx = {.driver = &m_egl};
     switch (syswm.subsystem) {
         case SDL_SYSWM_WAYLAND:
+            if (syswm.info.wl.egl_window) {
+                GPULogger::error("SDL2 window must not have an egl_window");
+                return nullptr;
+            }
+
             configureEGLContext(&gtx, syswm.info.wl.display, LinuxEGLOption::LINUX_WAYLAND);
             configureEGLSurface(&gtx, syswm.info.wl.surface, LinuxEGLOption::LINUX_WAYLAND);
             if (gtx.egl && gtx.surface) {

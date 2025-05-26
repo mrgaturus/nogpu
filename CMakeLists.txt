@@ -10,8 +10,9 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
 option(NOGPU_DEBUG "enable driver debugging" OFF)
 option(NOGPU_EXAMPLES "compile examples" OFF)
-option(NOGPU_SDL3 "use sdl3 windowing" OFF)
-option(NOGPU_SDL2 "use sdl2 windowing" ON)
+option(NOGPU_GLFW "use GLFW windowing" OFF)
+option(NOGPU_SDL3 "use SDL3 windowing" OFF)
+option(NOGPU_SDL2 "use SDL2 windowing" OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(nogpu STATIC
@@ -19,7 +20,18 @@ add_library(nogpu STATIC
     src/logger.cpp
     src/misc.cpp)
 
-# Windowing Surface
+# Windowing Surface: GLFW 3.4
+if (NOGPU_GLFW)
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+
+    find_package(glfw3 3.4 REQUIRED)
+    add_definitions(-DNOGPU_GLFW)
+    target_link_libraries(nogpu PRIVATE glfw)
+endif()
+
+# Windowing Surface: SDL
 if (NOGPU_SDL3)
     find_package(SDL3 REQUIRED)
     add_definitions(-DNOGPU_SDL3)

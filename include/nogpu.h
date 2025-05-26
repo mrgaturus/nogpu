@@ -3,6 +3,11 @@
 #ifndef NOGPU_H
 #define NOGPU_H
 
+// Include GLFW Window
+#if defined(NOGPU_GLFW)
+#include <GLFW/glfw3.h>
+#endif
+
 // Include SDL Window
 #if defined(NOGPU_SDL3)
 #include <SDL3/SDL.h>
@@ -97,6 +102,12 @@ class GPUDriver {
     // ----------------------------
     // GPU Driver: Context Creation
     // ----------------------------
+
+    // Context Creation: GLFW
+    #if defined(NOGPU_GLFW)
+        protected: virtual GPUContext *impl__createContext(GLFWwindow *win) = 0;
+        public: static GPUContext *createContext(GLFWwindow *win);
+    #endif
 
     // Context Creation: SDL2 & SDL3
     #if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
