@@ -3,11 +3,49 @@
 #include <cstdio>
 #include <nogpu.h>
 
+// -----------------
+// GLFW3 Hello World
+// -----------------
+
+#if defined(NOGPU_GLFW)
+#include <GLFW/glfw3.h>
+
+int main() {
+    // Initialize GLFW
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+    if (!glfwInit()) {
+        return -1;  // Failed to initialize GLFW
+    }
+
+    // Create a windowed mode window and its OpenGL context
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    GLFWwindow* window = glfwCreateWindow(1024, 600, "nogpu hello", NULL, NULL);
+    if (!window) {
+        glfwTerminate();
+        return -1;  // Failed to create window
+    }
+
+    // Create GPU Driver
+    GPUDriver::initialize(GPUDriverOption::DRIVER_OPENGL);
+    GPUContext* gpuCTX = GPUDriver::createContext(window);
+
+    // Loop until the user closes the window
+    while (!glfwWindowShouldClose(window)) {
+       glfwPollEvents();
+       gpuCTX->swapSurface();
+    }
+
+    // Clean up GLFW
+    GPUDriver::shutdown();
+    glfwTerminate();
+    return 0;
+}
+
 // ----------------
 // SDL3 Hello World
 // ----------------
 
-#if defined(NOGPU_SDL3)
+#elif defined(NOGPU_SDL3)
 #include <SDL3/SDL.h>
 
 int main() {

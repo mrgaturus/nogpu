@@ -64,6 +64,11 @@ class GLDriver : GPUDriver {
     int impl__getMultisamplesCount() override;
     GPUDriverOption impl__getDriverOption() override;
 
+    // Context Creation: GLFW
+    #if defined(NOGPU_GLFW)
+        GPUContext *impl__createContext(GLFWwindow* win) override;
+    #endif
+
     // Context Creation: SDL2 & SDL3
     #if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
         GPUContext *impl__createContext(SDL_Window *win) override;

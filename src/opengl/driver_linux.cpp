@@ -573,6 +573,71 @@ GPUContext* GLDriver::impl__createContext(GPUWindowWayland win) {
     return makeLinuxContext(gtx);
 }
 
+// ------------------------------------
+// Linux OpenGL Context: GLFW Windowing
+// ------------------------------------
+
+#if defined(NOGPU_GLFW)
+
+extern "C" {
+    extern GLFWAPI void* glfwGetX11Display(void);
+    extern GLFWAPI void* glfwGetWaylandDisplay(void);
+    extern GLFWAPI unsigned long glfwGetX11Window(GLFWwindow* window);
+    extern GLFWAPI void* glfwGetWaylandWindow(GLFWwindow* window);
+    extern GLFWAPI void* glfwGetGLXContext(GLFWwindow* window);
+    extern GLFWAPI void* glfwGetEGLContext(GLFWwindow* window);
+}
+
+GPUContext* GLDriver::impl__createContext(GLFWwindow* win) {
+    LinuxEGLContext gtx = {.driver = &m_egl};
+
+    if (!win) {
+        GPULogger::error("invalid GLFW window");
+        return nullptr;
+    } else if (glfwGetGLXContext(win) || glfwGetEGLContext(win)) {
+        GPULogger::error("GLFW window must not have a GLX context or EGL context");
+        return nullptr;
+    } else if (glfwGetWindowAttrib(win, GLFW_CLIENT_API) != GLFW_NO_API) {
+        GPULogger::error("GLFW window GLFW_CLIENT_API must be GLFW_NO_API");
+        return nullptr;
+    }
+
+    // Try Wayland Surface
+    void* display = glfwGetWaylandDisplay();
+    if (display != nullptr) {
+        void* surface = glfwGetWaylandWindow(win);
+        // Create Wayland EGL Context for GLFW3 Window
+        configureEGLContext(&gtx, display, LinuxEGLOption::LINUX_WAYLAND);
+        configureEGLSurface(&gtx, surface, LinuxEGLOption::LINUX_WAYLAND);
+        if (gtx.egl && gtx.surface) {
+            GPULogger::success("[opengl] EGL Wayland surface created for GLFW3:%p", win);
+            // Resize Wayland Surface
+            int w, h; glfwGetWindowSize(win, &w, &h);
+            resizeWaylandSurface(&gtx, w, h);
+            return makeLinuxContext(gtx);
+        }
+    }
+
+    // Try X11 Surface
+    display = glfwGetX11Display();
+    if (display != nullptr) {
+        unsigned long xid = glfwGetX11Window(win);
+        // Create X11 EGL Context for GLFW3 Window
+        configureEGLContext(&gtx, (void*) display, LinuxEGLOption::LINUX_X11);
+        configureEGLSurface(&gtx, (void*) xid, LinuxEGLOption::LINUX_X11);
+        if (gtx.egl && gtx.surface) {
+            GPULogger::success("[opengl] EGL X11 surface created for GLFW3:%p", win);
+            return makeLinuxContext(gtx);
+        }
+    }
+
+    // No Valid GLFW3 Window Found
+    GPULogger::error("GLFW window is not Wayland or X11");
+    return nullptr;
+}
+
+#endif // NOGPU_GLFW
+
 // -----------------------------------
 // Linux OpenGL Context: SDL Windowing
 // -----------------------------------

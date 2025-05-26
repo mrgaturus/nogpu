@@ -5,6 +5,7 @@
 
 // Include GLFW Window
 #if defined(NOGPU_GLFW)
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #endif
 

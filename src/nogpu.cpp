@@ -98,6 +98,32 @@ void GPUDriver::cached__remove(GPUContext* ctx) {
     ctx->m_prev = nullptr;
 }
 
+// ----------------------
+// Context Creation: GLFW
+// ----------------------
+
+#if defined(NOGPU_GLFW)
+
+GPUContext* GPUDriver::createContext(GLFWwindow *win) {
+    if (!GPUDriver::checkInitialized()) {
+        GPULogger::error("driver is not initialized");
+        return nullptr;
+    }
+
+    // Find or Create New Context
+    GPUContext* ctx = m_driver->cached__find(win);
+    if (!ctx) {
+        ctx = m_driver->impl__createContext(win);
+        m_driver->cached__add(ctx);
+        ctx->m_window = win;
+    }
+
+    // Return Context
+    return ctx;
+}
+
+#endif
+
 // -----------------------------
 // Context Creation: SDL2 & SDL3
 // -----------------------------
