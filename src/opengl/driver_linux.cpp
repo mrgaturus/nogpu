@@ -182,6 +182,10 @@ bool GLDriver::impl__checkRGBASurface() {
     return m_rgba;
 }
 
+bool GLDriver::impl__checkVerticalSync() {
+    return m_vsync;
+}
+
 bool GLDriver::impl__checkFeature(GPUDriverFeature feature) {
     return m_features & feature__flag(feature);
 }
@@ -192,6 +196,29 @@ int GLDriver::impl__getMultisamplesCount() {
 
 GPUDriverOption GLDriver::impl__getDriverOption() {
     return GPUDriverOption::DRIVER_OPENGL;
+}
+
+void GLDriver::impl__setVerticalSync(bool value) {
+    GLContext* ctx = (GLContext*) m_ctx_cache;
+
+    // Backup Current EGL Objects
+    EGLDisplay egl_dpy0 = eglGetCurrentDisplay();
+    EGLContext egl_ctx0 = eglGetCurrentContext();
+    EGLSurface egl_draw0 = eglGetCurrentSurface(EGL_DRAW);
+    EGLSurface egl_read0 = eglGetCurrentSurface(EGL_READ);
+
+    // Apply Vertical Vsync
+    while (ctx) {
+        LinuxEGLContext* gtx = &ctx->m_gtx;
+        eglMakeCurrent(gtx->display,
+            gtx->surface, gtx->surface, gtx->egl->context);
+        eglSwapInterval(gtx->display, (value) ? 1 : 0);
+        ctx = (GLContext*) ctx->m_next;
+    }
+
+    // Restore Current EGL Objects
+    eglMakeCurrent(egl_dpy0, egl_draw0, egl_read0, egl_ctx0);
+    m_vsync = value;
 }
 
 // --------------------------------------
@@ -303,9 +330,8 @@ GPUContext* GLDriver::makeLinuxContext(LinuxEGLContext gtx) {
         GLContext* ctx0 = new GLContext();
         ctx0->m_driver = this;
         ctx0->m_gtx = gtx;
-        // Return GPUContext
         ctx = (GPUContext*) ctx0;
-        this->cached__add(ctx);
+        impl__setVerticalSync(m_vsync);
     }
 
     // Return Created Context

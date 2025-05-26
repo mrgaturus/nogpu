@@ -85,9 +85,11 @@ class GPUDriver {
         virtual bool impl__shutdown() = 0;
         virtual bool impl__checkInitialized() = 0;
         virtual bool impl__checkRGBASurface() = 0;
+        virtual bool impl__checkVerticalSync() = 0;
         virtual bool impl__checkFeature(GPUDriverFeature feature) = 0;
         virtual int impl__getMultisamplesCount() = 0;
         virtual GPUDriverOption impl__getDriverOption() = 0;
+        virtual void impl__setVerticalSync(bool value) = 0;
 
     public: // Driver Initialize
         static bool initialize(GPUDriverOption option,
@@ -96,9 +98,11 @@ class GPUDriver {
         // Driver Information
         static bool checkInitialized();
         static bool checkRGBASurface();
+        static bool checkVerticalSync();
         static bool checkFeature(GPUDriverFeature feature);
         static int getMultisamplesCount();
         static GPUDriverOption getDriverOption();
+        static void setVerticalSync(bool value);
 
     // ----------------------------
     // GPU Driver: Context Creation

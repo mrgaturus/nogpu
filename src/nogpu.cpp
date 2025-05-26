@@ -46,6 +46,10 @@ bool GPUDriver::checkRGBASurface() {
     return (m_driver) && m_driver->impl__checkRGBASurface();
 }
 
+bool GPUDriver::checkVerticalSync() {
+    return (m_driver) && m_driver->impl__checkVerticalSync();
+}
+
 bool GPUDriver::checkFeature(GPUDriverFeature feature) {
     return (m_driver) && m_driver->impl__checkFeature(feature);
 }
@@ -58,6 +62,10 @@ int GPUDriver::getMultisamplesCount() {
 GPUDriverOption GPUDriver::getDriverOption() {
     if (!m_driver) return GPUDriverOption::DRIVER_NONE;
     return m_driver->impl__getDriverOption();
+}
+
+void GPUDriver::setVerticalSync(bool value) {
+    if (m_driver) m_driver->impl__setVerticalSync(value);
 }
 
 // -------------------------------

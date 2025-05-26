@@ -50,6 +50,7 @@ class GLDriver : GPUDriver {
     unsigned int m_features = 0;
     int m_msaa_samples = 0;
     bool m_rgba = false;
+    bool m_vsync = false;
 
     // Linux EGL Context
     #if defined(__unix__)
@@ -60,9 +61,11 @@ class GLDriver : GPUDriver {
     bool impl__shutdown() override;
     bool impl__checkInitialized() override;
     bool impl__checkRGBASurface() override;
+    bool impl__checkVerticalSync() override;
     bool impl__checkFeature(GPUDriverFeature feature) override;
     int impl__getMultisamplesCount() override;
     GPUDriverOption impl__getDriverOption() override;
+    void impl__setVerticalSync(bool value) override;
 
     // Context Creation: GLFW
     #if defined(NOGPU_GLFW)

@@ -12,7 +12,6 @@
 
 int main() {
     // Initialize GLFW
-    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
     if (!glfwInit()) {
         return -1;  // Failed to initialize GLFW
     }
@@ -28,6 +27,7 @@ int main() {
     // Create GPU Driver
     GPUDriver::initialize(GPUDriverOption::DRIVER_OPENGL);
     GPUContext* gpuCTX = GPUDriver::createContext(window);
+    GPUDriver::setVerticalSync(true);
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(window)) {
@@ -57,6 +57,7 @@ int main() {
     SDL_Window* win = SDL_CreateWindow("nogpu hello", 1024, 600, SDL_WINDOW_HIDDEN);
     GPUDriver::initialize(GPUDriverOption::DRIVER_OPENGL);
     GPUContext* gpuCTX = GPUDriver::createContext(win);
+    GPUDriver::setVerticalSync(true);
     SDL_ShowWindow(win);
 
     SDL_Event ev;
@@ -70,7 +71,6 @@ int main() {
 
         // Swap Context Surface
         gpuCTX->swapSurface();
-        SDL_Delay(16);
     }
 
 SHUTDOWN_DRIVER:
@@ -95,6 +95,7 @@ int main() {
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, SDL_WINDOW_HIDDEN);
     GPUDriver::initialize(GPUDriverOption::DRIVER_OPENGL);
     GPUContext* gpuCTX = GPUDriver::createContext(win);
+    GPUDriver::setVerticalSync(true);
     SDL_ShowWindow(win);
 
     SDL_Event ev;
@@ -108,7 +109,6 @@ int main() {
 
         // Swap Context Surface
         gpuCTX->swapSurface();
-        SDL_Delay(16);
     }
 
 SHUTDOWN_DRIVER:
