@@ -112,7 +112,13 @@ GPUContext* GPUDriver::createContext(SDL_Window *win) {
 
     // Find or Create New Context
     GPUContext* ctx = m_driver->cached__find(win);
-    if (!ctx) ctx = m_driver->impl__createContext(win);
+    if (!ctx) {
+        ctx = m_driver->impl__createContext(win);
+        m_driver->cached__add(ctx);
+        ctx->m_window = win;
+    }
+
+    // Return Context
     return ctx;
 }
 
@@ -131,8 +137,15 @@ GPUContext* GPUDriver::createContext(GPUWindowX11 win) {
     }
 
     // Find or Create New Context
-    GPUContext* ctx = m_driver->cached__find((void*) win.window);
-    if (!ctx) ctx = m_driver->impl__createContext(win);
+    void* win0 = (void*) win.window;
+    GPUContext* ctx = m_driver->cached__find(win0);
+    if (!ctx) {
+        ctx = m_driver->impl__createContext(win);
+        m_driver->cached__add(ctx);
+        ctx->m_window = win0;
+    }
+
+    // Return Context
     return ctx;
 }
 
@@ -144,7 +157,13 @@ GPUContext* GPUDriver::createContext(GPUWindowWayland win) {
 
     // Find or Create New Context
     GPUContext* ctx = m_driver->cached__find(win.surface);
-    if (!ctx) ctx = m_driver->impl__createContext(win);
+    if (!ctx) {
+        ctx = m_driver->impl__createContext(win);
+        m_driver->cached__add(ctx);
+        ctx->m_window = win.surface;
+    }
+
+    // Return Context
     return ctx;
 }
 

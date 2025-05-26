@@ -54,7 +54,7 @@ class GLDriver : GPUDriver {
     // Linux EGL Context
     #if defined(__unix__)
         LinuxEGLDriver m_egl = {};
-        GPUContext* makeLinuxContext(LinuxEGLContext ctx, void* win);
+        GPUContext* makeLinuxContext(LinuxEGLContext ctx);
     #endif
 
     bool impl__shutdown() override;

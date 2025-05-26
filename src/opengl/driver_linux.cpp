@@ -295,14 +295,13 @@ static void configureX11Surface(LinuxEGLContext* gtx, void* window) {
 // Linux OpenGL Context: Current
 // -----------------------------
 
-GPUContext* GLDriver::makeLinuxContext(LinuxEGLContext gtx, void* win) {
+GPUContext* GLDriver::makeLinuxContext(LinuxEGLContext gtx) {
     GPUContext* ctx = nullptr;
 
     // Create GLContext
     if (gtx.egl && gtx.surface) {
         GLContext* ctx0 = new GLContext();
         ctx0->m_driver = this;
-        ctx0->m_window = win;
         ctx0->m_gtx = gtx;
         // Return GPUContext
         ctx = (GPUContext*) ctx0;
@@ -556,7 +555,7 @@ GPUContext* GLDriver::impl__createContext(GPUWindowX11 win) {
     }
 
     // Return Created Context
-    return makeLinuxContext(gtx, window);
+    return makeLinuxContext(gtx);
 }
 
 GPUContext* GLDriver::impl__createContext(GPUWindowWayland win) {
@@ -571,7 +570,7 @@ GPUContext* GLDriver::impl__createContext(GPUWindowWayland win) {
     }
 
     // Return Created Context
-    return makeLinuxContext(gtx, win.surface);
+    return makeLinuxContext(gtx);
 }
 
 // -----------------------------------
@@ -628,7 +627,7 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
     }
 
     // Return Created Context
-    return makeLinuxContext(gtx, win);
+    return makeLinuxContext(gtx);
 }
 
 #endif
