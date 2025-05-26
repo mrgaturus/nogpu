@@ -17,7 +17,7 @@
 #if defined(__unix__)
 
 typedef struct {
-    void* display; // Xlib.h :: Display
+    void* display;        // Xlib.h :: Display
     unsigned long window; // Xlib.h :: Window
     int w, h;
 } GPUWindowX11;

@@ -79,6 +79,7 @@ void GLContext::swapSurface() {
     glClear(GL_COLOR_BUFFER_BIT);
     // Swap Context Buffer
     LinuxEGLContext *gtx = &m_gtx;
+    eglSwapInterval(gtx->display, 0);
     eglSwapBuffers(gtx->display, gtx->surface);
 }
 

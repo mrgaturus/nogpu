@@ -15,10 +15,21 @@ int main() {
     SDL_ShowWindow(win);
     gpuCTX->swapSurface();
 
-    printf("%s\n", "hello world");
-    char hello[1024];
-    fgets(hello, 1024, stdin);
+    SDL_Event ev;
+    while (true) {
+        while (SDL_PollEvent(&ev)) {
+            if (ev.type == SDL_QUIT) {
+                SDL_Quit();
+                goto SHUTDOWN_DRIVER;
+            }
+        }
 
+        // Swap Context Surface
+        gpuCTX->swapSurface();
+        SDL_Delay(16);
+    }
+
+SHUTDOWN_DRIVER:
     GPUDriver::shutdown();
     return 0;
 }

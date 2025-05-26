@@ -103,11 +103,49 @@ void GPUDriver::cached__remove(GPUContext* ctx) {
 // -----------------------------
 
 #if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
+
 GPUContext* GPUDriver::createContext(SDL_Window *win) {
-    if (!m_driver) return nullptr;
+    if (!GPUDriver::checkInitialized()) {
+        GPULogger::error("driver is not initialized");
+        return nullptr;
+    }
+
     // Find or Create New Context
     GPUContext* ctx = m_driver->cached__find(win);
     if (!ctx) ctx = m_driver->impl__createContext(win);
     return ctx;
 }
+
 #endif // SDL2 & SDL3
+
+// ------------------------------
+// Context Creation: Raw Platform
+// ------------------------------
+
+#if defined(__unix__)
+
+GPUContext* GPUDriver::createContext(GPUWindowX11 win) {
+    if (!GPUDriver::checkInitialized()) {
+        GPULogger::error("driver is not initialized");
+        return nullptr;
+    }
+
+    // Find or Create New Context
+    GPUContext* ctx = m_driver->cached__find((void*) win.window);
+    if (!ctx) ctx = m_driver->impl__createContext(win);
+    return ctx;
+}
+
+GPUContext* GPUDriver::createContext(GPUWindowWayland win) {
+    if (!GPUDriver::checkInitialized()) {
+        GPULogger::error("driver is not initialized");
+        return nullptr;
+    }
+
+    // Find or Create New Context
+    GPUContext* ctx = m_driver->cached__find(win.surface);
+    if (!ctx) ctx = m_driver->impl__createContext(win);
+    return ctx;
+}
+
+#endif // Raw Platform

@@ -256,6 +256,13 @@ typedef void (*x11_XGetWindowAttributes_t)(
     x11_window_attributes_t* result
 );
 
+typedef void (*x11_XResizeWindow_t)(
+    void* display,
+    unsigned long window,
+    unsigned int w,
+    unsigned int h
+);
+
 static void configureX11Surface(LinuxEGLContext* gtx, void* window) {
     LinuxEGLDriver* driver = gtx->driver;
     LinuxEGL* egl = gtx->egl;
@@ -287,6 +294,24 @@ static void configureX11Surface(LinuxEGLContext* gtx, void* window) {
 // -----------------------------
 // Linux OpenGL Context: Current
 // -----------------------------
+
+GPUContext* GLDriver::makeLinuxContext(LinuxEGLContext gtx, void* win) {
+    GPUContext* ctx = nullptr;
+
+    // Create GLContext
+    if (gtx.egl && gtx.surface) {
+        GLContext* ctx0 = new GLContext();
+        ctx0->m_driver = this;
+        ctx0->m_window = win;
+        ctx0->m_gtx = gtx;
+        // Return GPUContext
+        ctx = (GPUContext*) ctx0;
+        this->cached__add(ctx);
+    }
+
+    // Return Created Context
+    return ctx;
+}
 
 void GLDriver::makeCurrent(GLContext* ctx) {
     LinuxEGLDriver* driver = &m_egl;
@@ -517,11 +542,36 @@ static void configureEGLContext(LinuxEGLContext* gtx, void* display, LinuxEGLOpt
 // -----------------------------------
 
 GPUContext* GLDriver::impl__createContext(GPUWindowX11 win) {
-    return nullptr;
+    void* window = (void*) win.window;
+    LinuxEGLContext gtx = {.driver = &m_egl};
+    configureEGLContext(&gtx, (void*) win.display, LinuxEGLOption::LINUX_X11);
+    configureEGLSurface(&gtx, window, LinuxEGLOption::LINUX_X11);
+
+    // Resize X11 Window if Success
+    if (gtx.egl && gtx.surface) {
+        GPULogger::success("[opengl] EGL X11 surface created for XID:%ld", win.window);
+        x11_XResizeWindow_t XResizeWindow = (x11_XResizeWindow_t)
+            dlsym(m_egl.so_x11, "XResizeWindow");
+        XResizeWindow(gtx.egl->linux_display, win.window, win.w, win.h);
+    }
+
+    // Return Created Context
+    return makeLinuxContext(gtx, window);
 }
 
 GPUContext* GLDriver::impl__createContext(GPUWindowWayland win) {
-    return nullptr;
+    LinuxEGLContext gtx = {.driver = &m_egl};
+    configureEGLContext(&gtx, win.display, LinuxEGLOption::LINUX_WAYLAND);
+    configureEGLSurface(&gtx, win.surface, LinuxEGLOption::LINUX_WAYLAND);
+
+    // Resize Wayland EGL if Success
+    if (gtx.egl && gtx.surface) {
+        GPULogger::success("[opengl] EGL Wayland surface created for wl_surface:%p", win.surface);
+        resizeWaylandSurface(&gtx, win.w, win.h);
+    }
+
+    // Return Created Context
+    return makeLinuxContext(gtx, win.surface);
 }
 
 // -----------------------------------
@@ -539,20 +589,19 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
 
 GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
     SDL_SysWMinfo syswm;
-    GPUContext* ctx = nullptr;
     // Get SDL2 Native Info
     if (!win || !SDL_GetWindowWMInfo(win, &syswm)) {
         GPULogger::error("invalid SDL2 window");
-        return ctx;
+        return nullptr;
     }
 
     // Check Window Flags
     if (SDL_GetWindowFlags(win) & (SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL)) {
         GPULogger::error("SDL2 window flags must not have SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL");
-        return ctx;
+        return nullptr;
     } else if (SDL_HasWindowSurface(win) || SDL_GetRenderer(win)) {
         GPULogger::error("SDL2 window must not have a SDL_Surface or SDL_Renderer");
-        return ctx;
+        return nullptr;
     }
 
     // Create EGL Context
@@ -578,19 +627,8 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
             return nullptr;
     }
 
-    // Create GLContext
-    if (gtx.egl && gtx.surface) {
-        GLContext* ctx0 = new GLContext();
-        ctx0->m_driver = this;
-        ctx0->m_window = win;
-        ctx0->m_gtx = gtx;
-        // Return GPUContext
-        ctx = (GPUContext*) ctx0;
-        this->cached__add(ctx);
-    }
-
     // Return Created Context
-    return ctx;
+    return makeLinuxContext(gtx, win);
 }
 
 #endif
