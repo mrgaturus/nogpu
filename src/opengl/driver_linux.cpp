@@ -130,7 +130,7 @@ GLDriver::GLDriver(int msaa_samples, bool rgba) {
         GPULogger::success("[opengl] EGL version: %d.%d", egl_major, egl_minor);
         GPULogger::success("[opengl] OpenGL version: %s", vendor);
     } else {
-        GPULogger::error("[opengl] failed loading OpenGL functions"); goto TERMINATE_EGL;
+        GPULogger::error("[opengl] failed loading OpenGL functions");
     }
 
 TERMINATE_EGL:
@@ -624,7 +624,7 @@ GPUContext* GLDriver::impl__createContext(GLFWwindow* win) {
         GPULogger::error("GLFW window must not have a GLX context or EGL context");
         return nullptr;
     } else if (glfwGetWindowAttrib(win, GLFW_CLIENT_API) != GLFW_NO_API) {
-        GPULogger::error("GLFW window GLFW_CLIENT_API must be GLFW_NO_API");
+        GPULogger::error("GLFW window hint GLFW_CLIENT_API must be GLFW_NO_API");
         return nullptr;
     }
 
