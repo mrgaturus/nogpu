@@ -9,6 +9,7 @@ add_library(nogpu_opengl OBJECT
     framebuffer.cpp
     program.cpp
     texture.cpp
+    vertex_array.cpp
 )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")

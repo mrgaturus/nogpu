@@ -11,13 +11,13 @@ bool GLContext::isTransparent() {
 // GPU Object Creation
 // -------------------
 
+GPUBuffer* GLContext::createBuffer() {
+    return new GLBuffer(this);
+}
+
 GPUVertexArray* GLContext::createVertexArray() {
     return nullptr;
 };
-
-GPUBuffer* GLContext::createBuffer(GPUBufferTarget m_target) {
-    return nullptr;
-}
 
 GPUTexture2D* GLContext::createTexture2D() {
     return nullptr;

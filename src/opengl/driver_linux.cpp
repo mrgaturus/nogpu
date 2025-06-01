@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include <nogpu_private.h>
+#include "opengl.h"
+// Include from C
 #include <cstdlib>
 #include <dlfcn.h>
-// Include OpenGL
-#include "glad/glad.h"
-#include "opengl.h"
 
 static EGLint attr_egl[] = {
     EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,

@@ -104,9 +104,7 @@ class GPUDriver {
         static GPUDriverOption getDriverOption();
         static void setVerticalSync(bool value);
 
-    // ----------------------------
-    // GPU Driver: Context Creation
-    // ----------------------------
+    // -- GPU Driver: Context Creation --
 
     // Context Creation: GLFW
     #if defined(NOGPU_GLFW)
@@ -133,19 +131,6 @@ class GPUDriver {
 // GPU Objects: Buffer
 // -------------------
 
-enum class GPUBufferTarget : int {
-    BUFFER_ARRAY,
-    BUFFER_COPY_READ,
-    BUFFER_COPY_WRITE,
-    BUFFER_ELEMENT_ARRAY,
-    BUFFER_PIXEL_PACK,
-    BUFFER_PIXEL_UNPACK,
-    BUFFER_TEXTURE,
-    BUFFER_UNIFORM_BUFFER,
-    BUFFER_SHADER_STORAGE,
-    BUFFER_ATOMIC_COUNTER
-};
-
 enum class GPUBufferUsage : int {
     BUFFER_USAGE_STREAM_DRAW,
     BUFFER_USAGE_STREAM_READ,
@@ -157,44 +142,37 @@ enum class GPUBufferUsage : int {
     // Dynamic Buffer Usage
     BUFFER_USAGE_DYNAMIC_DRAW,
     BUFFER_USAGE_DYNAMIC_READ,
-    BUFFER_USAGE_DYNAMIC_COPY,
+    BUFFER_USAGE_DYNAMIC_COPY
 };
 
 enum class GPUBufferMapping : int {
-    BUFFER_MAP_READ_BIT,
-    BUFFER_MAP_WRITE_BIT,
-    BUFFER_MAP_INVALIDATE_RANGE_BIT,
-    BUFFER_MAP_INVALIDATE_BUFFER_BIT,
-    BUFFER_MAP_FLUSH_EXPLICIT_BIT,
-    BUFFER_MAP_UNSYNCRONIZED_BIT,
+    BUFFER_MAP_READ_BIT = 1 << 0,
+    BUFFER_MAP_WRITE_BIT = 1 << 1,
+    BUFFER_MAP_INVALIDATE_RANGE_BIT = 1 << 2,
+    BUFFER_MAP_INVALIDATE_BUFFER_BIT = 1 << 3,
+    BUFFER_MAP_FLUSH_EXPLICIT_BIT = 1 << 4,
+    BUFFER_MAP_UNSYNCHRONIZED_BIT = 1 << 5
 };
 
-class GPUVertexArray;
 class GPUBuffer {
-    protected:
-        GPUBufferTarget m_target;
-        void* m_mapping;
-        int m_bytes;
-    protected: GPUBuffer(GPUBufferTarget m_target);
+    protected: int m_bytes;
+    protected: GPUBuffer();
     protected: ~GPUBuffer();
     public: virtual void destroy() = 0;
+    public: int getBytes() { return m_bytes; };
 
     public: // GPU Buffer Usage
-        virtual void setTarget(GPUBufferTarget m_target) = 0;
         virtual void orphan(int bytes, GPUBufferUsage usage) = 0;
-        virtual void copy(int bytes, int offset_read, int offset_write, GPUBuffer *data) = 0;
         virtual void upload(int bytes, void *data, GPUBufferUsage usage) = 0;
         virtual void update(int bytes, int offset, void *data) = 0;
         virtual void download(int bytes, int offset, void *data) = 0;
+        virtual void copy(GPUBuffer *dst, int bytes, int offset_read, int offset_write) = 0;
 
     public: // GPU Buffer Usage: Mapping
-        virtual void *map(int bytes, int offset, GPUBufferMapping flags) = 0;
+        virtual void* map(int bytes, int offset, GPUBufferMapping flags) = 0;
         virtual void unmap() = 0;
-        virtual void wait() = 0;
-
-    public: // GPU Buffer Attributes
-        GPUBufferTarget getTarget() { return m_target; };
-        int getBytes() { return m_bytes; };
+        virtual void syncCPU() = 0;
+        virtual void syncGPU() = 0;
 };
 
 // -------------------------
@@ -221,15 +199,15 @@ enum class GPUAttributeType : int {
 
 class GPUVertexArray {
     protected:
-        GPUBuffer* bufferArray;
-        GPUBuffer* bufferElements;
+        GPUBuffer* m_array_buffer;
+        GPUBuffer* m_elements_buffer;
     protected: GPUVertexArray();
     protected: ~GPUVertexArray();
     public: virtual void destroy() = 0;
 
     public: // GPU Vertex Array: Register
-        virtual void attributeArray(GPUBuffer* buffer) = 0;
-        virtual void attributeElements(GPUBuffer* buffer) = 0;
+        virtual void useArrayBuffer(GPUBuffer* buffer) = 0;
+        virtual void useElementsBuffer(GPUBuffer* buffer) = 0;
         virtual void attributeFloat(int index, GPUAttributeSize size, GPUAttributeType type, bool normalized, int stride, int offset) = 0;
         virtual void attributeInteger(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) = 0;
         virtual void disableAttribute(int index) = 0;
@@ -899,7 +877,7 @@ enum class GPUDrawElementsType : int {
     ELEMENTS_UNSIGNED_INT
 };
 
-typedef enum {
+enum class GPUMemoryBarrier : int {
     BARRIER_VEXTEX_ATTRIB_ARRAY = 1 << 0,
     BARRIER_ELEMENT_ARRAY = 1 << 1,
     BARRIER_UNIFORM = 1 << 2,
@@ -913,7 +891,7 @@ typedef enum {
     BARRIER_ATOMIC_COUNTER = 1 << 10,
     BARRIER_SHADER_STORAGE = 1 << 11,
     BARRIER_ALL = 0x7FFFFFFF,
-} GPUMemoryBarrierFlags;
+};
 
 typedef struct {
     GPUPipeline *pipeline;
@@ -943,11 +921,10 @@ class GPUCommands {
     public: // GPU Command State
         virtual void usePipeline(GPUPipeline *pipeline) = 0;
         virtual void useVertexArray(GPUVertexArray *vertex_array) = 0;
-        virtual void useBuffer(GPUBuffer *buffer, GPUBufferTarget target) = 0;
         virtual void useTexture(GPUTexture *texture, int index) = 0;
         virtual void useFramebuffer(GPUFramebuffer* draw) = 0;
         virtual void useFramebuffer(GPUFramebuffer* draw, GPUFramebuffer* read) = 0;
-        virtual void useFramebufferContext() = 0;
+        virtual void useFramebufferDefault() = 0;
 
     public: // GPU Command Rendering
         virtual void drawClear() = 0;
@@ -959,7 +936,7 @@ class GPUCommands {
         virtual void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count) = 0;
         virtual void executeComputeSync(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) = 0;
         virtual void executeCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) = 0;
-        virtual void memoryBarrier(GPUMemoryBarrierFlags from, GPUMemoryBarrierFlags to) = 0;
+        virtual void memoryBarrier(GPUMemoryBarrier from, GPUMemoryBarrier to) = 0;
 };
 
 // -----------
@@ -977,8 +954,8 @@ class GPUContext {
     public: virtual bool isTransparent() = 0;
 
     public: // GPU Objects Creation
+        virtual GPUBuffer* createBuffer() = 0;
         virtual GPUVertexArray* createVertexArray() = 0;
-        virtual GPUBuffer* createBuffer(GPUBufferTarget m_target) = 0;
         virtual GPUTexture2D* createTexture2D() = 0;
         virtual GPUTexture3D* createTexture3D() = 0;
         virtual GPUTextureCubemap* createTextureCubemap() = 0;
@@ -995,4 +972,9 @@ class GPUContext {
         virtual void swapSurface() = 0;
 };
 
+// -- Enum Bit-flags Operator --
+GPUBufferMapping operator|(GPUBufferMapping a, GPUBufferMapping b);
+GPUBufferMapping operator&(GPUBufferMapping a, GPUBufferMapping b);
+GPUMemoryBarrier operator|(GPUMemoryBarrier a, GPUMemoryBarrier b);
+GPUMemoryBarrier operator&(GPUMemoryBarrier a, GPUMemoryBarrier b);
 #endif // NOGPU_H

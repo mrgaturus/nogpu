@@ -2,6 +2,7 @@
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #ifndef NOGPU_OPENGL_H
 #define NOGPU_OPENGL_H
+#include "glad/glad.h"
 #include <nogpu.h>
 
 #if defined(__unix__)
@@ -96,29 +97,33 @@ class GLDriver : GPUDriver {
 // -----------------
 
 class GLBuffer : GPUBuffer {
+    GLContext* m_ctx;
+    GLuint m_buffer_id;
+    void* m_mapping;
+    GLsync m_sync;
     // GPU Buffer Usage
-    void setTarget(GPUBufferTarget m_target) override;
     void orphan(int bytes, GPUBufferUsage usage) override;
-    void copy(int bytes, int offset_read, int offset_write, GPUBuffer *data) override;
     void upload(int bytes, void *data, GPUBufferUsage usage) override;
     void update(int bytes, int offset, void *data) override;
     void download(int bytes, int offset, void *data) override;
+    void copy(GPUBuffer *data, int bytes, int offset_read, int offset_write) override;
 
     // GPU Buffer Usage: Mapping
-    void *map(int bytes, int offset, GPUBufferMapping flags) override;
+    void* map(int bytes, int offset, GPUBufferMapping flags) override;
     void unmap() override;
-    void wait() override;
+    void syncCPU() override;
+    void syncGPU() override;
 
     private: // Buffer Constructor
         friend GLContext;
         void destroy() override;
-        GLBuffer();
+        GLBuffer(GLContext* ctx);
 };
 
 class GLVertexArray : GPUVertexArray {
     // GPU Vertex Array: Register
-    void attributeArray(GPUBuffer* buffer) override;
-    void attributeElements(GPUBuffer* buffer) override;
+    void useArrayBuffer(GPUBuffer* buffer) override;
+    void useElementsBuffer(GPUBuffer* buffer) override;
     void attributeFloat(int index, GPUAttributeSize size, GPUAttributeType type, bool normalized, int stride, int offset) override;
     void attributeInteger(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) override;
     void disableAttribute(int index) override;
@@ -303,11 +308,10 @@ class GLCommands : GPUCommands {
     // GPU Command State
     void usePipeline(GPUPipeline *pipeline) override;
     void useVertexArray(GPUVertexArray *vertex_array) override;
-    void useBuffer(GPUBuffer *buffer, GPUBufferTarget target) override;
     void useTexture(GPUTexture *texture, int index) override;
     void useFramebuffer(GPUFramebuffer* draw) override;
     void useFramebuffer(GPUFramebuffer* draw, GPUFramebuffer* read) override;
-    void useFramebufferContext() override;
+    void useFramebufferDefault() override;
 
     // GPU Command Rendering
     void drawClear() override;
@@ -319,7 +323,7 @@ class GLCommands : GPUCommands {
     void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count) override;
     void executeComputeSync(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) override;
     void executeCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) override;
-    void memoryBarrier(GPUMemoryBarrierFlags from, GPUMemoryBarrierFlags to) override;
+    void memoryBarrier(GPUMemoryBarrier from, GPUMemoryBarrier to) override;
 
     protected: // Commands Constructor
         GLCommands();
@@ -338,8 +342,8 @@ class GLContext : GPUContext {
     #endif
 
     // GPU Object Creation
+    GPUBuffer* createBuffer() override;
     GPUVertexArray* createVertexArray() override;
-    GPUBuffer* createBuffer(GPUBufferTarget m_target) override;
     GPUTexture2D* createTexture2D() override;
     GPUTexture3D* createTexture3D() override;
     GPUTextureCubemap* createTextureCubemap() override;
@@ -355,8 +359,8 @@ class GLContext : GPUContext {
     void recreateSurface(int w, int h) override;
     void swapSurface() override;
 
+    public: void gl__makeCurrent();
     protected: // Commands Constructor
-        inline void gl__makeCurrent();
         bool isTransparent() override;
         void destroy() override;
         friend GLDriver;
