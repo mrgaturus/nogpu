@@ -94,7 +94,7 @@ int main() {
     SDL_Window* win = SDL_CreateWindow("nogpu hello",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600, SDL_WINDOW_HIDDEN);
     GPUDriver::initialize(GPUDriverOption::DRIVER_OPENGL);
-    GPUContext* gpuCTX = GPUDriver::createContext(win);
+    GPUContext* ctx = GPUDriver::createContext(win);
     GPUDriver::setVerticalSync(true);
     SDL_ShowWindow(win);
 
@@ -108,7 +108,7 @@ int main() {
         }
 
         // Swap Context Surface
-        gpuCTX->swapSurface();
+        ctx->swapSurface();
     }
 
 SHUTDOWN_DRIVER:

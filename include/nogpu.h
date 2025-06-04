@@ -53,7 +53,6 @@ enum class GPUDriverOption : int {
 enum class GPUDriverFeature : int {
     DRIVER_FEATURE_RASTERIZE,
     DRIVER_FEATURE_COMPUTE,
-    DRIVER_FEATURE_BARRIER,
     DRIVER_FEATURE_DEBUG,
     // Shader Compiling
     DRIVER_SHADER_GLSL,
@@ -188,10 +187,10 @@ enum class GPUAttributeSize : int {
 
 enum class GPUAttributeType : int {
     ATTRIBUTE_TYPE_BYTE,
-    ATTRIBUTE_TYPE_UNSIGNED_BYTE,
     ATTRIBUTE_TYPE_SHORT,
-    ATTRIBUTE_TYPE_UNSIGNED_SHORT,
     ATTRIBUTE_TYPE_INT,
+    ATTRIBUTE_TYPE_UNSIGNED_BYTE,
+    ATTRIBUTE_TYPE_UNSIGNED_SHORT,
     ATTRIBUTE_TYPE_UNSIGNED_INT,
     ATTRIBUTE_TYPE_FLOAT,
     ATTRIBUTE_TYPE_DOUBLE,
@@ -208,8 +207,8 @@ class GPUVertexArray {
     public: // GPU Vertex Array: Register
         virtual void useArrayBuffer(GPUBuffer* buffer) = 0;
         virtual void useElementsBuffer(GPUBuffer* buffer) = 0;
-        virtual void attributeFloat(int index, GPUAttributeSize size, GPUAttributeType type, bool normalized, int stride, int offset) = 0;
-        virtual void attributeInteger(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) = 0;
+        virtual void defineAttribute(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) = 0;
+        virtual void defineNormalized(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) = 0;
         virtual void disableAttribute(int index) = 0;
         virtual void enableAttribute(int index) = 0;
 };

@@ -3,7 +3,7 @@
 #include <nogpu_private.h>
 #include "opengl.h"
 
-GLenum toValue(GPUBufferUsage usage) {
+static GLenum toValue(GPUBufferUsage usage) {
     switch (usage) {
         // Stream Buffer Usage
         case GPUBufferUsage::BUFFER_USAGE_STREAM_DRAW:
@@ -27,9 +27,12 @@ GLenum toValue(GPUBufferUsage usage) {
         case GPUBufferUsage::BUFFER_USAGE_DYNAMIC_COPY:
             return GL_DYNAMIC_COPY;
     }
+
+    // Reachable?
+    return ~0;
 }
 
-GLenum toValue(GPUBufferMapping flags) {
+static GLenum toValue(GPUBufferMapping flags) {
     GLenum result = 0;
     if ((int) (flags & GPUBufferMapping::BUFFER_MAP_READ_BIT))
         result |= GL_MAP_READ_BIT;
@@ -56,7 +59,7 @@ GLBuffer::GLBuffer(GLContext* ctx) {
     m_ctx = ctx;
 
     // Create OpenGL Buffer
-    glGenBuffers(1, &m_buffer_id);
+    glGenBuffers(1, &m_vbo);
     m_mapping = nullptr;
     m_sync = nullptr;
     m_bytes = 0;
@@ -66,7 +69,7 @@ void GLBuffer::destroy() {
     m_ctx->gl__makeCurrent();
     if (m_mapping) unmap();
     if (m_sync) glDeleteSync(m_sync);
-    glDeleteBuffers(1, &m_buffer_id);
+    glDeleteBuffers(1, &m_vbo);
 
     // Dealloc Object
     delete this;
@@ -78,7 +81,7 @@ void GLBuffer::destroy() {
 
 void GLBuffer::orphan(int bytes, GPUBufferUsage usage) {
     m_ctx->gl__makeCurrent();
-    glBindBuffer(GL_COPY_WRITE_BUFFER, m_buffer_id);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     glBufferData(GL_COPY_WRITE_BUFFER, bytes, NULL, toValue(usage));
 
     if (glGetError() != GL_NO_ERROR)
@@ -88,7 +91,7 @@ void GLBuffer::orphan(int bytes, GPUBufferUsage usage) {
 
 void GLBuffer::upload(int bytes, void *data, GPUBufferUsage usage) {
     m_ctx->gl__makeCurrent();
-    glBindBuffer(GL_COPY_WRITE_BUFFER, m_buffer_id);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     glBufferData(GL_COPY_WRITE_BUFFER, bytes, data, toValue(usage));
 
     if (glGetError() != GL_NO_ERROR)
@@ -98,7 +101,7 @@ void GLBuffer::upload(int bytes, void *data, GPUBufferUsage usage) {
 
 void GLBuffer::update(int bytes, int offset, void *data) {
     m_ctx->gl__makeCurrent();
-    glBindBuffer(GL_COPY_WRITE_BUFFER, m_buffer_id);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     glBufferSubData(GL_COPY_WRITE_BUFFER, offset, bytes, data);
 
     if (glGetError() != GL_NO_ERROR)
@@ -107,7 +110,7 @@ void GLBuffer::update(int bytes, int offset, void *data) {
 
 void GLBuffer::download(int bytes, int offset, void *data) {
     m_ctx->gl__makeCurrent();
-    glBindBuffer(GL_COPY_READ_BUFFER, m_buffer_id);
+    glBindBuffer(GL_COPY_READ_BUFFER, m_vbo);
     glGetBufferSubData(GL_COPY_READ_BUFFER, offset, bytes, data);
 
     if (glGetError() != GL_NO_ERROR)
@@ -116,8 +119,8 @@ void GLBuffer::download(int bytes, int offset, void *data) {
 
 void GLBuffer::copy(GPUBuffer *data, int bytes, int offset_read, int offset_write) {
     m_ctx->gl__makeCurrent();
-    glBindBuffer(GL_COPY_WRITE_BUFFER, ((GLBuffer*) data)->m_buffer_id);
-    glBindBuffer(GL_COPY_READ_BUFFER, this->m_buffer_id);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, ((GLBuffer*) data)->m_vbo);
+    glBindBuffer(GL_COPY_READ_BUFFER, this->m_vbo);
     glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER,
         offset_read, offset_write, bytes);
 
@@ -138,7 +141,7 @@ void* GLBuffer::map(int bytes, int offset, GPUBufferMapping flags) {
     }
 
     GLenum flags0 = toValue(flags);
-    glBindBuffer(GL_COPY_WRITE_BUFFER, m_buffer_id);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     void* map = glMapBufferRange(GL_COPY_WRITE_BUFFER, offset, bytes, flags0);
     if (glGetError() != GL_NO_ERROR)
         GPULogger::error("failed mapping %d:%d bytes from buffer %p",
@@ -162,7 +165,7 @@ void GLBuffer::unmap() {
         return;
     }
 
-    glBindBuffer(GL_COPY_WRITE_BUFFER, m_buffer_id);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     glUnmapBuffer(GL_COPY_WRITE_BUFFER);
     if (glGetError() != GL_NO_ERROR)
         GPULogger::error("failed unmapping buffer %p", this);

@@ -97,10 +97,6 @@ class GLDriver : GPUDriver {
 // -----------------
 
 class GLBuffer : GPUBuffer {
-    GLContext* m_ctx;
-    GLuint m_buffer_id;
-    void* m_mapping;
-    GLsync m_sync;
     // GPU Buffer Usage
     void orphan(int bytes, GPUBufferUsage usage) override;
     void upload(int bytes, void *data, GPUBufferUsage usage) override;
@@ -114,25 +110,35 @@ class GLBuffer : GPUBuffer {
     void syncCPU() override;
     void syncGPU() override;
 
+    public: // GL Attributes
+        GLContext* m_ctx;
+        GLuint m_vbo;
+        void* m_mapping;
+        GLsync m_sync;
+
     private: // Buffer Constructor
         friend GLContext;
-        void destroy() override;
         GLBuffer(GLContext* ctx);
+        void destroy() override;
 };
 
 class GLVertexArray : GPUVertexArray {
     // GPU Vertex Array: Register
     void useArrayBuffer(GPUBuffer* buffer) override;
     void useElementsBuffer(GPUBuffer* buffer) override;
-    void attributeFloat(int index, GPUAttributeSize size, GPUAttributeType type, bool normalized, int stride, int offset) override;
-    void attributeInteger(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) override;
+    void defineAttribute(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) override;
+    void defineNormalized(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) override;
     void disableAttribute(int index) override;
     void enableAttribute(int index) override;
 
+    public: // GL Attributes
+        GLContext* m_ctx;
+        GLuint m_vao;
+
     private: // Vertex Array Constructor
         friend GLContext;
+        GLVertexArray(GLContext* ctx);
         void destroy() override;
-        GLVertexArray();
 };
 
 // ------------------

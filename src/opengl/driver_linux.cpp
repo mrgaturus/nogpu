@@ -110,10 +110,8 @@ GLDriver::GLDriver(int msaa_samples, bool rgba) {
         // Check Extra Extensions
         if (GLAD_GL_ARB_debug_output) // Debug Feature
             features |= feature__flag(GPUDriverFeature::DRIVER_FEATURE_DEBUG);
-        if (GLAD_GL_ARB_compute_shader) // Compute Shader Feature
+        if (GLAD_GL_ARB_compute_shader && GLAD_GL_ARB_shader_image_load_store)
             features |= feature__flag(GPUDriverFeature::DRIVER_FEATURE_COMPUTE);
-        if (GLAD_GL_ARB_shader_image_load_store) // Memory Barrier Feature
-            features |= feature__flag(GPUDriverFeature::DRIVER_FEATURE_BARRIER);
         if (GLAD_GL_ARB_gl_spirv) { // SPIR-V Shader Feature
             features |= feature__flag(GPUDriverFeature::DRIVER_SHADER_SPIRV);
             features |= feature__flag(GPUDriverFeature::DRIVER_SHADER_LOW_SPIRV);
