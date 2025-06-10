@@ -19,23 +19,35 @@ GPUVertexArray* GLContext::createVertexArray() {
     return nullptr;
 };
 
-GPUTexture2D* GLContext::createTexture2D() {
+GPUTextureBuffer* GLContext::createTextureBuffer(GPUTexturePixelFormat format) {
     return nullptr;
 }
 
-GPUTexture3D* GLContext::createTexture3D() {
+GPUTexture1D* GLContext::createTexture1D(GPUTexturePixelType type, GPUTexturePixelFormat format) {
     return nullptr;
 }
 
-GPUTextureCubemap* GLContext::createTextureCubemap() {
+GPUTexture2D* GLContext::createTexture2D(GPUTexturePixelType type, GPUTexturePixelFormat format) {
     return nullptr;
 }
 
-GPURenderbuffer* GLContext::createRenderbuffer(int w, int h, GPUTexturePixelFormat format, int msaa_samples) {
+GPUTexture3D* GLContext::createTexture3D(GPUTexturePixelType type, GPUTexturePixelFormat format) {
     return nullptr;
 }
 
-GPUFramebuffer* GLContext::createFramebuffer() {
+GPUTextureCubemap* GLContext::createTextureCubemap(GPUTexturePixelType type, GPUTexturePixelFormat format) {
+    return nullptr;
+}
+
+GPUTextureCubemapArray* GLContext::createTextureCubemapArray(GPUTexturePixelType type, GPUTexturePixelFormat format) {
+    return nullptr;
+}
+
+GPURenderBuffer* GLContext::createRenderBuffer(GPURenderBufferMode mode, GPUTexturePixelFormat format) {
+    return nullptr;
+}
+
+GPUFrameBuffer* GLContext::createFrameBuffer() {
     return nullptr;
 }
 
