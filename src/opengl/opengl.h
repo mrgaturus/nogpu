@@ -141,6 +141,18 @@ class GLVertexArray : GPUVertexArray {
         void destroy() override;
 };
 
+// -------------------------
+// OpenGL GPU Texture Buffer
+// -------------------------
+
+class GLTextureBuffer : GLBuffer, GPUTextureBuffer {
+    void setFormat(GPUTexturePixelFormat format) override;
+
+    protected: // Texture Constructor
+        GLTextureBuffer(GPUTexturePixelFormat format);
+        friend GLContext;
+};
+
 // ------------------
 // OpenGL GPU Texture
 // ------------------
@@ -157,6 +169,20 @@ class GLTexture : GPUTexture {
         friend GLContext;
         void destroy() override;
         GLTexture();
+};
+
+class GLTexture1D : GLTexture, GPUTexture1D {
+    // Texture Buffer Manipulation
+    void allocate(int size, int levels) override;
+    void upload(int x, int size, int level, void* data) override;
+    void download(int x, int size, int level, void* data) override;
+    void unpack(int x, int size, int level, GPUBuffer *pbo, int pbo_offset) override;
+    void pack(int x, int size, int level, GPUBuffer *pbo, int pbo_offset) override;
+
+    protected: GLTexture1D(
+        GPUTexturePixelType m_pixel_type,
+        GPUTexturePixelFormat m_pixel_format);
+        friend GPUContext;
 };
 
 class GLTexture2D : GLTexture, GPUTexture2D {
@@ -202,30 +228,34 @@ class GLTextureCubemap : GLTexture, GPUTextureCubemap {
 };
 
 // ----------------------
-// OpenGL GPU Framebuffer
+// OpenGL GPU FrameBuffer
 // ----------------------
 
-class GLRenderbuffer : GPURenderbuffer {
-    protected: // Renderbuffer Constructor
-        GLRenderbuffer(int w, int h, GPUTexturePixelFormat format, int msaa_samples = 0);
+class GLRenderBuffer : GPURenderBuffer {
+    protected: // RenderBuffer Constructor
+        GLRenderBuffer(GPURenderBufferMode mode, GPUTexturePixelFormat format);
+        void allocate(int w, int h, int msaa_samples) override;
+        void allocate(int w, int h, int layers, int msaa_samples) override;
+
+        GPUTexture* getTexture() override;
         void destroy() override;
         friend GLContext;
 };
 
-class GLFramebuffer : GPUFramebuffer {
-    GPUFramebufferStatus checkStatus() override;
+class GLFrameBuffer : GPUFrameBuffer {
+    GPUFrameBufferStatus checkStatus() override;
     void attachColor(GPUTexture *color, int index) override;
     void attachDepthStencil(GPUTexture *depth_stencil) override;
     void attachStencil(GPUTexture *stencil) override;
     void attachDepth(GPUTexture *depth) override;
-    // GPU Renderbuffer Attachment
-    void attachColor(GPURenderbuffer *color, int index) override;
-    void attachDepthStencil(GPURenderbuffer *depth_stencil) override;
-    void attachStencil(GPURenderbuffer *stencil) override;
-    void attachDepth(GPURenderbuffer *depth) override;
+    // GPU RenderBuffer Attachment
+    void attachColor(GPURenderBuffer *color, int index) override;
+    void attachDepthStencil(GPURenderBuffer *depth_stencil) override;
+    void attachStencil(GPURenderBuffer *stencil) override;
+    void attachDepth(GPURenderBuffer *depth) override;
 
-    protected: // Framebuffer Constructor
-        GLFramebuffer();
+    protected: // FrameBuffer Constructor
+        GLFrameBuffer();
         void destroy() override;
         friend GLContext;
 };
@@ -315,9 +345,9 @@ class GLCommands : GPUCommands {
     void usePipeline(GPUPipeline *pipeline) override;
     void useVertexArray(GPUVertexArray *vertex_array) override;
     void useTexture(GPUTexture *texture, int index) override;
-    void useFramebuffer(GPUFramebuffer* draw) override;
-    void useFramebuffer(GPUFramebuffer* draw, GPUFramebuffer* read) override;
-    void useFramebufferDefault() override;
+    void useFrameBuffer(GPUFrameBuffer* draw) override;
+    void useFrameBuffer(GPUFrameBuffer* draw, GPUFrameBuffer* read) override;
+    void useFrameBufferDefault() override;
 
     // GPU Command Rendering
     void drawClear() override;
@@ -350,11 +380,15 @@ class GLContext : GPUContext {
     // GPU Object Creation
     GPUBuffer* createBuffer() override;
     GPUVertexArray* createVertexArray() override;
-    GPUTexture2D* createTexture2D() override;
-    GPUTexture3D* createTexture3D() override;
-    GPUTextureCubemap* createTextureCubemap() override;
-    GPURenderbuffer* createRenderbuffer(int w, int h, GPUTexturePixelFormat format, int msaa_samples = 0) override;
-    GPUFramebuffer* createFramebuffer() override;
+    GPUTextureBuffer* createTextureBuffer(GPUTexturePixelFormat format) override;
+    GPUTexture1D* createTexture1D(GPUTexturePixelType type, GPUTexturePixelFormat format) override;
+    GPUTexture2D* createTexture2D(GPUTexturePixelType type, GPUTexturePixelFormat format) override;
+    GPUTexture3D* createTexture3D(GPUTexturePixelType type, GPUTexturePixelFormat format) override;
+    GPUTextureCubemap* createTextureCubemap(GPUTexturePixelType type, GPUTexturePixelFormat format) override;
+    GPUTextureCubemapArray* createTextureCubemapArray(GPUTexturePixelType type, GPUTexturePixelFormat format) override;
+    GPURenderBuffer* createRenderBuffer(GPURenderBufferMode mode, GPUTexturePixelFormat format) override;
+    // GPU Rendering Objects
+    GPUFrameBuffer* createFrameBuffer() override;
     GPUProgram* createProgram() override;
     GPUShader* createShader(GPUShaderType type, char* buffer, int size) override;
     GPUPipeline* createPipeline(GPUProgram* program) override;

@@ -46,6 +46,7 @@ enum class GPUDriverOption : int {
     // Driver Options
     DRIVER_OPENGL,
     DRIVER_VULKAN,
+    DRIVER_DX11,
     DRIVER_DX12,
     DRIVER_METAL
 };
@@ -54,6 +55,10 @@ enum class GPUDriverFeature : int {
     DRIVER_FEATURE_RASTERIZE,
     DRIVER_FEATURE_COMPUTE,
     DRIVER_FEATURE_DEBUG,
+    DRIVER_TEXTURE_1D,
+    DRIVER_TEXTURE_RGBA16,
+    DRIVER_TEXTURE_CUBEMAP_ARRAY,
+    DRIVER_TEXTURE_MULTISAMPLE,
     // Shader Compiling
     DRIVER_SHADER_GLSL,
     DRIVER_SHADER_HLSL,
@@ -61,8 +66,8 @@ enum class GPUDriverFeature : int {
     // Built-in Shader Compiling
     DRIVER_SHADER_LOW_GLSL, // OpenGL
     DRIVER_SHADER_LOW_SPIRV, // Vulkan
-    DRIVER_SHADER_LOW_DXBC, // SM 5_1
-    DRIVER_SHADER_LOW_DXIL, // SM 6_0
+    DRIVER_SHADER_LOW_DXBC, // Shader Model 5_1
+    DRIVER_SHADER_LOW_DXIL, // Shader Model 6_0
     DRIVER_SHADER_LOW_MTL, // Metal
 };
 
@@ -405,45 +410,72 @@ class GPUTexture {
         GPUTextureWrap getPixelWrap() { return m_wrap; }
 };
 
+// ---------------------------
+// GPU Objects: Texture Buffer
+// ---------------------------
+
+class GPUTextureBuffer : GPUBuffer {
+    protected: GPUTextureBuffer();
+    protected: ~GPUTextureBuffer();
+    // Texture Pixels Manipulation
+    public: virtual void setFormat(GPUTexturePixelFormat format);
+};
+
 // --------------------
 // GPU Objects: Texture
 // --------------------
 
-class GPUTexture2D : GPUTexture {
-    protected: GPUTexture2D(
-        GPUTexturePixelType m_pixel_type,
-        GPUTexturePixelFormat m_pixel_format);
+class GPUTexture1D : GPUTexture {
+    protected: GPUTexture1D();
+    protected: ~GPUTexture1D();
 
-    public: // Texture Buffer Manipulation
+    public: // Texture Pixels Manipulation
+        virtual void allocate(int size, int levels) = 0;
+        virtual void upload(int x, int size, int level, void* data) = 0;
+        virtual void download(int x, int size, int level, void* data) = 0;
+        virtual void unpack(int x, int size, int level, GPUBuffer *pbo, int pbo_offset) = 0;
+        virtual void pack(int x, int size, int level, GPUBuffer *pbo, int pbo_offset) = 0;
+};
+
+enum class GPUTexture2DMode : int {
+    TEXTURE_2D,
+    TEXTURE_1D_ARRAY,
+};
+
+class GPUTexture2D : GPUTexture {
+    protected: GPUTexture2D();
+    protected: ~GPUTexture2D();
+
+    public: // Texture Pixels Manipulation
         virtual void allocate(int w, int h, int levels) = 0;
         virtual void upload(int x, int y, int w, int h, int level, void* data) = 0;
         virtual void download(int x, int y, int w, int h, int level, void* data) = 0;
-        virtual void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int pbo_offset) = 0;
-        virtual void pack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int pbo_offset) = 0;
+        virtual void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void pack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) = 0;
+    public: // Texture Attributes
+        virtual void setMode(GPUTexture2DMode mode);
+        virtual GPUTexture2DMode getMode();
 };
 
 enum class GPUTexture3DMode : int {
-    TEXTURE_2D_ARRAY,
     TEXTURE_3D,
+    TEXTURE_2D_ARRAY,
 };
 
 class GPUTexture3D : GPUTexture {
-    protected:
-        GPUTexture3DMode m_mode;
-        int m_layers;
-    protected: GPUTexture3D(
-        GPUTexturePixelType m_pixel_type,
-        GPUTexturePixelFormat m_pixel_format);
+    protected: GPUTexture3D();
+    protected: ~GPUTexture3D();
 
-    public: // Texture Buffer Manipulation
+    public: // Texture Pixels Manipulation
         virtual void allocate(int w, int h, int layers, int levels) = 0;
         virtual void upload(int x, int y, int w, int h, int layer, int level, void* data) = 0;
         virtual void download(int x, int y, int w, int h, int layer, int level, void* data) = 0;
-        virtual void unpack(int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int pbo_offset) = 0;
-        virtual void pack(int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int pbo_offset) = 0;
-    public: // Attribute Getters
-        GPUTexture3DMode getMode() { return m_mode; };
-        int getLayers() { return m_layers; };
+        virtual void unpack(int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void pack(int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) = 0;
+    public: // Texture Attributes
+        virtual int getLayers();
+        virtual GPUTexture3DMode getMode();
+        virtual void setMode(GPUTexture3DMode mode);
 };
 
 enum class GPUTextureCubemapSide : int {
@@ -456,66 +488,93 @@ enum class GPUTextureCubemapSide : int {
 };
 
 class GPUTextureCubemap : GPUTexture {
-    protected: GPUTextureCubemap(
-        GPUTexturePixelType m_pixel_type,
-        GPUTexturePixelFormat m_pixel_format);
-    public: // Texture Buffer Manipulation
+    protected: GPUTextureCubemap();
+    protected: ~GPUTextureCubemap();
+
+    public: // Texture Pixels Manipulation
         virtual void allocate(int w, int h, int levels) = 0;
         virtual void upload(int x, int y, int w, int h, int level, GPUTextureCubemapSide side, void* data) = 0;
         virtual void download(int x, int y, int w, int h, int level, GPUTextureCubemapSide side, void* data) = 0;
-        virtual void unpack(int x, int y, int w, int h, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int pbo_offset) = 0;
-        virtual void pack(int x, int y, int w, int h, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int pbo_offset) = 0;
+        virtual void unpack(int x, int y, int w, int h, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int offset) = 0;
+        virtual void pack(int x, int y, int w, int h, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int offset) = 0;
+};
+
+class GPUTextureCubemapArray : GPUTexture {
+    protected: GPUTextureCubemapArray();
+    protected: ~GPUTextureCubemapArray();
+
+    public: // Texture Pixels Manipulation
+        virtual void allocate(int w, int h, int layers, int levels) = 0;
+        virtual void upload(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, void* data) = 0;
+        virtual void download(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, void* data) = 0;
+        virtual void unpack(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int offset) = 0;
+        virtual void pack(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int offset) = 0;
+    public: // Texture Attributes
+        virtual int getLayers();
 };
 
 // ------------------------
-// GPU Objects: Framebuffer
+// GPU Objects: FrameBuffer
 // ------------------------
 
-class GPURenderbuffer {
+enum class GPURenderBufferMode : int {
+    RENDERBUFFER_TEXTURE,
+    RENDERBUFFER_TEXTURE_ARRAY,
+    RENDERBUFFER_OFFSCREEN
+};
+
+class GPURenderBuffer {
     protected:
+        GPURenderBufferMode m_mode;
         GPUTexturePixelFormat m_format;
+        int m_msaa_samples;
         int m_w, m_h;
     // GPU Renderbuffer Constructor
-    protected: GPURenderbuffer(int w, int h, GPUTexturePixelFormat format, int msaa_samples = 0);
-    protected: ~GPURenderbuffer();
+    protected: GPURenderBuffer();
+    protected: ~GPURenderBuffer();
     public: virtual void destroy() = 0;
+    public: virtual void allocate(int w, int h, int msaa_samples) = 0;
+    public: virtual void allocate(int w, int h, int layers, int msaa_samples) = 0;
 
-    public: // GPU Renderbuffer Attributes
+    public: // Renderbuffer Attributes
         int getW() { return m_w; }
         int getH() { return m_h; }
+        int getMultisamples() { return m_msaa_samples; }
         GPUTextureSize getSize() { return (GPUTextureSize) { m_w, m_h }; }
+        GPURenderBufferMode getMode() { return m_mode; }
         GPUTexturePixelFormat getFormat() { return m_format; }
+        virtual GPUTexture* getTexture();
 };
 
-enum class GPUFramebufferStatus : int {
+enum class GPUFrameBufferStatus : int {
     FRAMEBUFFER_UNDEFINED,
+    FRAMEBUFFER_UNSUPPORTED,
     FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
     FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT,
-    FRAMEBUFFER_UNSUPPORTED,
     FRAMEBUFFER_INCOMPLETE_MULTISAMPLE
 };
 
-class GPUFramebuffer {
+class GPUFrameBuffer {
     protected:
-        GPUTexture *m_colors[32];
+        GPUTexture *m_colors[64];
         GPUTexture *m_stencil;
         GPUTexture *m_depth;
     // GPU Framebuffer Constructor
-    protected: GPUFramebuffer();
-    protected: ~GPUFramebuffer();
+    protected: GPUFrameBuffer();
+    protected: ~GPUFrameBuffer();
     public: virtual void destroy() = 0;
 
     public: // GPU Texture Attach
-        virtual GPUFramebufferStatus checkStatus() = 0;
+        virtual GPUFrameBufferStatus checkStatus() = 0;
         virtual void attachColor(GPUTexture *color, int index) = 0;
         virtual void attachDepthStencil(GPUTexture *depth_stencil) = 0;
         virtual void attachStencil(GPUTexture *stencil) = 0;
         virtual void attachDepth(GPUTexture *depth) = 0;
         // GPU Renderbuffer Attachment
-        virtual void attachColor(GPURenderbuffer *color, int index) = 0;
-        virtual void attachDepthStencil(GPURenderbuffer *depth_stencil) = 0;
-        virtual void attachStencil(GPURenderbuffer *stencil) = 0;
-        virtual void attachDepth(GPURenderbuffer *depth) = 0;
+        virtual void attachColor(GPURenderBuffer *color, int index) = 0;
+        virtual void attachDepthStencil(GPURenderBuffer *depth_stencil) = 0;
+        virtual void attachStencil(GPURenderBuffer *stencil) = 0;
+        virtual void attachDepth(GPURenderBuffer *depth) = 0;
     public: // GPU Framebuffer Attributes
         GPUTexture *getColor(int index) { return m_colors[index]; }
         GPUTexture *getStencil() { return m_stencil; }
@@ -898,9 +957,8 @@ typedef struct {
     GPUBuffer *buffers[16];
     GPUTexture *textures[64];
     GPUVertexArray *vertexArray;
-    GPURenderbuffer *renderBuffer;
-    GPUFramebuffer *framebufferRead;
-    GPUFramebuffer *framebufferDraw;
+    GPUFrameBuffer *framebufferRead;
+    GPUFrameBuffer *framebufferDraw;
 } GPUCommandState;
 
 class GPUCommands {
@@ -921,9 +979,9 @@ class GPUCommands {
         virtual void usePipeline(GPUPipeline *pipeline) = 0;
         virtual void useVertexArray(GPUVertexArray *vertex_array) = 0;
         virtual void useTexture(GPUTexture *texture, int index) = 0;
-        virtual void useFramebuffer(GPUFramebuffer* draw) = 0;
-        virtual void useFramebuffer(GPUFramebuffer* draw, GPUFramebuffer* read) = 0;
-        virtual void useFramebufferDefault() = 0;
+        virtual void useFrameBuffer(GPUFrameBuffer* draw, GPUFrameBuffer* read) = 0;
+        virtual void useFrameBuffer(GPUFrameBuffer* draw) = 0;
+        virtual void useFrameBufferDefault() = 0;
 
     public: // GPU Command Rendering
         virtual void drawClear() = 0;
@@ -952,19 +1010,24 @@ class GPUContext {
     public: virtual void destroy() = 0;
     public: virtual bool isTransparent() = 0;
 
-    public: // GPU Objects Creation
+    public:
+        // GPU Buffer Objects
         virtual GPUBuffer* createBuffer() = 0;
         virtual GPUVertexArray* createVertexArray() = 0;
-        virtual GPUTexture2D* createTexture2D() = 0;
-        virtual GPUTexture3D* createTexture3D() = 0;
-        virtual GPUTextureCubemap* createTextureCubemap() = 0;
-        virtual GPURenderbuffer* createRenderbuffer(int w, int h, GPUTexturePixelFormat format, int msaa_samples = 0) = 0;
-        virtual GPUFramebuffer* createFramebuffer() = 0;
+        virtual GPUTextureBuffer* createTextureBuffer(GPUTexturePixelFormat format) = 0;
+        virtual GPUTexture1D* createTexture1D(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
+        virtual GPUTexture2D* createTexture2D(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
+        virtual GPUTexture3D* createTexture3D(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
+        virtual GPUTextureCubemap* createTextureCubemap(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
+        virtual GPUTextureCubemapArray* createTextureCubemapArray(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
+        virtual GPURenderBuffer* createRenderBuffer(GPURenderBufferMode mode, GPUTexturePixelFormat format) = 0;
+        // GPU Rendering Objects
+        virtual GPUFrameBuffer* createFrameBuffer() = 0;
         virtual GPUProgram* createProgram() = 0;
         virtual GPUShader* createShader(GPUShaderType type, char* buffer, int size) = 0;
         virtual GPUPipeline* createPipeline(GPUProgram* program) = 0;
 
-    public: // GPU Object Commands
+    public: // GPU Command Objects
         virtual GPUCommands* createCommands() = 0;
         virtual void submit(GPUCommands* commands) = 0;
         virtual void recreateSurface(int w, int h) = 0;
