@@ -107,11 +107,17 @@ GLDriver::GLDriver(int msaa_samples, bool rgba) {
 
         unsigned int features =
             feature__flag(GPUDriverFeature::DRIVER_FEATURE_RASTERIZE) |
+            feature__flag(GPUDriverFeature::DRIVER_TEXTURE_1D) |
+            feature__flag(GPUDriverFeature::DRIVER_TEXTURE_RGBA16) |
             feature__flag(GPUDriverFeature::DRIVER_SHADER_GLSL) |
             feature__flag(GPUDriverFeature::DRIVER_SHADER_LOW_GLSL);
         // Check Extra Extensions
         if (GLAD_GL_ARB_debug_output) // Debug Feature
             features |= feature__flag(GPUDriverFeature::DRIVER_FEATURE_DEBUG);
+        if (GLAD_GL_ARB_texture_cube_map_array) // Texture Cubemap Array Feature
+            features |= feature__flag(GPUDriverFeature::DRIVER_TEXTURE_CUBEMAP_ARRAY);
+        if (GLAD_GL_ARB_texture_storage_multisample) // Texture Multisample Feature
+            features |= feature__flag(GPUDriverFeature::DRIVER_TEXTURE_MULTISAMPLE);
         if (GLAD_GL_ARB_compute_shader && GLAD_GL_ARB_shader_image_load_store)
             features |= feature__flag(GPUDriverFeature::DRIVER_FEATURE_COMPUTE);
         if (GLAD_GL_ARB_gl_spirv) { // SPIR-V Shader Feature
