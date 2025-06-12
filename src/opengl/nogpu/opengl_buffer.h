@@ -9,7 +9,7 @@ typedef unsigned int GLuint;
 typedef struct __GLsync *GLsync;
 
 class GLContext;
-class GLBuffer : GPUBuffer {
+class GLBuffer : virtual GPUBuffer {
     // GPU Buffer Usage
     void orphan(int bytes, GPUBufferUsage usage) override;
     void upload(int bytes, void *data, GPUBufferUsage usage) override;

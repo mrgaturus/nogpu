@@ -200,7 +200,7 @@ class GPUTexture {
 // GPU Objects: Texture Buffer
 // ---------------------------
 
-class GPUTextureBuffer : GPUBuffer {
+class GPUTextureBuffer : virtual GPUBuffer {
     protected: GPUTextureBuffer();
     protected: ~GPUTextureBuffer();
     // Texture Pixels Manipulation
@@ -211,7 +211,7 @@ class GPUTextureBuffer : GPUBuffer {
 // GPU Objects: Texture
 // --------------------
 
-class GPUTexture1D : GPUTexture {
+class GPUTexture1D : virtual GPUTexture {
     protected: GPUTexture1D();
     protected: ~GPUTexture1D();
 
@@ -219,8 +219,8 @@ class GPUTexture1D : GPUTexture {
         virtual void allocate(int size, int levels) = 0;
         virtual void upload(int x, int size, int level, void* data) = 0;
         virtual void download(int x, int size, int level, void* data) = 0;
-        virtual void unpack(int x, int size, int level, GPUBuffer *pbo, int pbo_offset) = 0;
-        virtual void pack(int x, int size, int level, GPUBuffer *pbo, int pbo_offset) = 0;
+        virtual void unpack(int x, int size, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void pack(int x, int size, int level, GPUBuffer *pbo, int offset) = 0;
 };
 
 enum class GPUTexture2DMode : int {
@@ -229,7 +229,7 @@ enum class GPUTexture2DMode : int {
     TEXTURE_1D_ARRAY,
 };
 
-class GPUTexture2D : GPUTexture {
+class GPUTexture2D : virtual GPUTexture {
     protected: GPUTexture2D();
     protected: ~GPUTexture2D();
 
@@ -249,7 +249,7 @@ enum class GPUTexture3DMode : int {
     TEXTURE_2D_ARRAY,
 };
 
-class GPUTexture3D : GPUTexture {
+class GPUTexture3D : virtual GPUTexture {
     protected: GPUTexture3D();
     protected: ~GPUTexture3D();
 
@@ -274,7 +274,7 @@ enum class GPUTextureCubemapSide : int {
     TEXTURE_CUBE_MAP_NEGATIVE_Z
 };
 
-class GPUTextureCubemap : GPUTexture {
+class GPUTextureCubemap : virtual GPUTexture {
     protected: GPUTextureCubemap();
     protected: ~GPUTextureCubemap();
 
@@ -286,7 +286,7 @@ class GPUTextureCubemap : GPUTexture {
         virtual void pack(int x, int y, int w, int h, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int offset) = 0;
 };
 
-class GPUTextureCubemapArray : GPUTexture {
+class GPUTextureCubemapArray : virtual GPUTexture {
     protected: GPUTextureCubemapArray();
     protected: ~GPUTextureCubemapArray();
 
