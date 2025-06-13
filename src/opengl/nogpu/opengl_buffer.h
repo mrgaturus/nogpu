@@ -6,6 +6,7 @@
 
 typedef int GLint;
 typedef unsigned int GLuint;
+typedef unsigned int GLenum;
 typedef struct __GLsync *GLsync;
 
 class GLContext;

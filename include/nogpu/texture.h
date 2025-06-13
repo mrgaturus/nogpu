@@ -8,14 +8,14 @@
 // GPU Enums: Texture Formats
 // --------------------------
 
-enum class GPUTextureUploadType : int {
-    TEXTURE_UPLOAD_UNSIGNED_BYTE,
-    TEXTURE_UPLOAD_BYTE,
-    TEXTURE_UPLOAD_UNSIGNED_SHORT,
-    TEXTURE_UPLOAD_SHORT,
-    TEXTURE_UPLOAD_UNSIGNED_INT,
-    TEXTURE_UPLOAD_INT,
-    TEXTURE_UPLOAD_FLOAT,
+enum class GPUTextureTransferType : int {
+    TEXTURE_TRANSFER_UNSIGNED_BYTE,
+    TEXTURE_TRANSFER_BYTE,
+    TEXTURE_TRANSFER_UNSIGNED_SHORT,
+    TEXTURE_TRANSFER_SHORT,
+    TEXTURE_TRANSFER_UNSIGNED_INT,
+    TEXTURE_TRANSFER_INT,
+    TEXTURE_TRANSFER_FLOAT,
 };
 
 enum class GPUTexturePixelType: int {
@@ -169,6 +169,7 @@ class GPUTexture {
     protected:
         GPUTexturePixelType m_pixel_type;
         GPUTexturePixelFormat m_pixel_format;
+        GPUTextureTransferType m_transfer_type;
         GPUTextureSwizzle m_swizzle;
         GPUTextureFilter m_filter;
         GPUTextureWrap m_wrap;
@@ -179,6 +180,7 @@ class GPUTexture {
     public: virtual void destroy() = 0;
 
     public: // GPU Texture Attributes
+        virtual void setTransferType(GPUTextureTransferType type) = 0;
         virtual void setSwizzle(GPUTextureFilter swizzle) = 0;
         virtual void setFilter(GPUTextureFilter filter) = 0;
         virtual void setWrap(GPUTextureFilter wrap) = 0;
@@ -191,6 +193,7 @@ class GPUTexture {
         GPUTextureSize getSize() { return (GPUTextureSize) { m_w, m_h }; }
         GPUTexturePixelType getPixelType() { return m_pixel_type; }
         GPUTexturePixelFormat getPixelFormat() { return m_pixel_format; }
+        GPUTextureTransferType getTransferType() { return m_transfer_type; }
         GPUTextureSwizzle getPixelSwizzle() { return m_swizzle; }
         GPUTextureFilter getPixelFilter() { return m_filter; }
         GPUTextureWrap getPixelWrap() { return m_wrap; }

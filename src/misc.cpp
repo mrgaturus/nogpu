@@ -41,8 +41,12 @@ GPUMemoryBarrier operator&(GPUMemoryBarrier a, GPUMemoryBarrier b) {
 // ------------------
 
 // -- GPU Buffer --
-GPUBuffer::GPUBuffer() {}
-GPUBuffer::~GPUBuffer() {}
+GPUBuffer::GPUBuffer() = default;
+GPUBuffer::~GPUBuffer() = default;
 // -- GPU Vertex Array --
-GPUVertexArray::GPUVertexArray() {}
-GPUVertexArray::~GPUVertexArray() {}
+GPUVertexArray::GPUVertexArray() = default;
+GPUVertexArray::~GPUVertexArray() = default;
+
+// -- GPU Texture --
+GPUTexture::GPUTexture() = default;
+GPUTexture::~GPUTexture() = default;
