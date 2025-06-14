@@ -55,10 +55,13 @@ enum class GPUDriverFeature : int {
     DRIVER_FEATURE_RASTERIZE,
     DRIVER_FEATURE_COMPUTE,
     DRIVER_FEATURE_DEBUG,
+    // Texture Features
     DRIVER_TEXTURE_1D,
     DRIVER_TEXTURE_RGBA16,
     DRIVER_TEXTURE_CUBEMAP_ARRAY,
     DRIVER_TEXTURE_MULTISAMPLE,
+    DRIVER_TEXTURE_S3TC,
+    DRIVER_TEXTURE_BPTC,
     // Shader Compiling
     DRIVER_SHADER_GLSL,
     DRIVER_SHADER_HLSL,
@@ -66,8 +69,8 @@ enum class GPUDriverFeature : int {
     // Built-in Shader Compiling
     DRIVER_SHADER_LOW_GLSL, // OpenGL
     DRIVER_SHADER_LOW_SPIRV, // Vulkan
-    DRIVER_SHADER_LOW_DXBC, // Shader Model 5_1
-    DRIVER_SHADER_LOW_DXIL, // Shader Model 6_0
+    DRIVER_SHADER_LOW_DXBC, // DirectX 11
+    DRIVER_SHADER_LOW_DXIL, // DirectX 12
     DRIVER_SHADER_LOW_MTL, // Metal
 };
 

@@ -43,9 +43,11 @@ int GLAD_GL_ARB_shader_image_load_store = 0;
 int GLAD_GL_ARB_shader_image_size = 0;
 int GLAD_GL_ARB_shader_storage_buffer_object = 0;
 int GLAD_GL_ARB_spirv_extensions = 0;
+int GLAD_GL_ARB_texture_compression_bptc = 0;
 int GLAD_GL_ARB_texture_cube_map_array = 0;
 int GLAD_GL_ARB_texture_storage = 0;
 int GLAD_GL_ARB_texture_storage_multisample = 0;
+int GLAD_GL_EXT_texture_compression_s3tc = 0;
 
 
 
@@ -937,9 +939,11 @@ static int glad_gl_find_extensions_gl(void) {
     GLAD_GL_ARB_shader_image_size = glad_gl_has_extension(exts, exts_i, "GL_ARB_shader_image_size");
     GLAD_GL_ARB_shader_storage_buffer_object = glad_gl_has_extension(exts, exts_i, "GL_ARB_shader_storage_buffer_object");
     GLAD_GL_ARB_spirv_extensions = glad_gl_has_extension(exts, exts_i, "GL_ARB_spirv_extensions");
+    GLAD_GL_ARB_texture_compression_bptc = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_compression_bptc");
     GLAD_GL_ARB_texture_cube_map_array = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_cube_map_array");
     GLAD_GL_ARB_texture_storage = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_storage");
     GLAD_GL_ARB_texture_storage_multisample = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_storage_multisample");
+    GLAD_GL_EXT_texture_compression_s3tc = glad_gl_has_extension(exts, exts_i, "GL_EXT_texture_compression_s3tc");
 
     glad_gl_free_extensions(exts_i);
 

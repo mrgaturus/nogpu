@@ -5,9 +5,13 @@
 #include <nogpu/texture.h>
 #include "opengl_buffer.h"
 
+GLenum toValue(GPUTextureTransferType type);
 GLenum toValue(GPUTexturePixelType type);
 GLenum toValue(GPUTexturePixelFormat format);
-GLenum toValue(GPUTextureTransferType type);
+
+GLenum toValue(GPUTextureFilterMode swizzle);
+GLenum toValue(GPUTextureSwizzleMode filter);
+GLenum toValue(GPUTextureWrapMode wrap);
 
 // -------------------------
 // OpenGL GPU Texture Buffer
