@@ -139,6 +139,20 @@ enum class GPUTextureWrapMode : int {
     TEXTURE_WRAP_MIRRORED_REPEAT,
 };
 
+// ---------------------------
+// GPU Objects: Texture Buffer
+// ---------------------------
+
+class GPUTextureBuffer {
+    protected: GPUTextureBuffer();
+    protected: ~GPUTextureBuffer();
+    public: virtual void destroy() = 0;
+    // Texture Pixels Manipulation
+    public: virtual void setFormat(GPUTexturePixelFormat format);
+    public: virtual GPUTexturePixelFormat getFormat();
+    public: virtual GPUBuffer* getBuffer();
+};
+
 // -------------------------
 // GPU Objects: Texture Base
 // -------------------------
@@ -198,17 +212,6 @@ class GPUTexture {
         GPUTextureSwizzle getPixelSwizzle() { return m_swizzle; }
         GPUTextureFilter getPixelFilter() { return m_filter; }
         GPUTextureWrap getPixelWrap() { return m_wrap; }
-};
-
-// ---------------------------
-// GPU Objects: Texture Buffer
-// ---------------------------
-
-class GPUTextureBuffer : virtual GPUBuffer {
-    protected: GPUTextureBuffer();
-    protected: ~GPUTextureBuffer();
-    // Texture Pixels Manipulation
-    public: virtual void setFormat(GPUTexturePixelFormat format);
 };
 
 // --------------------

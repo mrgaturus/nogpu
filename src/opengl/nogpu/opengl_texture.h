@@ -17,11 +17,22 @@ GLenum toValue(GPUTextureWrapMode wrap);
 // OpenGL GPU Texture Buffer
 // -------------------------
 
-class GLTextureBuffer : GLBuffer, GPUTextureBuffer {
+class GLTextureBuffer : GPUTextureBuffer {
+    // Texture Pixels Manipulation
     void setFormat(GPUTexturePixelFormat format) override;
+    GPUTexturePixelFormat getFormat() override;
+    GPUBuffer* getBuffer() override;
+
+    public: // Texture Attributes
+        GPUTexturePixelFormat m_format;
+        GLBuffer* m_buffer;
+        GLContext* m_ctx;
 
     protected: // Texture Constructor
-        GLTextureBuffer(GPUTexturePixelFormat format);
+        GLTextureBuffer(
+            GLContext* ctx,
+            GPUTexturePixelFormat format);
+        void destroy() override;
         friend GLContext;
 };
 
@@ -29,11 +40,7 @@ class GLTextureBuffer : GLBuffer, GPUTextureBuffer {
 // OpenGL GPU Texture
 // ------------------
 
-class GLTexture : virtual GPUTexture {
-    GLContext* m_ctx;
-    GLenum m_tex_target;
-    GLuint m_tex;
-    GLsync m_sync;
+class GLTexture : virtual public GPUTexture {
     // GPU Texture Attributes
     void setTransferType(GPUTextureTransferType type) override;
     void setSwizzle(GPUTextureSwizzle swizzle) override;
@@ -42,6 +49,12 @@ class GLTexture : virtual GPUTexture {
     void generateMipmaps() override;
     void syncCPU() override;
     void syncGPU() override;
+
+    public: // Texture Attributes
+        GLContext* m_ctx;
+        GLenum m_tex_target;
+        GLuint m_tex;
+        GLsync m_sync;
 
     protected: // Texture Constructor
         GLTexture(GLContext* ctx);
@@ -59,8 +72,8 @@ class GLTexture1D : GLTexture, GPUTexture1D {
 
     protected: GLTexture1D(
         GLContext* ctx,
-        GPUTexturePixelType m_pixel_type,
-        GPUTexturePixelFormat m_pixel_format);
+        GPUTexturePixelType type,
+        GPUTexturePixelFormat format);
         friend GLContext;
 };
 
@@ -77,8 +90,8 @@ class GLTexture2D : GLTexture, GPUTexture2D {
 
     protected: GLTexture2D(
         GLContext* ctx,
-        GPUTexturePixelType m_pixel_type,
-        GPUTexturePixelFormat m_pixel_format);
+        GPUTexturePixelType type,
+        GPUTexturePixelFormat format);
         friend GLContext;
 };
 
@@ -97,8 +110,8 @@ class GLTexture3D : GLTexture, GPUTexture3D {
 
     protected: GLTexture3D(
         GLContext* ctx,
-        GPUTexturePixelType m_pixel_type,
-        GPUTexturePixelFormat m_pixel_format);
+        GPUTexturePixelType type,
+        GPUTexturePixelFormat format);
         friend GLContext;
 };
 
@@ -112,8 +125,8 @@ class GLTextureCubemap : GLTexture, GPUTextureCubemap {
 
     protected: GLTextureCubemap(
         GLContext* ctx,
-        GPUTexturePixelType m_pixel_type,
-        GPUTexturePixelFormat m_pixel_format);
+        GPUTexturePixelType type,
+        GPUTexturePixelFormat format);
         friend GLContext;
 };
 
@@ -129,8 +142,8 @@ class GLTextureCubemapArray : GLTexture, GPUTextureCubemapArray {
 
     protected: GLTextureCubemapArray(
         GLContext* ctx,
-        GPUTexturePixelType m_pixel_type,
-        GPUTexturePixelFormat m_pixel_format);
+        GPUTexturePixelType type,
+        GPUTexturePixelFormat format);
         friend GLContext;
 };
 

@@ -10,7 +10,7 @@ typedef unsigned int GLenum;
 typedef struct __GLsync *GLsync;
 
 class GLContext;
-class GLBuffer : virtual GPUBuffer {
+class GLBuffer : public GPUBuffer {
     // GPU Buffer Usage
     void orphan(int bytes, GPUBufferUsage usage) override;
     void upload(int bytes, void *data, GPUBufferUsage usage) override;
@@ -30,7 +30,7 @@ class GLBuffer : virtual GPUBuffer {
         GLuint m_vbo;
         GLsync m_sync;
 
-    private: // Buffer Constructor
+    public: // Buffer Constructor
         friend GLContext;
         GLBuffer(GLContext* ctx);
         void destroy() override;
