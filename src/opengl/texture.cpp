@@ -18,6 +18,7 @@ void GLTexture::destroy() {
     m_ctx->gl__makeCurrent();
 
     // Destroy OpenGL Texture
+    if (m_sync) glDeleteSync(m_sync);
     glDeleteTextures(1, &m_tex);
     m_sync = nullptr;
     m_ctx = nullptr;

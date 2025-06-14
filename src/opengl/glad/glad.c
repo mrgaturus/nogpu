@@ -37,6 +37,7 @@ int GLAD_GL_VERSION_3_2 = 0;
 int GLAD_GL_VERSION_3_3 = 0;
 int GLAD_GL_ARB_compute_shader = 0;
 int GLAD_GL_ARB_debug_output = 0;
+int GLAD_GL_ARB_get_texture_sub_image = 0;
 int GLAD_GL_ARB_gl_spirv = 0;
 int GLAD_GL_ARB_shader_atomic_counters = 0;
 int GLAD_GL_ARB_shader_image_load_store = 0;
@@ -178,6 +179,7 @@ PFNGLGETBUFFERPARAMETERIVPROC glad_glGetBufferParameteriv = NULL;
 PFNGLGETBUFFERPOINTERVPROC glad_glGetBufferPointerv = NULL;
 PFNGLGETBUFFERSUBDATAPROC glad_glGetBufferSubData = NULL;
 PFNGLGETCOMPRESSEDTEXIMAGEPROC glad_glGetCompressedTexImage = NULL;
+PFNGLGETCOMPRESSEDTEXTURESUBIMAGEPROC glad_glGetCompressedTextureSubImage = NULL;
 PFNGLGETDEBUGMESSAGELOGARBPROC glad_glGetDebugMessageLogARB = NULL;
 PFNGLGETDOUBLEVPROC glad_glGetDoublev = NULL;
 PFNGLGETERRORPROC glad_glGetError = NULL;
@@ -215,6 +217,7 @@ PFNGLGETTEXPARAMETERIIVPROC glad_glGetTexParameterIiv = NULL;
 PFNGLGETTEXPARAMETERIUIVPROC glad_glGetTexParameterIuiv = NULL;
 PFNGLGETTEXPARAMETERFVPROC glad_glGetTexParameterfv = NULL;
 PFNGLGETTEXPARAMETERIVPROC glad_glGetTexParameteriv = NULL;
+PFNGLGETTEXTURESUBIMAGEPROC glad_glGetTextureSubImage = NULL;
 PFNGLGETTRANSFORMFEEDBACKVARYINGPROC glad_glGetTransformFeedbackVarying = NULL;
 PFNGLGETUNIFORMBLOCKINDEXPROC glad_glGetUniformBlockIndex = NULL;
 PFNGLGETUNIFORMINDICESPROC glad_glGetUniformIndices = NULL;
@@ -808,6 +811,11 @@ static void glad_gl_load_GL_ARB_debug_output( GLADuserptrloadfunc load, void* us
     glad_glDebugMessageInsertARB = (PFNGLDEBUGMESSAGEINSERTARBPROC) load(userptr, "glDebugMessageInsertARB");
     glad_glGetDebugMessageLogARB = (PFNGLGETDEBUGMESSAGELOGARBPROC) load(userptr, "glGetDebugMessageLogARB");
 }
+static void glad_gl_load_GL_ARB_get_texture_sub_image( GLADuserptrloadfunc load, void* userptr) {
+    if(!GLAD_GL_ARB_get_texture_sub_image) return;
+    glad_glGetCompressedTextureSubImage = (PFNGLGETCOMPRESSEDTEXTURESUBIMAGEPROC) load(userptr, "glGetCompressedTextureSubImage");
+    glad_glGetTextureSubImage = (PFNGLGETTEXTURESUBIMAGEPROC) load(userptr, "glGetTextureSubImage");
+}
 static void glad_gl_load_GL_ARB_gl_spirv( GLADuserptrloadfunc load, void* userptr) {
     if(!GLAD_GL_ARB_gl_spirv) return;
     glad_glSpecializeShaderARB = (PFNGLSPECIALIZESHADERARBPROC) load(userptr, "glSpecializeShaderARB");
@@ -933,6 +941,7 @@ static int glad_gl_find_extensions_gl(void) {
 
     GLAD_GL_ARB_compute_shader = glad_gl_has_extension(exts, exts_i, "GL_ARB_compute_shader");
     GLAD_GL_ARB_debug_output = glad_gl_has_extension(exts, exts_i, "GL_ARB_debug_output");
+    GLAD_GL_ARB_get_texture_sub_image = glad_gl_has_extension(exts, exts_i, "GL_ARB_get_texture_sub_image");
     GLAD_GL_ARB_gl_spirv = glad_gl_has_extension(exts, exts_i, "GL_ARB_gl_spirv");
     GLAD_GL_ARB_shader_atomic_counters = glad_gl_has_extension(exts, exts_i, "GL_ARB_shader_atomic_counters");
     GLAD_GL_ARB_shader_image_load_store = glad_gl_has_extension(exts, exts_i, "GL_ARB_shader_image_load_store");
@@ -1013,6 +1022,7 @@ int gladLoadGLUserPtr( GLADuserptrloadfunc load, void *userptr) {
     if (!glad_gl_find_extensions_gl()) return 0;
     glad_gl_load_GL_ARB_compute_shader(load, userptr);
     glad_gl_load_GL_ARB_debug_output(load, userptr);
+    glad_gl_load_GL_ARB_get_texture_sub_image(load, userptr);
     glad_gl_load_GL_ARB_gl_spirv(load, userptr);
     glad_gl_load_GL_ARB_shader_atomic_counters(load, userptr);
     glad_gl_load_GL_ARB_shader_image_load_store(load, userptr);
