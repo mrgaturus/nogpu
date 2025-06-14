@@ -30,16 +30,21 @@ class GLTextureBuffer : GLBuffer, GPUTextureBuffer {
 // ------------------
 
 class GLTexture : virtual GPUTexture {
+    GLContext* m_ctx;
+    GLenum m_tex_target;
+    GLuint m_tex;
+    GLsync m_sync;
     // GPU Texture Attributes
     void setTransferType(GPUTextureTransferType type) override;
-    void setSwizzle(GPUTextureFilter swizzle) override;
+    void setSwizzle(GPUTextureSwizzle swizzle) override;
     void setFilter(GPUTextureFilter filter) override;
-    void setWrap(GPUTextureFilter wrap) override;
+    void setWrap(GPUTextureWrap wrap) override;
     void generateMipmaps() override;
-    void wait() override;
+    void syncCPU() override;
+    void syncGPU() override;
 
     protected: // Texture Constructor
-        GLTexture();
+        GLTexture(GLContext* ctx);
         void destroy() override;
         friend GLContext;
 };
@@ -53,6 +58,7 @@ class GLTexture1D : GLTexture, GPUTexture1D {
     void pack(int x, int size, int level, GPUBuffer *pbo, int offset) override;
 
     protected: GLTexture1D(
+        GLContext* ctx,
         GPUTexturePixelType m_pixel_type,
         GPUTexturePixelFormat m_pixel_format);
         friend GLContext;
@@ -70,6 +76,7 @@ class GLTexture2D : GLTexture, GPUTexture2D {
     void setMode(GPUTexture2DMode mode) override;
 
     protected: GLTexture2D(
+        GLContext* ctx,
         GPUTexturePixelType m_pixel_type,
         GPUTexturePixelFormat m_pixel_format);
         friend GLContext;
@@ -89,6 +96,7 @@ class GLTexture3D : GLTexture, GPUTexture3D {
 
 
     protected: GLTexture3D(
+        GLContext* ctx,
         GPUTexturePixelType m_pixel_type,
         GPUTexturePixelFormat m_pixel_format);
         friend GLContext;
@@ -103,6 +111,7 @@ class GLTextureCubemap : GLTexture, GPUTextureCubemap {
     void pack(int x, int y, int w, int h, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int offset) override;
 
     protected: GLTextureCubemap(
+        GLContext* ctx,
         GPUTexturePixelType m_pixel_type,
         GPUTexturePixelFormat m_pixel_format);
         friend GLContext;
@@ -119,6 +128,7 @@ class GLTextureCubemapArray : GLTexture, GPUTextureCubemapArray {
     int getLayers() override;
 
     protected: GLTextureCubemapArray(
+        GLContext* ctx,
         GPUTexturePixelType m_pixel_type,
         GPUTexturePixelFormat m_pixel_format);
         friend GLContext;

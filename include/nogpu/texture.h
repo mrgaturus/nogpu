@@ -181,11 +181,12 @@ class GPUTexture {
 
     public: // GPU Texture Attributes
         virtual void setTransferType(GPUTextureTransferType type) = 0;
-        virtual void setSwizzle(GPUTextureFilter swizzle) = 0;
+        virtual void setSwizzle(GPUTextureSwizzle swizzle) = 0;
         virtual void setFilter(GPUTextureFilter filter) = 0;
-        virtual void setWrap(GPUTextureFilter wrap) = 0;
+        virtual void setWrap(GPUTextureWrap wrap) = 0;
         virtual void generateMipmaps() = 0;
-        virtual void wait() = 0;
+        virtual void syncCPU() = 0;
+        virtual void syncGPU() = 0;
 
     public: // GPU Texture Attributes
         int getW() { return m_w; }
