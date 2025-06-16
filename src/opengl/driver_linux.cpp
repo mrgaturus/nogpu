@@ -100,7 +100,7 @@ GLDriver::GLDriver(int msaa_samples, bool rgba) {
 
     // Load OpenGL Functions
     if (gladLoadGL((GLADloadfunc) eglGetProcAddress) != 0) {
-        if (GLAD_GL_VERSION_3_3 == 0) {
+        if (GLAD_GL_VERSION_3_3 == 0 && !GLAD_GL_ARB_texture_storage) {
             GPULogger::error("[opengl] device doesn't support OpenGL 3.3");
             goto TERMINATE_EGL;
         }
