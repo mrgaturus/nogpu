@@ -19,19 +19,19 @@ GLenum toValue(GPUTextureWrapMode wrap);
 
 class GLTextureBuffer : GPUTextureBuffer {
     // Texture Pixels Manipulation
-    void setFormat(GPUTexturePixelFormat format) override;
-    GPUTexturePixelFormat getFormat() override;
+    void setType(GPUTexturePixelType type) override;
+    GPUTexturePixelType getType() override;
     GPUBuffer* getBuffer() override;
 
     public: // Texture Attributes
-        GPUTexturePixelFormat m_format;
+        GPUTexturePixelType m_pixel_type;
         GLBuffer* m_buffer;
         GLContext* m_ctx;
 
     protected: // Texture Constructor
         GLTextureBuffer(
             GLContext* ctx,
-            GPUTexturePixelFormat format);
+            GPUTexturePixelType type);
         void destroy() override;
         friend GLContext;
 };

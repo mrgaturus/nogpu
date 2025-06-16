@@ -9,23 +9,35 @@
 // Texture 1D: Buffer
 // ------------------
 
-GLTextureBuffer::GLTextureBuffer(GLContext* ctx, GPUTexturePixelFormat format) {
+GLTextureBuffer::GLTextureBuffer(GLContext* ctx, GPUTexturePixelType type) {
     ctx->gl__makeCurrent();
+    // Check Valid Texture Pixel Types
+    if (static_cast<int>(type) > static_cast<int>(GPUTexturePixelType::TEXTURE_PIXEL_RGBA32UI)) {
+        GPULogger::error("invalid pixel format for texture buffer %p", this);
+        delete this;
+        return;
+    }
 
     // Define Texture Buffer
-    m_format = format;
+    m_pixel_type = type;
     m_buffer = new GLBuffer(ctx);
     m_ctx = ctx;
 }
 
-void GLTextureBuffer::setFormat(GPUTexturePixelFormat format) {
+void GLTextureBuffer::setType(GPUTexturePixelType type) {
     m_ctx->gl__makeCurrent();
-    m_format = format;
+
+    // Check Valid Texture Pixel Types and Change Type
+    if (static_cast<int>(type) > static_cast<int>(GPUTexturePixelType::TEXTURE_PIXEL_RGBA32UI)) {
+        GPULogger::error("invalid pixel format for texture buffer %p", this);
+    } else {
+        m_pixel_type = type;
+    }
 }
 
-GPUTexturePixelFormat GLTextureBuffer::getFormat() {
+GPUTexturePixelType GLTextureBuffer::getType() {
     m_ctx->gl__makeCurrent();
-    return m_format;
+    return m_pixel_type;
 }
 
 GPUBuffer* GLTextureBuffer::getBuffer() {

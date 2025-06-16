@@ -64,18 +64,6 @@ GLenum toValue(GPUTexturePixelType type) {
         case GPUTexturePixelType::TEXTURE_PIXEL_RGBA16_SNORM:
             return GL_RGBA16_SNORM;
 
-        // Depth/Stencil Formats
-        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH_COMPONENT16:
-            return GL_DEPTH_COMPONENT16;
-        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH_COMPONENT24:
-            return GL_DEPTH_COMPONENT24;
-        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH_COMPONENT32:
-            return GL_DEPTH_COMPONENT32;
-        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH24_STENCIL8:
-            return GL_DEPTH24_STENCIL8;
-        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH32F_STENCIL8:
-            return GL_DEPTH32F_STENCIL8;
-
         // Floating-point formats
         case GPUTexturePixelType::TEXTURE_PIXEL_R16F:
             return GL_R16F;
@@ -146,6 +134,18 @@ GLenum toValue(GPUTexturePixelType type) {
             return GL_RGBA32I;
         case GPUTexturePixelType::TEXTURE_PIXEL_RGBA32UI:
             return GL_RGBA32UI;
+
+        // Depth/Stencil Formats
+        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH_COMPONENT16:
+            return GL_DEPTH_COMPONENT16;
+        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH_COMPONENT24:
+            return GL_DEPTH_COMPONENT24;
+        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH_COMPONENT32:
+            return GL_DEPTH_COMPONENT32;
+        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH24_STENCIL8:
+            return GL_DEPTH24_STENCIL8;
+        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH32F_STENCIL8:
+            return GL_DEPTH32F_STENCIL8;
 
         // Simple Compression
         case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_RED:

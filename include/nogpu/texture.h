@@ -35,12 +35,6 @@ enum class GPUTexturePixelType: int {
     TEXTURE_PIXEL_RGBA8_SNORM,
     TEXTURE_PIXEL_RGBA16,
     TEXTURE_PIXEL_RGBA16_SNORM,
-    // Depth/Stencil formats
-    TEXTURE_PIXEL_DEPTH_COMPONENT16,
-    TEXTURE_PIXEL_DEPTH_COMPONENT24,
-    TEXTURE_PIXEL_DEPTH_COMPONENT32,
-    TEXTURE_PIXEL_DEPTH24_STENCIL8,
-    TEXTURE_PIXEL_DEPTH32F_STENCIL8,
     // Floating-point formats
     TEXTURE_PIXEL_R16F,
     TEXTURE_PIXEL_RG16F,
@@ -75,6 +69,13 @@ enum class GPUTexturePixelType: int {
     TEXTURE_PIXEL_RGBA16UI,
     TEXTURE_PIXEL_RGBA32I,
     TEXTURE_PIXEL_RGBA32UI,
+
+    // Depth/Stencil formats
+    TEXTURE_PIXEL_DEPTH_COMPONENT16,
+    TEXTURE_PIXEL_DEPTH_COMPONENT24,
+    TEXTURE_PIXEL_DEPTH_COMPONENT32,
+    TEXTURE_PIXEL_DEPTH24_STENCIL8,
+    TEXTURE_PIXEL_DEPTH32F_STENCIL8,
 
     // Simple Compression
     TEXTURE_PIXEL_COMPRESSED_RED,
@@ -148,8 +149,8 @@ class GPUTextureBuffer {
     protected: ~GPUTextureBuffer();
     public: virtual void destroy() = 0;
     // Texture Pixels Manipulation
-    public: virtual void setFormat(GPUTexturePixelFormat format);
-    public: virtual GPUTexturePixelFormat getFormat();
+    public: virtual void setType(GPUTexturePixelType type);
+    public: virtual GPUTexturePixelType getType();
     public: virtual GPUBuffer* getBuffer();
 };
 
