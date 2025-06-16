@@ -122,7 +122,7 @@ void GLBuffer::download(int bytes, int offset, void *data) {
 void GLBuffer::copy(GPUBuffer *data, int bytes, int offset_read, int offset_write) {
     m_ctx->gl__makeCurrent();
 
-    GLBuffer* buf = dynamic_cast<GLBuffer*>(data);
+    GLBuffer* buf = static_cast<GLBuffer*>(data);
     glBindBuffer(GL_COPY_WRITE_BUFFER, buf->m_vbo);
     glBindBuffer(GL_COPY_READ_BUFFER, this->m_vbo);
     glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER,

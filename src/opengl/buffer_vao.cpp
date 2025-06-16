@@ -61,7 +61,7 @@ void GLVertexArray::useArrayBuffer(GPUBuffer* buffer) {
 
     if (buffer) {
         glBindVertexArray(m_vao);
-        GLBuffer* buf = dynamic_cast<GLBuffer*>(buffer);
+        GLBuffer* buf = static_cast<GLBuffer*>(buffer);
         glBindBuffer(GL_ARRAY_BUFFER, buf->m_vbo);
     } else glBindBuffer(GL_ARRAY_BUFFER, 0);
     
@@ -74,7 +74,7 @@ void GLVertexArray::useElementsBuffer(GPUBuffer* buffer) {
 
     if (buffer) {
         glBindVertexArray(m_vao);
-        GLBuffer* buf = dynamic_cast<GLBuffer*>(buffer);
+        GLBuffer* buf = static_cast<GLBuffer*>(buffer);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buf->m_vbo);
     } else glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
@@ -94,7 +94,7 @@ void GLVertexArray::defineAttribute(int index, GPUAttributeSize size, GPUAttribu
     }
 
     glBindVertexArray(m_vao);
-    GLBuffer* buf = dynamic_cast<GLBuffer*>(m_array_buffer);
+    GLBuffer* buf = static_cast<GLBuffer*>(m_array_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buf->m_vbo);
     glVertexAttribPointer(index, toValue(size), toValue(type),
         false, stride, reinterpret_cast<void*>(offset));
@@ -119,7 +119,7 @@ void GLVertexArray::defineNormalized(int index, GPUAttributeSize size, GPUAttrib
     }
 
     glBindVertexArray(m_vao);
-    GLBuffer* buf = dynamic_cast<GLBuffer*>(m_array_buffer);
+    GLBuffer* buf = static_cast<GLBuffer*>(m_array_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buf->m_vbo);
     glVertexAttribPointer(index, toValue(size), toValue(type),
         true, stride, reinterpret_cast<void*>(offset));
