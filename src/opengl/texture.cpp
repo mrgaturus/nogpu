@@ -85,6 +85,21 @@ void GLTexture::setWrap(GPUTextureWrap wrap) {
 // GPU Objects: Texture Base Mipmaps
 // ---------------------------------
 
+void GLTexture::generateTexture() {
+    m_ctx->gl__makeCurrent();
+    GLenum target = m_tex_target;
+    glBindTexture(target, m_tex);
+
+    // Reallocate if Allocated
+    GLint checkAllocated = GL_FALSE;
+    glGetTexParameteriv(target, GL_TEXTURE_IMMUTABLE_FORMAT, &checkAllocated);
+    if (checkAllocated != GL_FALSE) {
+        glDeleteTextures(1, &m_tex);
+        glGenTextures(1, &m_tex);
+        glBindTexture(target, m_tex);
+    }
+}
+
 void GLTexture::generateMipmaps() {
     m_ctx->gl__makeCurrent();
 

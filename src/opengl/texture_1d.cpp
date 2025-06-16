@@ -51,6 +51,13 @@ GLTexture1D::GLTexture1D(
     GPUTexturePixelFormat format) : GLTexture(ctx) {
         m_pixel_type = type;
         m_pixel_format = format;
+        m_tex_target = GL_TEXTURE_1D;
+        
+        // Check if texture 1D is supported
+        if (!GPUDriver::checkFeature(GPUDriverFeature::DRIVER_TEXTURE_1D)) {
+            GPULogger::error("texture 1d is not supported");
+            delete this;
+        }
 }
 
 // -------------------------------
@@ -60,8 +67,8 @@ GLTexture1D::GLTexture1D(
 void GLTexture1D::allocate(int size, int levels) {
     m_ctx->gl__makeCurrent();
 
+    this->generateTexture();
     GLenum target = m_tex_target;
-    glBindTexture(target, m_tex);
     glTexStorage1D(target, levels, toValue(m_pixel_type), size);
 
     // Check Allocation Error

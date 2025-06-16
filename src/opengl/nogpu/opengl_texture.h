@@ -58,6 +58,7 @@ class GLTexture : virtual public GPUTexture {
 
     protected: // Texture Constructor
         GLTexture(GLContext* ctx);
+        void generateTexture();
         void destroy() override;
         friend GLContext;
 };
