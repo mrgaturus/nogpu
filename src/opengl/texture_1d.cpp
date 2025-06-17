@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
+#include <climits>
 #include <nogpu_private.h>
 #include "nogpu/opengl_texture.h"
 #include "nogpu/opengl_context.h"
@@ -26,13 +27,14 @@ GLTextureBuffer::GLTextureBuffer(GLContext* ctx, GPUTexturePixelType type) {
 
 void GLTextureBuffer::setType(GPUTexturePixelType type) {
     m_ctx->gl__makeCurrent();
-
     // Check Valid Texture Pixel Types and Change Type
     if (static_cast<int>(type) > static_cast<int>(GPUTexturePixelType::TEXTURE_PIXEL_RGBA32UI)) {
         GPULogger::error("invalid pixel format for texture buffer %p", this);
-    } else {
-        m_pixel_type = type;
+        return;
     }
+
+    // Change Pixel Type
+    m_pixel_type = type;
 }
 
 GPUTexturePixelType GLTextureBuffer::getType() {
@@ -121,12 +123,88 @@ void GLTexture1D::upload(int x, int size, int level, void* data) {
 
 void GLTexture1D::download(int x, int size, int level, void* data) {
     m_ctx->gl__makeCurrent();
+
+    GLint read;
+    GLenum error = GL_NO_ERROR;
+    GLenum target = m_tex_target;
+    glBindTexture(target, m_tex);
+
+    // Use Optimized glGetTextureSubImage if available
+    if (GLAD_GL_ARB_get_texture_sub_image) {
+        glGetTextureSubImage(m_tex, level,
+            x, 0, 0, size, 1, 1,
+            toValue(m_pixel_format),
+            toValue(m_transfer_type),
+            INT_MAX, data);
+
+        // Check Successful
+        error = glGetError();
+        if (error != GL_NO_ERROR)
+            goto DOWNLOAD_ERROR;
+        return;
+    // Use Optimized glGetTexImage when full image
+    } else if (x == 0 && size == m_w) {
+        glGetTexImage(target, level,
+            toValue(m_pixel_format),
+            toValue(m_transfer_type),
+            data);
+
+        // Check Successful
+        error = glGetError();
+        if (error != GL_NO_ERROR)
+            goto DOWNLOAD_ERROR;
+        return;
+    }
+
+    // Create Read Framebuffer
+    if (!m_tex_fbo) {
+        glGenFramebuffers(1, &m_tex_fbo);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
+        glFramebufferTexture1D(GL_READ_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0, 
+            GL_TEXTURE_1D, m_tex, 0);
+
+        // Check if Texture and Framebuffer is valid to hacky read
+        if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+            glDeleteFramebuffers(1, &m_tex_fbo);
+            goto DOWNLOAD_ERROR;
+        }
+    } 
+
+    // Use Framebuffer Trick for Old Devices
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
+    glGetIntegerv(GL_READ_BUFFER, &read);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    glReadPixels(x, 0, size, 1,
+        toValue(m_pixel_format),
+        toValue(m_transfer_type),
+        data);
+
+    error = glGetError(); glReadBuffer(read);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    // Check Texture Reading Successful
+    if (error != GL_NO_ERROR) {
+        DOWNLOAD_ERROR: {
+            GPULogger::error("failed downloading pixels from 1d texture %p", this);
+        }
+    }
 }
 
 void GLTexture1D::unpack(int x, int size, int level, GPUBuffer *pbo, int offset) {
     m_ctx->gl__makeCurrent();
+    // Copy PBO Pixels to Texture
+    GLBuffer* buf = static_cast<GLBuffer*>(pbo);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf->m_vbo);
+    this->upload(x, size, level, reinterpret_cast<void*>(offset));
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 }
 
 void GLTexture1D::pack(int x, int size, int level, GPUBuffer *pbo, int offset) {
     m_ctx->gl__makeCurrent();
+    // Copy Texture Pixels to PBO
+    GLBuffer* buf = static_cast<GLBuffer*>(pbo);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, buf->m_vbo);
+    this->download(x, size, level, reinterpret_cast<void*>(offset));
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }

@@ -53,6 +53,7 @@ class GLTexture : virtual public GPUTexture {
     public: // Texture Attributes
         GLContext* m_ctx;
         GLenum m_tex_target;
+        GLuint m_tex_fbo;
         GLuint m_tex;
         GLsync m_sync;
 

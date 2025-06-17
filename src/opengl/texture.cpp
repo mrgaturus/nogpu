@@ -11,6 +11,7 @@ GLTexture::GLTexture(GLContext* ctx) {
     // Generate OpenGL Texture
     glGenTextures(1, &m_tex);
     m_sync = nullptr;
+    m_tex_fbo = 0;
     m_ctx = ctx;
 }
 
@@ -19,6 +20,7 @@ void GLTexture::destroy() {
 
     // Destroy OpenGL Texture
     if (m_sync) glDeleteSync(m_sync);
+    if (m_tex_fbo) glDeleteFramebuffers(1, &m_tex_fbo);
     glDeleteTextures(1, &m_tex);
     m_sync = nullptr;
     m_ctx = nullptr;
@@ -118,10 +120,16 @@ void GLTexture::generateMipmaps() {
 
 void GLTexture::syncCPU() {
     m_ctx->gl__makeCurrent();
+    // Wait Texture PBO Fence Sync
+    if (m_sync) glDeleteSync(m_sync);
+    m_sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     if (m_sync) glClientWaitSync(m_sync, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
 };
 
 void GLTexture::syncGPU() {
     m_ctx->gl__makeCurrent();
+    // Wait Texture PBO Fence Sync
+    if (m_sync) glDeleteSync(m_sync);
+    m_sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     if (m_sync) glWaitSync(m_sync, 0, GL_TIMEOUT_IGNORED);
 };
