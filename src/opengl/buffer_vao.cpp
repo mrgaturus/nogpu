@@ -89,7 +89,7 @@ void GLVertexArray::useElementsBuffer(GPUBuffer* buffer) {
 void GLVertexArray::defineAttribute(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) {
     m_ctx->gl__makeCurrent();
     if (!m_array_buffer) {
-        GPULogger::error("an array buffer not used to define a normalized attribute: #%d", index);
+        GPULogger::error("an array buffer is not used to define attribute #%d for %p", index, this);
         return;
     }
 
@@ -100,7 +100,7 @@ void GLVertexArray::defineAttribute(int index, GPUAttributeSize size, GPUAttribu
         false, stride, reinterpret_cast<void*>(offset));
 
     if (glGetError() != GL_NO_ERROR) {
-        GPULogger::error("failed define attribute #%d", index);
+        GPULogger::error("failed define attribute #%d for %p", index, this);
         return;
     }
 
@@ -111,11 +111,9 @@ void GLVertexArray::defineAttribute(int index, GPUAttributeSize size, GPUAttribu
 void GLVertexArray::defineNormalized(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) {
     m_ctx->gl__makeCurrent();
     if (!m_array_buffer) {
-        GPULogger::error("an array buffer not used to define a normalized attribute: #%d", index);
-        return;
+        GPULogger::error("an array buffer is not used to define normalized attribute #%d for %p", index, this); return;
     } else if (type == GPUAttributeType::ATTRIBUTE_TYPE_FLOAT || type == GPUAttributeType::ATTRIBUTE_TYPE_DOUBLE) {
-        GPULogger::error("float or double cannot be normalized for attribute: #%d", index);
-        return;
+        GPULogger::error("float or double cannot be normalized to define attribute #%d for %p", index, this); return;
     }
 
     glBindVertexArray(m_vao);
@@ -125,7 +123,7 @@ void GLVertexArray::defineNormalized(int index, GPUAttributeSize size, GPUAttrib
         true, stride, reinterpret_cast<void*>(offset));
 
     if (glGetError() != GL_NO_ERROR) {
-        GPULogger::error("failed define normalized attribute: #%d", index);
+        GPULogger::error("failed define normalized attribute: #%d for %p", index, this);
         return;
     }
 
@@ -140,7 +138,7 @@ void GLVertexArray::disableAttribute(int index) {
     glDisableVertexAttribArray(index);
 
     if (glGetError() != GL_NO_ERROR)
-        GPULogger::warning("attribute #%d is not defined", index);
+        GPULogger::warning("attribute #%d is not defined for %p", index, this);
 };
 
 void GLVertexArray::enableAttribute(int index) {
@@ -150,5 +148,5 @@ void GLVertexArray::enableAttribute(int index) {
     glEnableVertexAttribArray(index);
 
     if (glGetError() != GL_NO_ERROR)
-        GPULogger::warning("attribute #%d is not defined", index);
+        GPULogger::warning("attribute #%d is not defined for %p", index, this);
 };
