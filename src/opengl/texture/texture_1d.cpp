@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
-#include <climits>
 #include <nogpu_private.h>
 #include "../nogpu/opengl_texture.h"
 #include "../nogpu/opengl_context.h"
 #include "../glad/glad.h"
+#include <climits>
 
 // -----------------------
 // Texture 1D: Constructor
@@ -40,11 +40,11 @@ void GLTexture1D::allocate(int size, int levels) {
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel type for %p", this); return;
+            GPULogger::error("invalid pixel type for 1D %p", this); return;
         case GL_INVALID_OPERATION:
-            GPULogger::error("invalid levels count for %p", this); return;
+            GPULogger::error("invalid levels count for 1D %p", this); return;
         case GL_INVALID_VALUE:
-            GPULogger::error("invalid size for %p", this); return;
+            GPULogger::error("invalid size for 1D %p", this); return;
     }
 
     // Set Texture Dimensions
@@ -64,11 +64,11 @@ void GLTexture1D::upload(int x, int size, int level, void* data) {
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_OPERATION:
-            GPULogger::error("failed uploading pixels for %p", this); return;
+            GPULogger::error("failed uploading pixels for 1D %p", this); return;
         case GL_INVALID_VALUE:
-            GPULogger::error("failed uploading parameters for %p", this); return;
+            GPULogger::error("failed uploading parameters for 1D %p", this); return;
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel format/type for %p", this); return;
+            GPULogger::error("invalid pixel format/type for 1D %p", this); return;
     }
 }
 
@@ -137,13 +137,14 @@ void GLTexture1D::download(int x, int size, int level, void* data) {
     // Check Texture Reading Successful
     if (error != GL_NO_ERROR) {
         DOWNLOAD_ERROR: {
-            GPULogger::error("failed downloading pixels from 1d texture %p", this);
+            GPULogger::error("failed downloading pixels from 1D %p", this);
         }
     }
 }
 
 void GLTexture1D::unpack(int x, int size, int level, GPUBuffer *pbo, int offset) {
     m_ctx->gl__makeCurrent();
+
     // Copy PBO Pixels to Texture
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf->m_vbo);
@@ -153,6 +154,7 @@ void GLTexture1D::unpack(int x, int size, int level, GPUBuffer *pbo, int offset)
 
 void GLTexture1D::pack(int x, int size, int level, GPUBuffer *pbo, int offset) {
     m_ctx->gl__makeCurrent();
+
     // Copy Texture Pixels to PBO
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, buf->m_vbo);
