@@ -80,15 +80,15 @@ class GLTexture1D : GLTexture, GPUTexture1D {
 };
 
 class GLTexture2D : GLTexture, GPUTexture2D {
+    GPUTexture2DMode getMode() override;
+    void setMode(GPUTexture2DMode mode);
+
     // Texture Buffer Manipulation
-    void allocate(int w, int h, int levels) override;
+    void allocate(GPUTexture2DMode mode, int w, int h, int levels) override;
     void upload(int x, int y, int w, int h, int level, void* data) override;
     void download(int x, int y, int w, int h, int level, void* data) override;
     void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
     void pack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
-    // Texture Attributes
-    GPUTexture2DMode getMode() override;
-    void setMode(GPUTexture2DMode mode) override;
 
     protected: GLTexture2D(
         GLContext* ctx,
@@ -98,17 +98,15 @@ class GLTexture2D : GLTexture, GPUTexture2D {
 };
 
 class GLTexture3D : GLTexture, GPUTexture3D {
+    GPUTexture3DMode getMode() override;
+    int getLayers() override;
+
     // Texture Buffer Manipulation
-    void allocate(int w, int h, int layers, int levels) override;
+    void allocate(GPUTexture3DMode mode, int w, int h, int layers, int levels) override;
     void upload(int x, int y, int w, int h, int layer, int level, void* data) override;
     void download(int x, int y, int w, int h, int layer, int level, void* data) override;
     void unpack(int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) override;
     void pack(int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) override;
-    // Texture Attributes
-    int getLayers() override;
-    GPUTexture3DMode getMode() override;
-    void setMode(GPUTexture3DMode mode) override;
-
 
     protected: GLTexture3D(
         GLContext* ctx,

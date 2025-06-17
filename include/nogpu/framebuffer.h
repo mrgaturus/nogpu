@@ -19,7 +19,9 @@ class GPURenderBuffer {
         GPURenderBufferMode m_mode;
         GPUTexturePixelFormat m_format;
         int m_msaa_samples;
-        int m_w, m_h;
+        int m_width;
+        int m_height;
+
     // GPU Renderbuffer Constructor
     protected: GPURenderBuffer();
     protected: ~GPURenderBuffer();
@@ -28,10 +30,10 @@ class GPURenderBuffer {
     public: virtual void allocate(int w, int h, int layers, int msaa_samples) = 0;
 
     public: // Renderbuffer Attributes
-        int getW() { return m_w; }
-        int getH() { return m_h; }
+        int getWidth() { return m_width; }
+        int getHeight() { return m_height; }
         int getMultisamples() { return m_msaa_samples; }
-        GPUTextureSize getSize() { return (GPUTextureSize) { m_w, m_h }; }
+        GPUTextureSize getSize() { return (GPUTextureSize) { m_width, m_height }; }
         GPURenderBufferMode getMode() { return m_mode; }
         GPUTexturePixelFormat getFormat() { return m_format; }
         virtual GPUTexture* getTexture();

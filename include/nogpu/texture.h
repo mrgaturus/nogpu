@@ -177,7 +177,8 @@ typedef struct {
 } GPUTextureWrap;
 
 typedef struct {
-    int w, h;
+    int width;
+    int height;
 } GPUTextureSize;
 
 class GPUTexture {
@@ -188,8 +189,10 @@ class GPUTexture {
         GPUTextureSwizzle m_swizzle;
         GPUTextureFilter m_filter;
         GPUTextureWrap m_wrap;
-        int m_w, m_h;
-    // Texture Constructor
+        int m_width;
+        int m_height;
+
+    // GPU Texture Constructor
     protected: GPUTexture();
     protected: ~GPUTexture();
     public: virtual void destroy() = 0;
@@ -204,9 +207,9 @@ class GPUTexture {
         virtual void syncGPU() = 0;
 
     public: // GPU Texture Attributes
-        int getW() { return m_w; }
-        int getH() { return m_h; }
-        GPUTextureSize getSize() { return (GPUTextureSize) { m_w, m_h }; }
+        int getWidth() { return m_width; }
+        int getHeight() { return m_height; }
+        GPUTextureSize getSize() { return (GPUTextureSize) { m_width, m_height }; }
         GPUTexturePixelType getPixelType() { return m_pixel_type; }
         GPUTexturePixelFormat getPixelFormat() { return m_pixel_format; }
         GPUTextureTransferType getTransferType() { return m_transfer_type; }
@@ -240,16 +243,14 @@ enum class GPUTexture2DMode : int {
 class GPUTexture2D : virtual GPUTexture {
     protected: GPUTexture2D();
     protected: ~GPUTexture2D();
+    public: virtual GPUTexture2DMode getMode();
 
     public: // Texture Pixels Manipulation
-        virtual void allocate(int w, int h, int levels) = 0;
+        virtual void allocate(GPUTexture2DMode mode, int w, int h, int levels) = 0;
         virtual void upload(int x, int y, int w, int h, int level, void* data) = 0;
         virtual void download(int x, int y, int w, int h, int level, void* data) = 0;
         virtual void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) = 0;
         virtual void pack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) = 0;
-    public: // Texture Attributes
-        virtual void setMode(GPUTexture2DMode mode);
-        virtual GPUTexture2DMode getMode();
 };
 
 enum class GPUTexture3DMode : int {
@@ -260,17 +261,15 @@ enum class GPUTexture3DMode : int {
 class GPUTexture3D : virtual GPUTexture {
     protected: GPUTexture3D();
     protected: ~GPUTexture3D();
+    public: virtual GPUTexture3DMode getMode();
+    public: virtual int getLayers();
 
     public: // Texture Pixels Manipulation
-        virtual void allocate(int w, int h, int layers, int levels) = 0;
+        virtual void allocate(GPUTexture3DMode mode, int w, int h, int layers, int levels) = 0;
         virtual void upload(int x, int y, int w, int h, int layer, int level, void* data) = 0;
         virtual void download(int x, int y, int w, int h, int layer, int level, void* data) = 0;
         virtual void unpack(int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) = 0;
         virtual void pack(int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) = 0;
-    public: // Texture Attributes
-        virtual int getLayers();
-        virtual GPUTexture3DMode getMode();
-        virtual void setMode(GPUTexture3DMode mode);
 };
 
 enum class GPUTextureCubemapSide : int {
