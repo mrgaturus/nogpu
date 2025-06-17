@@ -19,13 +19,41 @@ GLTexture2D::GLTexture2D(
         m_tex_target = GL_TEXTURE_2D;
 }
 
+GPUTexture2DMode GLTexture2D::getMode() {
+    m_ctx->gl__makeCurrent();
+
+    switch (m_tex_target) {
+        case GL_TEXTURE_2D:
+            return GPUTexture2DMode::TEXTURE_2D;
+        case GL_TEXTURE_RECTANGLE:
+            return GPUTexture2DMode::TEXTURE_2D_RECTANGLE;
+        case GL_TEXTURE_1D_ARRAY:
+            return GPUTexture2DMode::TEXTURE_1D_ARRAY;
+    }
+
+    // Return Fallback Value
+    return GPUTexture2DMode::TEXTURE_2D;
+}
+
+void GLTexture2D::setMode(GPUTexture2DMode mode) {
+    switch (mode) {
+        case GPUTexture2DMode::TEXTURE_2D:
+            m_tex_target = GL_TEXTURE_2D; break;
+        case GPUTexture2DMode::TEXTURE_2D_RECTANGLE:
+            m_tex_target = GL_TEXTURE_RECTANGLE; break;
+        case GPUTexture2DMode::TEXTURE_1D_ARRAY:
+            m_tex_target = GL_TEXTURE_1D_ARRAY; break;
+    }
+}
+
 // -------------------------------
 // Texture 2D: Buffer Manipulation
 // -------------------------------
 
-void GLTexture2D::allocate(int w, int h, int levels) {
+void GLTexture2D::allocate(GPUTexture2DMode mode, int w, int h, int levels) {
     m_ctx->gl__makeCurrent();
 
+    this->setMode(mode);
     this->generateTexture();
     GLenum target = m_tex_target;
     glTexStorage2D(target, levels, toValue(m_pixel_type), w, h);
@@ -42,8 +70,8 @@ void GLTexture2D::allocate(int w, int h, int levels) {
     }
 
     // Set Texture Dimensions
-    m_w = w;
-    m_h = h;
+    m_width = w;
+    m_height = h;
 }
 
 void GLTexture2D::upload(int x, int y, int w, int h, int level, void* data) {
@@ -88,7 +116,7 @@ void GLTexture2D::download(int x, int y, int w, int h, int level, void* data) {
             goto DOWNLOAD_ERROR;
         return;
     // Use Optimized glGetTexImage when full image
-    } else if (x == 0 && y == 0 && w == m_w && h == m_h) {
+    } else if (x == 0 && y == 0 && w == m_width && h == m_height) {
         glGetTexImage(target, level,
             toValue(m_pixel_format),
             toValue(m_transfer_type),
@@ -101,24 +129,26 @@ void GLTexture2D::download(int x, int y, int w, int h, int level, void* data) {
         return;
     }
 
-    // Create Read Framebuffer
-    if (!m_tex_fbo) {
-        glGenFramebuffers(1, &m_tex_fbo);
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
-        glFramebufferTexture2D(GL_READ_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0, 
-            GL_TEXTURE_2D, m_tex, 0);
-
-        // Check if Texture and Framebuffer is valid to hacky read
-        if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-            glDeleteFramebuffers(1, &m_tex_fbo);
-            goto DOWNLOAD_ERROR;
-        }
-    } 
-
     // Use Framebuffer Trick for Old Devices
+    if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
+    // Decide 2D Framebuffer Attachment
+    if (m_tex_target != GL_TEXTURE_1D_ARRAY) {
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0, m_tex_target, m_tex, level);
+    } else { // Decide 1D Array Framebuffer Attachment
+        glFramebufferTextureLayer(GL_READ_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0, m_tex, level, y); y = 0;
+    }
+
+    // Check if Texture and Framebuffer is valid to hacky read
+    if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        glDeleteFramebuffers(1, &m_tex_fbo);
+        goto DOWNLOAD_ERROR;
+    }
+
+    // Read Framebuffer Pixels
     glGetIntegerv(GL_READ_BUFFER, &read);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
     glReadPixels(x, y, w, h,
@@ -154,17 +184,4 @@ void GLTexture2D::pack(int x, int y, int w, int h, int level, GPUBuffer *pbo, in
     glBindBuffer(GL_PIXEL_PACK_BUFFER, buf->m_vbo);
     this->download(x, y, w, h, level, reinterpret_cast<void*>(offset));
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-}
-
-// -----------------------------
-// Texture 2D: Mode Manipulation
-// -----------------------------
-
-void GLTexture2D::setMode(GPUTexture2DMode mode) {
-    m_ctx->gl__makeCurrent();
-}
-
-GPUTexture2DMode GLTexture2D::getMode() {
-    m_ctx->gl__makeCurrent();
-    return GPUTexture2DMode::TEXTURE_2D;
 }

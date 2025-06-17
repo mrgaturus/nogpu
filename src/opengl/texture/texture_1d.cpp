@@ -17,12 +17,6 @@ GLTexture1D::GLTexture1D(
         m_pixel_type = type;
         m_pixel_format = format;
         m_tex_target = GL_TEXTURE_1D;
-        
-        // Check if texture 1D is supported
-        if (!GPUDriver::checkFeature(GPUDriverFeature::DRIVER_TEXTURE_1D)) {
-            GPULogger::error("texture 1d is not supported");
-            delete this;
-        }
 }
 
 // -------------------------------
@@ -48,8 +42,8 @@ void GLTexture1D::allocate(int size, int levels) {
     }
 
     // Set Texture Dimensions
-    m_w = size;
-    m_h = 1;
+    m_width = size;
+    m_height = 1;
 }
 
 void GLTexture1D::upload(int x, int size, int level, void* data) {
@@ -94,7 +88,7 @@ void GLTexture1D::download(int x, int size, int level, void* data) {
             goto DOWNLOAD_ERROR;
         return;
     // Use Optimized glGetTexImage when full image
-    } else if (x == 0 && size == m_w) {
+    } else if (x == 0 && size == m_width) {
         glGetTexImage(target, level,
             toValue(m_pixel_format),
             toValue(m_transfer_type),
@@ -107,24 +101,19 @@ void GLTexture1D::download(int x, int size, int level, void* data) {
         return;
     }
 
-    // Create Read Framebuffer
-    if (!m_tex_fbo) {
-        glGenFramebuffers(1, &m_tex_fbo);
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
-        glFramebufferTexture1D(GL_READ_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0, 
-            GL_TEXTURE_1D, m_tex, 0);
-
-        // Check if Texture and Framebuffer is valid to hacky read
-        if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-            glDeleteFramebuffers(1, &m_tex_fbo);
-            goto DOWNLOAD_ERROR;
-        }
-    } 
-
     // Use Framebuffer Trick for Old Devices
+    if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
+    glFramebufferTexture1D(GL_READ_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0, GL_TEXTURE_1D, m_tex, level);
+    // Check if Texture and Framebuffer is valid to hacky read
+    if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        glDeleteFramebuffers(1, &m_tex_fbo);
+        goto DOWNLOAD_ERROR;
+    }
+
+    // Read Framebuffer Pixels
     glGetIntegerv(GL_READ_BUFFER, &read);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
     glReadPixels(x, 0, size, 1,
