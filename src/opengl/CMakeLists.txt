@@ -9,7 +9,8 @@ add_library(nogpu_opengl OBJECT
     context.cpp
     framebuffer.cpp
     shader.cpp
-    texture_1d.cpp
+    texture/texture_1d.cpp
+    texture/texture_2d.cpp
     texture_values.cpp
     texture.cpp
 )
