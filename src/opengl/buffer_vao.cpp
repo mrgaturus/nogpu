@@ -111,9 +111,11 @@ void GLVertexArray::defineAttribute(int index, GPUAttributeSize size, GPUAttribu
 void GLVertexArray::defineNormalized(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) {
     m_ctx->gl__makeCurrent();
     if (!m_array_buffer) {
-        GPULogger::error("an array buffer is not used to define normalized attribute #%d for %p", index, this); return;
+        GPULogger::error("an array buffer is not used to define normalized attribute #%d for %p", index, this);
+        return;
     } else if (type == GPUAttributeType::ATTRIBUTE_TYPE_FLOAT || type == GPUAttributeType::ATTRIBUTE_TYPE_DOUBLE) {
-        GPULogger::error("float or double cannot be normalized to define attribute #%d for %p", index, this); return;
+        GPULogger::error("float or double cannot be normalized to define attribute #%d for %p", index, this);
+        return;
     }
 
     glBindVertexArray(m_vao);
