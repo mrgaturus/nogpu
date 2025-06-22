@@ -262,14 +262,14 @@ class GPUTexture3D : virtual GPUTexture {
     protected: GPUTexture3D();
     protected: ~GPUTexture3D();
     public: virtual GPUTexture3DMode getMode();
-    public: virtual int getLayers();
+    public: virtual int getDepth();
 
     public: // Texture Pixels Manipulation
-        virtual void allocate(GPUTexture3DMode mode, int w, int h, int layers, int levels) = 0;
-        virtual void upload(int x, int y, int w, int h, int layer, int level, void* data) = 0;
-        virtual void download(int x, int y, int w, int h, int layer, int level, void* data) = 0;
-        virtual void unpack(int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) = 0;
-        virtual void pack(int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void allocate(GPUTexture3DMode mode, int w, int h, int depth, int levels) = 0;
+        virtual void upload(int x, int y, int z, int w, int h, int depth, int level, void* data) = 0;
+        virtual void download(int x, int y, int z, int w, int h, int depth, int level, void* data) = 0;
+        virtual void unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void pack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) = 0;
 };
 
 enum class GPUTextureCubemapSide : int {
@@ -296,6 +296,7 @@ class GPUTextureCubemap : virtual GPUTexture {
 class GPUTextureCubemapArray : virtual GPUTexture {
     protected: GPUTextureCubemapArray();
     protected: ~GPUTextureCubemapArray();
+    public: virtual int getLayers();
 
     public: // Texture Pixels Manipulation
         virtual void allocate(int w, int h, int layers, int levels) = 0;
@@ -303,8 +304,6 @@ class GPUTextureCubemapArray : virtual GPUTexture {
         virtual void download(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, void* data) = 0;
         virtual void unpack(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int offset) = 0;
         virtual void pack(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int offset) = 0;
-    public: // Texture Attributes
-        virtual int getLayers();
 };
 
 #endif // NOGPU_TEXTURE_H

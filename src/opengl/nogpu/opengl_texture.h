@@ -99,14 +99,16 @@ class GLTexture2D : GLTexture, GPUTexture2D {
 
 class GLTexture3D : GLTexture, GPUTexture3D {
     GPUTexture3DMode getMode() override;
-    int getLayers() override;
+    void setMode(GPUTexture3DMode mode);
+    int getDepth() override;
+    int m_depth;
 
     // Texture Buffer Manipulation
-    void allocate(GPUTexture3DMode mode, int w, int h, int layers, int levels) override;
-    void upload(int x, int y, int w, int h, int layer, int level, void* data) override;
-    void download(int x, int y, int w, int h, int layer, int level, void* data) override;
-    void unpack(int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) override;
-    void pack(int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) override;
+    void allocate(GPUTexture3DMode mode, int w, int h, int depth, int levels) override;
+    void upload(int x, int y, int z, int w, int h, int depth, int level, void* data) override;
+    void download(int x, int y, int z, int w, int h, int depth, int level, void* data) override;
+    void unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) override;
+    void pack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) override;
 
     protected: GLTexture3D(
         GLContext* ctx,
@@ -131,14 +133,15 @@ class GLTextureCubemap : GLTexture, GPUTextureCubemap {
 };
 
 class GLTextureCubemapArray : GLTexture, GPUTextureCubemapArray {
+    int getLayers() override;
+    int m_depth;
+
     // Texture Buffer Manipulation
     void allocate(int w, int h, int layers, int levels) override;
     void upload(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, void* data) override;
     void download(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, void* data) override;
     void unpack(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int offset) override;
     void pack(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int offset) override;
-    // Texture Attributes
-    int getLayers() override;
 
     protected: GLTextureCubemapArray(
         GLContext* ctx,
