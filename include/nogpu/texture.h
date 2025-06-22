@@ -287,10 +287,10 @@ class GPUTextureCubemap : virtual GPUTexture {
 
     public: // Texture Pixels Manipulation
         virtual void allocate(int w, int h, int levels) = 0;
-        virtual void upload(int x, int y, int w, int h, int level, GPUTextureCubemapSide side, void* data) = 0;
-        virtual void download(int x, int y, int w, int h, int level, GPUTextureCubemapSide side, void* data) = 0;
-        virtual void unpack(int x, int y, int w, int h, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int offset) = 0;
-        virtual void pack(int x, int y, int w, int h, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int offset) = 0;
+        virtual void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, void* data) = 0;
+        virtual void download(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, void* data) = 0;
+        virtual void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void pack(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) = 0;
 };
 
 class GPUTextureCubemapArray : virtual GPUTexture {
@@ -300,10 +300,10 @@ class GPUTextureCubemapArray : virtual GPUTexture {
 
     public: // Texture Pixels Manipulation
         virtual void allocate(int w, int h, int layers, int levels) = 0;
-        virtual void upload(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, void* data) = 0;
-        virtual void download(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, void* data) = 0;
-        virtual void unpack(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int offset) = 0;
-        virtual void pack(int x, int y, int w, int h, int layer, int level, GPUTextureCubemapSide side, GPUBuffer *pbo, int offset) = 0;
+        virtual void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data) = 0;
+        virtual void download(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data) = 0;
+        virtual void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void pack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) = 0;
 };
 
 #endif // NOGPU_TEXTURE_H
