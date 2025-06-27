@@ -17,6 +17,9 @@ GLTexture3D::GLTexture3D(
         m_pixel_type = type;
         m_pixel_format = format;
         m_tex_target = GL_TEXTURE_3D;
+        // Check Depth Stencil Transfer Type
+        if (type == GPUTexturePixelType::TEXTURE_PIXEL_DEPTH24_STENCIL8)
+            m_transfer_type = GPUTextureTransferType::TEXTURE_TRANSFER_DEPTH24_STENCIL8;
 }
 
 GPUTexture3DMode GLTexture3D::getMode() {
@@ -94,6 +97,10 @@ void GLTexture3D::upload(int x, int y, int z, int w, int h, int depth, int level
 void GLTexture3D::download(int x, int y, int z, int w, int h, int depth, int level, void* data) {
 
 }
+
+// -----------------------------------------
+// Texture 3D: Buffer Manipulation using PBO
+// -----------------------------------------
 
 void GLTexture3D::unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) {
     m_ctx->gl__makeCurrent();

@@ -11,14 +11,16 @@ GLenum toValue(GPUTextureTransferType type) {
     switch (type) {
         case GPUTextureTransferType::TEXTURE_TRANSFER_UNSIGNED_BYTE:
             return GL_UNSIGNED_BYTE;
-        case GPUTextureTransferType::TEXTURE_TRANSFER_BYTE:
-            return GL_BYTE;
         case GPUTextureTransferType::TEXTURE_TRANSFER_UNSIGNED_SHORT:
             return GL_UNSIGNED_SHORT;
-        case GPUTextureTransferType::TEXTURE_TRANSFER_SHORT:
-            return GL_SHORT;
         case GPUTextureTransferType::TEXTURE_TRANSFER_UNSIGNED_INT:
             return GL_UNSIGNED_INT;
+        case GPUTextureTransferType::TEXTURE_TRANSFER_DEPTH24_STENCIL8:
+            return GL_UNSIGNED_INT_24_8;
+        case GPUTextureTransferType::TEXTURE_TRANSFER_BYTE:
+            return GL_BYTE;
+        case GPUTextureTransferType::TEXTURE_TRANSFER_SHORT:
+            return GL_SHORT;
         case GPUTextureTransferType::TEXTURE_TRANSFER_INT:
             return GL_INT;
         case GPUTextureTransferType::TEXTURE_TRANSFER_FLOAT:
@@ -144,48 +146,56 @@ GLenum toValue(GPUTexturePixelType type) {
             return GL_DEPTH_COMPONENT32;
         case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH24_STENCIL8:
             return GL_DEPTH24_STENCIL8;
-        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH32F_STENCIL8:
-            return GL_DEPTH32F_STENCIL8;
+    }
 
+    // Unreachable
+    return ~0;
+}
+
+GLenum toValue(GPUTextureCompressedType type) {
+    switch (type) {
         // Simple Compression
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_RED:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RED:
             return GL_COMPRESSED_RED;
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_RG:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RG:
             return GL_COMPRESSED_RG;
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_RGB:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGB:
             return GL_COMPRESSED_RGB;
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_RGBA:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGBA:
             return GL_COMPRESSED_RGBA;
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_SRGB:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_SRGB:
             return GL_COMPRESSED_SRGB;
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_SRGB_ALPHA:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_SRGB_ALPHA:
             return GL_COMPRESSED_SRGB_ALPHA;
+
         // RGTC: Red-Green Texture Compression
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_RED_RGTC1:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RED_RGTC1:
             return GL_COMPRESSED_RED_RGTC1;
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_SIGNED_RED_RGTC1:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_SIGNED_RED_RGTC1:
             return GL_COMPRESSED_SIGNED_RED_RGTC1;
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_RG_RGTC2:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RG_RGTC2:
             return GL_COMPRESSED_RG_RGTC2;
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_SIGNED_RG_RGTC2:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_SIGNED_RG_RGTC2:
             return GL_COMPRESSED_SIGNED_RG_RGTC2;
+
         // S3TC/DXT compression
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_RGB_S3TC_DXT1:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGB_S3TC_DXT1:
             return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_RGBA_S3TC_DXT1:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGBA_S3TC_DXT1:
             return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_RGBA_S3TC_DXT3:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGBA_S3TC_DXT3:
             return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_RGBA_S3TC_DXT5:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGBA_S3TC_DXT5:
             return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+
         // BPTC Float/UNORM compression
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_RGBA_BPTC_UNORM:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGBA_BPTC_UNORM:
             return GL_COMPRESSED_RGBA_BPTC_UNORM_ARB;
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
             return GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB;
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGB_BPTC_SIGNED_FLOAT:
             return GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_ARB;
-        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT:
             return GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_ARB;
     }
 
@@ -273,4 +283,19 @@ GLenum toValue(GPUTextureWrapMode wrap) {
 
     // Unreachable
     return ~0;
+}
+
+// ------------------------------------
+// GL Enums: Framebuffer Download Trick
+// ------------------------------------
+
+GLenum toHackyFramebufferAttachmentType(GPUTexturePixelFormat format) {
+    switch (format) {
+        case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_COMPONENT:
+            return GL_DEPTH_ATTACHMENT;
+        case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_STENCIL:
+            return GL_DEPTH_STENCIL_ATTACHMENT;
+        default: // RGBA Color Fallback
+            return GL_COLOR_ATTACHMENT0;
+    }
 }

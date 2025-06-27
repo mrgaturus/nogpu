@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include <nogpu_private.h>
-#include <nogpu.h>
+#include <nogpu/buffer.h>
+#include <nogpu/commands.h>
 
 unsigned int next_power_of_two(unsigned int v) {
     v--;
@@ -14,6 +15,17 @@ unsigned int next_power_of_two(unsigned int v) {
 
     // Portable for all C Compilers
     return v;
+}
+
+bool is_color(GPUTexturePixelType type) {
+    switch (type) {
+        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH_COMPONENT16:
+        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH_COMPONENT24:
+        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH_COMPONENT32:
+        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH24_STENCIL8:
+            return false;
+        default: return true;
+    }
 }
 
 // -----------------------

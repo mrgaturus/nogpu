@@ -17,6 +17,9 @@ GLTexture2D::GLTexture2D(
         m_pixel_type = type;
         m_pixel_format = format;
         m_tex_target = GL_TEXTURE_2D;
+        // Check Depth Stencil Transfer Type
+        if (type == GPUTexturePixelType::TEXTURE_PIXEL_DEPTH24_STENCIL8)
+            m_transfer_type = GPUTextureTransferType::TEXTURE_TRANSFER_DEPTH24_STENCIL8;
 }
 
 GPUTexture2DMode GLTexture2D::getMode() {
@@ -86,18 +89,17 @@ void GLTexture2D::upload(int x, int y, int w, int h, int level, void* data) {
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_OPERATION:
-            GPULogger::error("failed uploading pixels for 2D %p", this); return;
+            GPULogger::error("failed uploading pixels for 2D %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("failed uploading parameters for 2D %p", this); return;
+            GPULogger::error("failed uploading parameters for 2D %p", this);
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel format/type for 2D %p", this); return;
+            GPULogger::error("invalid pixel format/type for 2D %p", this);
     }
 }
 
 void GLTexture2D::download(int x, int y, int w, int h, int level, void* data) {
     m_ctx->gl__makeCurrent();
 
-    GLint read;
     GLenum error = GL_NO_ERROR;
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
@@ -109,45 +111,47 @@ void GLTexture2D::download(int x, int y, int w, int h, int level, void* data) {
             toValue(m_pixel_format),
             toValue(m_transfer_type),
             INT_MAX, data);
-
-        // Check Successful
         error = glGetError();
-        if (error != GL_NO_ERROR)
-            goto DOWNLOAD_ERROR;
-        return;
     // Use Optimized glGetTexImage when full image
     } else if (x == 0 && y == 0 && w == m_width && h == m_height) {
         glGetTexImage(target, level,
             toValue(m_pixel_format),
             toValue(m_transfer_type),
             data);
-
-        // Check Successful
         error = glGetError();
-        if (error != GL_NO_ERROR)
-            goto DOWNLOAD_ERROR;
-        return;
+    // Use Framebuffer Trick for Old Devices
+    } else if (m_tex_target == GL_TEXTURE_2D) {
+        error = download__hacky2D(x, y, w, h, level, data);
+    } else if (m_tex_target == GL_TEXTURE_1D_ARRAY) {
+        error = download__hacky1DArray(x, y, w, h, level, data);
     }
 
-    // Use Framebuffer Trick for Old Devices
+    // Check Succesfull
+    if (error != GL_NO_ERROR)
+        GPULogger::error("failed downloading pixels from 2D %p", this);
+}
+
+// --------------------------------
+// Texture 2D: Download Workarounds
+// --------------------------------
+
+GLenum GLTexture2D::download__hacky2D(int x, int y, int w, int h, int level, void* data) {
     if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
+
+    GLenum attachment = toHackyFramebufferAttachmentType(m_pixel_format);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
-    // Decide 2D Framebuffer Attachment
-    if (m_tex_target != GL_TEXTURE_1D_ARRAY) {
-        glFramebufferTexture2D(GL_READ_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0, m_tex_target, m_tex, level);
-    } else { // Decide 1D Array Framebuffer Attachment
-        glFramebufferTextureLayer(GL_READ_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0, m_tex, level, y); y = 0;
-    }
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER,
+        attachment, m_tex_target, m_tex, level);
 
     // Check if Texture and Framebuffer is valid to hacky read
     if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         glDeleteFramebuffers(1, &m_tex_fbo);
-        goto DOWNLOAD_ERROR;
+        return GL_INVALID_OPERATION;
     }
 
+    GLint read = 0;
+    GLenum error = GL_NO_ERROR;
     // Read Framebuffer Pixels
     glGetIntegerv(GL_READ_BUFFER, &read);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
@@ -156,15 +160,56 @@ void GLTexture2D::download(int x, int y, int w, int h, int level, void* data) {
         toValue(m_transfer_type),
         data);
 
-    error = glGetError(); glReadBuffer(read);
+    error = glGetError();
+    glReadBuffer(read);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    // Check Texture Reading Successful
-    if (error != GL_NO_ERROR) {
-        DOWNLOAD_ERROR: {
-            GPULogger::error("failed downloading pixels from 2D %p", this);
-        }
-    }
+    return error;
 }
+
+GLenum GLTexture2D::download__hacky1DArray(int x, int y, int w, int h, int level, void* data) {
+    if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
+
+    // Check if Texture and Framebuffer is valid to hacky read
+    GLenum attachment = toHackyFramebufferAttachmentType(m_pixel_format);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
+    glFramebufferTextureLayer(GL_READ_FRAMEBUFFER,
+        attachment, m_tex, level, y);
+
+    // Check if Texture and Framebuffer is valid to hacky read
+    if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        glDeleteFramebuffers(1, &m_tex_fbo);
+        return GL_INVALID_OPERATION;
+    }
+
+    GLint read = 0;
+    GLenum error = GL_NO_ERROR;
+    glGetIntegerv(GL_READ_BUFFER, &read);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+
+    // Read Framebuffer for Layers
+    for (int i = 0; i < h; i++) {
+        glFramebufferTextureLayer(GL_READ_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0, m_tex, level, y + i);
+        glReadPixels(x, 0, w, 1,
+            toValue(m_pixel_format),
+            toValue(m_transfer_type),
+            data);
+
+        // Check Read Error
+        error = glGetError();
+        if (error != GL_NO_ERROR)
+            break;
+    }
+
+    glReadBuffer(read);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    return error;
+}
+
+// -----------------------------------------
+// Texture 2D: Buffer Manipulation using PBO
+// -----------------------------------------
 
 void GLTexture2D::unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) {
     m_ctx->gl__makeCurrent();

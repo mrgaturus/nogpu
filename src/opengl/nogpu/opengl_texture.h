@@ -7,11 +7,15 @@
 
 GLenum toValue(GPUTextureTransferType type);
 GLenum toValue(GPUTexturePixelType type);
+GLenum toValue(GPUTextureCompressedType type);
 GLenum toValue(GPUTexturePixelFormat format);
 
 GLenum toValue(GPUTextureFilterMode swizzle);
 GLenum toValue(GPUTextureSwizzleMode filter);
 GLenum toValue(GPUTextureWrapMode wrap);
+
+GLenum toHackyFramebufferAttachmentType(
+    GPUTexturePixelFormat format);
 
 // -------------------------
 // OpenGL GPU Texture Buffer
@@ -72,6 +76,8 @@ class GLTexture1D : GLTexture, GPUTexture1D {
     void unpack(int x, int size, int level, GPUBuffer *pbo, int offset) override;
     void pack(int x, int size, int level, GPUBuffer *pbo, int offset) override;
 
+    // Texture Buffer Manipulation: Internals
+    GLenum download__hacky1D(int x, int size, int level, void* data);
     protected: GLTexture1D(
         GLContext* ctx,
         GPUTexturePixelType type,
@@ -90,6 +96,9 @@ class GLTexture2D : GLTexture, GPUTexture2D {
     void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
     void pack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
 
+    // Texture Buffer Manipulation: Internals
+    GLenum download__hacky2D(int x, int y, int w, int h, int level, void* data);
+    GLenum download__hacky1DArray(int x, int y, int w, int h, int level, void* data);
     protected: GLTexture2D(
         GLContext* ctx,
         GPUTexturePixelType type,
@@ -110,6 +119,9 @@ class GLTexture3D : GLTexture, GPUTexture3D {
     void unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) override;
     void pack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) override;
 
+    // Texture Buffer Manipulation: Internals
+    GLenum download__hacky3D(int x, int y, int z, int w, int h, int depth, int level, void* data);
+    GLenum download__hacky2DArray(int x, int y, int z, int w, int h, int depth, int level, void* data);
     protected: GLTexture3D(
         GLContext* ctx,
         GPUTexturePixelType type,
