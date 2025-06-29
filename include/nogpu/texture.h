@@ -137,7 +137,7 @@ enum class GPUTextureSwizzleMode : int {
 };
 
 enum class GPUTextureWrapMode : int {
-    TEXTURE_WRAP_CLAMP_TO_EDGE,
+    TEXTURE_WRAP_CLAMP,
     TEXTURE_WRAP_REPEAT,
     TEXTURE_WRAP_MIRRORED_REPEAT,
 };
@@ -191,8 +191,10 @@ class GPUTexture {
         GPUTextureSwizzle m_swizzle;
         GPUTextureFilter m_filter;
         GPUTextureWrap m_wrap;
+        // Texture Dimensions
         int m_width;
         int m_height;
+        int m_depth;
 
     // GPU Texture Constructor
     protected: GPUTexture();
@@ -211,6 +213,8 @@ class GPUTexture {
     public: // GPU Texture Attributes
         int getWidth() { return m_width; }
         int getHeight() { return m_height; }
+        int getDepth() { return m_depth; }
+        int getLayers() { return m_depth; }
         GPUTextureSize getSize() { return (GPUTextureSize) { m_width, m_height }; }
         GPUTexturePixelType getPixelType() { return m_pixel_type; }
         GPUTexturePixelFormat getPixelFormat() { return m_pixel_format; }
@@ -245,9 +249,9 @@ enum class GPUTexture2DMode : int {
 class GPUTexture2D : virtual GPUTexture {
     protected: GPUTexture2D();
     protected: ~GPUTexture2D();
-    public: virtual GPUTexture2DMode getMode();
 
     public: // Texture Pixels Manipulation
+        virtual GPUTexture2DMode getMode();
         virtual void allocate(GPUTexture2DMode mode, int w, int h, int levels) = 0;
         virtual void upload(int x, int y, int w, int h, int level, void* data) = 0;
         virtual void download(int x, int y, int w, int h, int level, void* data) = 0;
@@ -263,10 +267,9 @@ enum class GPUTexture3DMode : int {
 class GPUTexture3D : virtual GPUTexture {
     protected: GPUTexture3D();
     protected: ~GPUTexture3D();
-    public: virtual GPUTexture3DMode getMode();
-    public: virtual int getDepth();
 
     public: // Texture Pixels Manipulation
+        virtual GPUTexture3DMode getMode();
         virtual void allocate(GPUTexture3DMode mode, int w, int h, int depth, int levels) = 0;
         virtual void upload(int x, int y, int z, int w, int h, int depth, int level, void* data) = 0;
         virtual void download(int x, int y, int z, int w, int h, int depth, int level, void* data) = 0;
@@ -298,7 +301,6 @@ class GPUTextureCubemap : virtual GPUTexture {
 class GPUTextureCubemapArray : virtual GPUTexture {
     protected: GPUTextureCubemapArray();
     protected: ~GPUTextureCubemapArray();
-    public: virtual int getLayers();
 
     public: // Texture Pixels Manipulation
         virtual void allocate(int w, int h, int layers, int levels) = 0;

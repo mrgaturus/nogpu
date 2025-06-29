@@ -107,8 +107,6 @@ class GLTexture2D : GLTexture, GPUTexture2D {
 class GLTexture3D : GLTexture, GPUTexture3D {
     GPUTexture3DMode getMode() override;
     void setMode(GPUTexture3DMode mode);
-    int getDepth() override;
-    int m_depth;
 
     // Texture Buffer Manipulation
     void allocate(GPUTexture3DMode mode, int w, int h, int depth, int levels) override;
@@ -140,9 +138,6 @@ class GLTextureCubemap : GLTexture, GPUTextureCubemap {
 };
 
 class GLTextureCubemapArray : GLTexture, GPUTextureCubemapArray {
-    int getLayers() override;
-    int m_depth;
-
     // Texture Buffer Manipulation
     void allocate(int w, int h, int layers, int levels) override;
     void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data) override;

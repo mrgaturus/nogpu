@@ -47,6 +47,7 @@ void GLTexture1D::allocate(int size, int levels) {
     // Set Texture Dimensions
     m_width = size;
     m_height = 1;
+    m_depth = 1;
 }
 
 void GLTexture1D::upload(int x, int size, int level, void* data) {

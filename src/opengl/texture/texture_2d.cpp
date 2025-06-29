@@ -75,6 +75,7 @@ void GLTexture2D::allocate(GPUTexture2DMode mode, int w, int h, int levels) {
     // Set Texture Dimensions
     m_width = w;
     m_height = h;
+    m_depth = 1;
 }
 
 void GLTexture2D::upload(int x, int y, int w, int h, int level, void* data) {

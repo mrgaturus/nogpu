@@ -273,7 +273,7 @@ GLenum toValue(GPUTextureSwizzleMode swizzle) {
 
 GLenum toValue(GPUTextureWrapMode wrap) {
     switch (wrap) {
-        case GPUTextureWrapMode::TEXTURE_WRAP_CLAMP_TO_EDGE:
+        case GPUTextureWrapMode::TEXTURE_WRAP_CLAMP:
             return GL_CLAMP_TO_EDGE;
         case GPUTextureWrapMode::TEXTURE_WRAP_REPEAT:
             return GL_REPEAT;
