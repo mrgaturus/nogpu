@@ -284,18 +284,3 @@ GLenum toValue(GPUTextureWrapMode wrap) {
     // Unreachable
     return ~0;
 }
-
-// ------------------------------------
-// GL Enums: Framebuffer Download Trick
-// ------------------------------------
-
-GLenum toHackyFramebufferAttachmentType(GPUTexturePixelFormat format) {
-    switch (format) {
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_COMPONENT:
-            return GL_DEPTH_ATTACHMENT;
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_STENCIL:
-            return GL_DEPTH_STENCIL_ATTACHMENT;
-        default: // RGBA Color Fallback
-            return GL_COLOR_ATTACHMENT0;
-    }
-}

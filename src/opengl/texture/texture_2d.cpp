@@ -121,90 +121,14 @@ void GLTexture2D::download(int x, int y, int w, int h, int level, void* data) {
         error = glGetError();
     // Use Framebuffer Trick for Old Devices
     } else if (m_tex_target == GL_TEXTURE_2D) {
-        error = download__hacky2D(x, y, w, h, level, data);
+        error = compatDownload2D(x, y, w, h, level, data);
     } else if (m_tex_target == GL_TEXTURE_1D_ARRAY) {
-        error = download__hacky1DArray(x, y, w, h, level, data);
+        error = compatDownload3D(x, 0, y, w, 1, h, level, data);
     }
 
     // Check Succesfull
     if (error != GL_NO_ERROR)
         GPULogger::error("failed downloading pixels from 2D %p", this);
-}
-
-// --------------------------------
-// Texture 2D: Download Workarounds
-// --------------------------------
-
-GLenum GLTexture2D::download__hacky2D(int x, int y, int w, int h, int level, void* data) {
-    if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
-
-    GLenum attachment = toHackyFramebufferAttachmentType(m_pixel_format);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
-    glFramebufferTexture2D(GL_READ_FRAMEBUFFER,
-        attachment, m_tex_target, m_tex, level);
-
-    // Check if Texture and Framebuffer is valid to hacky read
-    if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-        glDeleteFramebuffers(1, &m_tex_fbo);
-        return GL_INVALID_OPERATION;
-    }
-
-    GLint read = 0;
-    GLenum error = GL_NO_ERROR;
-    // Read Framebuffer Pixels
-    glGetIntegerv(GL_READ_BUFFER, &read);
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
-    glReadPixels(x, y, w, h,
-        toValue(m_pixel_format),
-        toValue(m_transfer_type),
-        data);
-
-    error = glGetError();
-    glReadBuffer(read);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    return error;
-}
-
-GLenum GLTexture2D::download__hacky1DArray(int x, int y, int w, int h, int level, void* data) {
-    if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
-
-    // Check if Texture and Framebuffer is valid to hacky read
-    GLenum attachment = toHackyFramebufferAttachmentType(m_pixel_format);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
-    glFramebufferTextureLayer(GL_READ_FRAMEBUFFER,
-        attachment, m_tex, level, y);
-
-    // Check if Texture and Framebuffer is valid to hacky read
-    if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-        glDeleteFramebuffers(1, &m_tex_fbo);
-        return GL_INVALID_OPERATION;
-    }
-
-    GLint read = 0;
-    GLenum error = GL_NO_ERROR;
-    glGetIntegerv(GL_READ_BUFFER, &read);
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
-
-    // Read Framebuffer for Layers
-    for (int i = 0; i < h; i++) {
-        glFramebufferTextureLayer(GL_READ_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0, m_tex, level, y + i);
-        glReadPixels(x, 0, w, 1,
-            toValue(m_pixel_format),
-            toValue(m_transfer_type),
-            data);
-
-        // Check Read Error
-        error = glGetError();
-        if (error != GL_NO_ERROR)
-            break;
-    }
-
-    glReadBuffer(read);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    return error;
 }
 
 // -----------------------------------------

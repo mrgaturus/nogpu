@@ -93,49 +93,12 @@ void GLTexture1D::download(int x, int size, int level, void* data) {
         error = glGetError();
     // Use Framebuffer Trick for Old Devices
     } else { 
-        error = download__hacky1D(
-            x, size, level, data);     
+        error = compatDownload2D(x, 0, size, 1, level, data);
     }
 
     // Check Succesfull
     if (error != GL_NO_ERROR)
         GPULogger::error("failed downloading pixels from 1D %p", this);
-}
-
-// --------------------------------
-// Texture 1D: Download Workarounds
-// --------------------------------
-
-GLenum GLTexture1D::download__hacky1D(int x, int size, int level, void* data) {
-    if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
-
-    GLenum attachment = toHackyFramebufferAttachmentType(m_pixel_format);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
-    glFramebufferTexture1D(GL_READ_FRAMEBUFFER,
-        attachment, GL_TEXTURE_1D, m_tex, level);
-
-    // Check if Texture and Framebuffer is valid to hacky read
-    if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-        glDeleteFramebuffers(1, &m_tex_fbo);
-        return GL_INVALID_OPERATION;
-    }
-
-    GLint read = 0;
-    GLenum error = GL_NO_ERROR;
-    // Read Framebuffer Pixels
-    glGetIntegerv(GL_READ_BUFFER, &read);
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
-    glReadPixels(x, 0, size, 1,
-        toValue(m_pixel_format),
-        toValue(m_transfer_type),
-        data);
-
-    // Return Error Check
-    error = glGetError();
-    glReadBuffer(read);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    return error;
 }
 
 // -----------------------------------------

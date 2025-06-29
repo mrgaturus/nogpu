@@ -13,6 +13,7 @@ add_library(nogpu_opengl OBJECT
     texture/texture_2d.cpp
     texture/texture_3d.cpp
     texture/texture_buffer.cpp
+    texture_download.cpp
     texture_values.cpp
     texture.cpp
 )

@@ -65,6 +65,9 @@ class GLTexture : virtual public GPUTexture {
         GLTexture(GLContext* ctx);
         void generateTexture();
         void destroy() override;
+        // Texture Compatibile Download
+        GLenum compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data);
+        GLenum compatDownload2D(int x, int y, int w, int h, int level, void* data);
         friend GLContext;
 };
 
@@ -76,8 +79,6 @@ class GLTexture1D : GLTexture, GPUTexture1D {
     void unpack(int x, int size, int level, GPUBuffer *pbo, int offset) override;
     void pack(int x, int size, int level, GPUBuffer *pbo, int offset) override;
 
-    // Texture Buffer Manipulation: Internals
-    GLenum download__hacky1D(int x, int size, int level, void* data);
     protected: GLTexture1D(
         GLContext* ctx,
         GPUTexturePixelType type,
@@ -96,9 +97,6 @@ class GLTexture2D : GLTexture, GPUTexture2D {
     void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
     void pack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
 
-    // Texture Buffer Manipulation: Internals
-    GLenum download__hacky2D(int x, int y, int w, int h, int level, void* data);
-    GLenum download__hacky1DArray(int x, int y, int w, int h, int level, void* data);
     protected: GLTexture2D(
         GLContext* ctx,
         GPUTexturePixelType type,
@@ -119,9 +117,6 @@ class GLTexture3D : GLTexture, GPUTexture3D {
     void unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) override;
     void pack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) override;
 
-    // Texture Buffer Manipulation: Internals
-    GLenum download__hacky3D(int x, int y, int z, int w, int h, int depth, int level, void* data);
-    GLenum download__hacky2DArray(int x, int y, int z, int w, int h, int depth, int level, void* data);
     protected: GLTexture3D(
         GLContext* ctx,
         GPUTexturePixelType type,

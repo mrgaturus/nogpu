@@ -4,7 +4,7 @@
 #include "../nogpu/opengl_texture.h"
 #include "../nogpu/opengl_context.h"
 #include "../glad/glad.h"
-//#include <climits>
+#include <climits>
 
 // -----------------------
 // Texture 2D: Constructor
@@ -61,11 +61,11 @@ void GLTexture3D::allocate(GPUTexture3DMode mode, int w, int h, int depth, int l
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel type for 3D %p", this); return;
+            GPULogger::error("invalid pixel type for 3D %p", this);
         case GL_INVALID_OPERATION:
-            GPULogger::error("invalid levels count for 3D %p", this); return;
+            GPULogger::error("invalid levels count for 3D %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("invalid size for 3D %p", this); return;
+            GPULogger::error("invalid size for 3D %p", this);
     }
 
     // Set Texture Dimensions
@@ -86,16 +86,44 @@ void GLTexture3D::upload(int x, int y, int z, int w, int h, int depth, int level
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_OPERATION:
-            GPULogger::error("failed uploading pixels for 2D %p", this); return;
+            GPULogger::error("failed uploading pixels for 3D %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("failed uploading parameters for 2D %p", this); return;
+            GPULogger::error("failed uploading parameters for 3D %p", this);
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel format/type for 2D %p", this); return;
+            GPULogger::error("invalid pixel format/type for 3D %p", this);
     }
 }
 
 void GLTexture3D::download(int x, int y, int z, int w, int h, int depth, int level, void* data) {
+    m_ctx->gl__makeCurrent();
 
+    GLenum error = GL_NO_ERROR;
+    GLenum target = m_tex_target;
+    glBindTexture(target, m_tex);
+
+    // Use Optimized glGetTextureSubImage if available
+    if (GLAD_GL_ARB_get_texture_sub_image) {
+        glGetTextureSubImage(m_tex, level,
+            x, y, z, w, h, depth,
+            toValue(m_pixel_format),
+            toValue(m_transfer_type),
+            INT_MAX, data);
+        error = glGetError();
+    // Use Optimized glGetTexImage when full image
+    } else if (x == 0 && y == 0 && z == 0 && w == m_width && h == m_height && depth == m_depth) {
+        glGetTexImage(target, level,
+            toValue(m_pixel_format),
+            toValue(m_transfer_type),
+            data);
+        error = glGetError();
+    // Use Framebuffer Trick for Old Devices
+    } else {
+        error = compatDownload3D(x, y, z, w, h, depth, level, data);
+    }
+
+    // Check Succesfull
+    if (error != GL_NO_ERROR)
+        GPULogger::error("failed downloading pixels from 2D %p", this);
 }
 
 // -----------------------------------------
