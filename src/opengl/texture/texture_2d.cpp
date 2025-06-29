@@ -65,12 +65,16 @@ void GLTexture2D::allocate(GPUTexture2DMode mode, int w, int h, int levels) {
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel type for 2D %p", this); return;
+            GPULogger::error("invalid pixel type for 2D %p", this);
         case GL_INVALID_OPERATION:
-            GPULogger::error("invalid levels count for 2D %p", this); return;
+            GPULogger::error("invalid levels count for 2D %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("invalid size for 2D %p", this); return;
+            GPULogger::error("invalid size for 2D %p", this);
     }
+
+    // Check Texture Errors
+    if (error != GL_NO_ERROR)
+        return;
 
     // Set Texture Dimensions
     m_width = w;

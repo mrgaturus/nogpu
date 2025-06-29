@@ -37,12 +37,16 @@ void GLTexture1D::allocate(int size, int levels) {
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel type for 1D %p", this); return;
+            GPULogger::error("invalid pixel type for 1D %p", this);
         case GL_INVALID_OPERATION:
-            GPULogger::error("invalid levels count for 1D %p", this); return;
+            GPULogger::error("invalid levels count for 1D %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("invalid size for 1D %p", this); return;
+            GPULogger::error("invalid size for 1D %p", this);
     }
+
+    // Check Texture Errors
+    if (error != GL_NO_ERROR)
+        return;
 
     // Set Texture Dimensions
     m_width = size;

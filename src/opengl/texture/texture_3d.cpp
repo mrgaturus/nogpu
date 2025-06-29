@@ -68,6 +68,10 @@ void GLTexture3D::allocate(GPUTexture3DMode mode, int w, int h, int depth, int l
             GPULogger::error("invalid size for 3D %p", this);
     }
 
+    // Check Texture Errors
+    if (error != GL_NO_ERROR)
+        return;
+
     // Set Texture Dimensions
     m_width = w;
     m_height = h;
