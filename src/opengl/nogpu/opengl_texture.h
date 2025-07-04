@@ -13,9 +13,7 @@ GLenum toValue(GPUTexturePixelFormat format);
 GLenum toValue(GPUTextureFilterMode swizzle);
 GLenum toValue(GPUTextureSwizzleMode filter);
 GLenum toValue(GPUTextureWrapMode wrap);
-
-GLenum toHackyFramebufferAttachmentType(
-    GPUTexturePixelFormat format);
+GLenum toValue(GPUTextureCubemapSide side);
 
 // -------------------------
 // OpenGL GPU Texture Buffer

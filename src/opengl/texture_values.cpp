@@ -284,3 +284,30 @@ GLenum toValue(GPUTextureWrapMode wrap) {
     // Unreachable
     return ~0;
 }
+
+// --------------------------
+// GPU Enums: Texture Cubemap
+// --------------------------
+
+GLenum toValue(GPUTextureCubemapSide side) {
+    switch (side) {
+        // Positive Cubemap Sides
+        case GPUTextureCubemapSide::TEXTURE_CUBEMAP_POSITIVE_X:
+            return GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+        case GPUTextureCubemapSide::TEXTURE_CUBEMAP_POSITIVE_Y:
+            return GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
+        case GPUTextureCubemapSide::TEXTURE_CUBEMAP_POSITIVE_Z:
+            return GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
+
+        // Negative Cubemap Sides
+        case GPUTextureCubemapSide::TEXTURE_CUBEMAP_NEGATIVE_X:
+            return GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
+        case GPUTextureCubemapSide::TEXTURE_CUBEMAP_NEGATIVE_Y:
+            return GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
+        case GPUTextureCubemapSide::TEXTURE_CUBEMAP_NEGATIVE_Z:
+            return GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
+    }
+
+    // Unreachable
+    return ~0;
+}

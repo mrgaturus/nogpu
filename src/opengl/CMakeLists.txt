@@ -8,11 +8,14 @@ add_library(nogpu_opengl OBJECT
     commands.cpp
     context.cpp
     framebuffer.cpp
+    pipeline.cpp
     shader.cpp
     texture/texture_1d.cpp
     texture/texture_2d.cpp
     texture/texture_3d.cpp
     texture/texture_buffer.cpp
+    texture/texture_cubemap.cpp
+    texture/texture_cubemap_array.cpp
     texture_download.cpp
     texture_values.cpp
     texture.cpp
