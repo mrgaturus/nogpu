@@ -19,7 +19,11 @@ enum class GPUTextureTransferType : int {
     TEXTURE_TRANSFER_FLOAT,
 };
 
+enum class GPUTextureCompressedType : int;
 enum class GPUTexturePixelType: int {
+    TEXTURE_NO_UNCOMPRESSED,
+
+    // Unsigned Integer Formats
     TEXTURE_PIXEL_R8,
     TEXTURE_PIXEL_R8_SNORM,
     TEXTURE_PIXEL_R16,
@@ -36,6 +40,7 @@ enum class GPUTexturePixelType: int {
     TEXTURE_PIXEL_RGBA8_SNORM,
     TEXTURE_PIXEL_RGBA16,
     TEXTURE_PIXEL_RGBA16_SNORM,
+
     // Floating-point formats
     TEXTURE_PIXEL_R16F,
     TEXTURE_PIXEL_RG16F,
@@ -45,6 +50,7 @@ enum class GPUTexturePixelType: int {
     TEXTURE_PIXEL_RG32F,
     TEXTURE_PIXEL_RGB32F,
     TEXTURE_PIXEL_RGBA32F,
+
     // Integer formats
     TEXTURE_PIXEL_R8I,
     TEXTURE_PIXEL_R8UI,
@@ -75,32 +81,7 @@ enum class GPUTexturePixelType: int {
     TEXTURE_PIXEL_DEPTH_COMPONENT16,
     TEXTURE_PIXEL_DEPTH_COMPONENT24,
     TEXTURE_PIXEL_DEPTH_COMPONENT32,
-    TEXTURE_PIXEL_DEPTH24_STENCIL8,
-};
-
-enum class GPUTextureCompressedType : int {
-    // Simple Compression
-    TEXTURE_COMPRESSED_RED,
-    TEXTURE_COMPRESSED_RG,
-    TEXTURE_COMPRESSED_RGB,
-    TEXTURE_COMPRESSED_RGBA,
-    TEXTURE_COMPRESSED_SRGB,
-    TEXTURE_COMPRESSED_SRGB_ALPHA,
-    // RGTC: Red-Green Texture Compression
-    TEXTURE_COMPRESSED_RED_RGTC1,
-    TEXTURE_COMPRESSED_SIGNED_RED_RGTC1,
-    TEXTURE_COMPRESSED_RG_RGTC2,
-    TEXTURE_COMPRESSED_SIGNED_RG_RGTC2,
-    // S3TC/DXT compression
-    TEXTURE_COMPRESSED_RGB_S3TC_DXT1,
-    TEXTURE_COMPRESSED_RGBA_S3TC_DXT1,
-    TEXTURE_COMPRESSED_RGBA_S3TC_DXT3,
-    TEXTURE_COMPRESSED_RGBA_S3TC_DXT5,
-    // BPTC Float/UNORM compression
-    TEXTURE_COMPRESSED_RGBA_BPTC_UNORM,
-    TEXTURE_COMPRESSED_SRGB_ALPHA_BPTC_UNORM,
-    TEXTURE_COMPRESSED_RGB_BPTC_SIGNED_FLOAT,
-    TEXTURE_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT
+    TEXTURE_PIXEL_DEPTH24_STENCIL8
 };
 
 enum class GPUTexturePixelFormat : int {
@@ -188,6 +169,7 @@ class GPUTexture {
         GPUTexturePixelType m_pixel_type;
         GPUTexturePixelFormat m_pixel_format;
         GPUTextureTransferType m_transfer_type;
+        GPUTextureCompressedType m_compressed_type;
         GPUTextureSwizzle m_swizzle;
         GPUTextureFilter m_filter;
         GPUTextureWrap m_wrap;
@@ -219,6 +201,7 @@ class GPUTexture {
         GPUTexturePixelType getPixelType() { return m_pixel_type; }
         GPUTexturePixelFormat getPixelFormat() { return m_pixel_format; }
         GPUTextureTransferType getTransferType() { return m_transfer_type; }
+        GPUTextureCompressedType getCompressedType() { return m_compressed_type; }
         GPUTextureSwizzle getPixelSwizzle() { return m_swizzle; }
         GPUTextureFilter getPixelFilter() { return m_filter; }
         GPUTextureWrap getPixelWrap() { return m_wrap; }

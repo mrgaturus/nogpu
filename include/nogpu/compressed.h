@@ -4,14 +4,8 @@
 #define NOGPU_COMPRESSED_H
 #include "texture.h"
 
-enum class GPUCompressedPixelType : int {
-    // Simple compression
-    TEXTURE_COMPRESSED_SIMPLE_RED,
-    TEXTURE_COMPRESSED_SIMPLE_RG,
-    TEXTURE_COMPRESSED_SIMPLE_RGB,
-    TEXTURE_COMPRESSED_SIMPLE_RGBA,
-    TEXTURE_COMPRESSED_SIMPLE_sRGB,
-    TEXTURE_COMPRESSED_SIMPLE_sRGBA,
+enum class GPUTextureCompressedType : int {
+    TEXTURE_NO_COMPRESSED,
 
     // RGTC/Red-Green compression
     TEXTURE_COMPRESSED_RGTC1_RED,

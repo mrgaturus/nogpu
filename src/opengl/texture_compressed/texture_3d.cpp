@@ -11,14 +11,11 @@
 
 GLCompressed3D::GLCompressed3D(
     GLContext* ctx,
-    GPUTexturePixelType type,
+    GPUTextureCompressedType type,
     GPUTexturePixelFormat format) : GLTexture(ctx) {
-        m_pixel_type = type;
+        m_compressed_type = type;
         m_pixel_format = format;
         m_tex_target = GL_TEXTURE_3D;
-        // Check Depth Stencil Transfer Type
-        if (type == GPUTexturePixelType::TEXTURE_PIXEL_DEPTH24_STENCIL8)
-            m_transfer_type = GPUTextureTransferType::TEXTURE_TRANSFER_DEPTH24_STENCIL8;
 }
 
 GPUTexture3DMode GLCompressed3D::getMode() {

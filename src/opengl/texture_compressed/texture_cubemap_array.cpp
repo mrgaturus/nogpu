@@ -11,14 +11,11 @@
 
 GLCompressedCubemapArray::GLCompressedCubemapArray(
     GLContext* ctx,
-    GPUTexturePixelType type,
+    GPUTextureCompressedType type,
     GPUTexturePixelFormat format) : GLTexture(ctx) {
-        m_pixel_type = type;
+        m_compressed_type = type;
         m_pixel_format = format;
         m_tex_target = GL_TEXTURE_CUBE_MAP_ARRAY_ARB;
-        // Check Depth Stencil Transfer Type
-        if (type == GPUTexturePixelType::TEXTURE_PIXEL_DEPTH24_STENCIL8)
-            m_transfer_type = GPUTextureTransferType::TEXTURE_TRANSFER_DEPTH24_STENCIL8;
 
         // Check if Cubemap Array is Supported
         if (!GLAD_GL_ARB_texture_cube_map_array) {

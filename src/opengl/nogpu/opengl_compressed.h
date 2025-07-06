@@ -13,7 +13,7 @@ class GLCompressed1D : GLTexture, GPUCompressed1D {
 
     protected: GLCompressed1D(
         GLContext* ctx,
-        GPUTexturePixelType type,
+        GPUTextureCompressedType type,
         GPUTexturePixelFormat format);
         friend GLContext;
 };
@@ -29,7 +29,7 @@ class GLCompressed2D : GLTexture, GPUCompressed2D {
 
     protected: GLCompressed2D(
         GLContext* ctx,
-        GPUTexturePixelType type,
+        GPUTextureCompressedType type,
         GPUTexturePixelFormat format);
         friend GLContext;
 };
@@ -45,7 +45,7 @@ class GLCompressed3D : GLTexture, GPUCompressed3D {
 
     protected: GLCompressed3D(
         GLContext* ctx,
-        GPUTexturePixelType type,
+        GPUTextureCompressedType type,
         GPUTexturePixelFormat format);
         friend GLContext;
 };
@@ -58,7 +58,7 @@ class GLCompressedCubemap : GLTexture, GPUCompressedCubemap {
 
     protected: GLCompressedCubemap(
         GLContext* ctx,
-        GPUTexturePixelType type,
+        GPUTextureCompressedType type,
         GPUTexturePixelFormat format);
         friend GLContext;
 };
@@ -71,7 +71,7 @@ class GLCompressedCubemapArray : GLTexture, GPUCompressedCubemapArray {
 
     protected: GLCompressedCubemapArray(
         GLContext* ctx,
-        GPUTexturePixelType type,
+        GPUTextureCompressedType type,
         GPUTexturePixelFormat format);
         friend GLContext;
 };
