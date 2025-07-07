@@ -6,16 +6,14 @@
 #include "../glad/glad.h"
 
 // -----------------------
-// Texture 2D: Constructor
+// Texture 3D: Constructor
 // -----------------------
 
-GLCompressed3D::GLCompressed3D(
-    GLContext* ctx,
-    GPUTextureCompressedType type,
-    GPUTexturePixelFormat format) : GLTexture(ctx) {
-        m_compressed_type = type;
-        m_pixel_format = format;
+GLCompressed3D::GLCompressed3D(GLContext* ctx, GPUTextureCompressedType type) : GLTexture(ctx) {
+        m_pixel_type = GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED;
+        m_pixel_format = GPUTexturePixelFormat::TEXTURE_FORMAT_COMPRESSED;
         m_tex_target = GL_TEXTURE_3D;
+        m_compressed_type = type;
 }
 
 GPUTexture3DMode GLCompressed3D::getMode() {
@@ -42,7 +40,7 @@ void GLCompressed3D::setMode(GPUTexture3DMode mode) {
 }
 
 // -------------------------------
-// Texture 2D: Buffer Manipulation
+// Texture 3D: Buffer Manipulation
 // -------------------------------
 
 void GLCompressed3D::allocate(GPUTexture3DMode mode, int w, int h, int depth, int levels) {

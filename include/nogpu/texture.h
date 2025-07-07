@@ -21,7 +21,7 @@ enum class GPUTextureTransferType : int {
 
 enum class GPUTextureCompressedType : int;
 enum class GPUTexturePixelType: int {
-    TEXTURE_NO_UNCOMPRESSED,
+    TEXTURE_PIXEL_COMPRESSED,
 
     // Unsigned Integer Formats
     TEXTURE_PIXEL_R8,
@@ -92,7 +92,8 @@ enum class GPUTexturePixelFormat : int {
     TEXTURE_FORMAT_BGR,
     TEXTURE_FORMAT_BGRA,
     TEXTURE_FORMAT_DEPTH_COMPONENT,
-    TEXTURE_FORMAT_DEPTH_STENCIL
+    TEXTURE_FORMAT_DEPTH_STENCIL,
+    TEXTURE_FORMAT_COMPRESSED
 };
 
 // ------------------------

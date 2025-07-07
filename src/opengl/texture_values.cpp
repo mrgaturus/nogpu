@@ -28,14 +28,14 @@ GLenum toValue(GPUTextureTransferType type) {
             return GL_FLOAT;
     }
 
-    // Unreachable
-    return ~0;
+    // Unreachable Value
+    return GL_INVALID_ENUM;
 }
 
 GLenum toValue(GPUTexturePixelType type) {
     switch (type) {
-        case GPUTexturePixelType::TEXTURE_NO_UNCOMPRESSED:
-            return ~0;
+        case GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED:
+            return GL_INVALID_ENUM;
 
         // Unsigned/Signed integer normalized formats
         case GPUTexturePixelType::TEXTURE_PIXEL_R8:
@@ -153,14 +153,14 @@ GLenum toValue(GPUTexturePixelType type) {
             return GL_DEPTH24_STENCIL8;
     }
 
-    // Unreachable
-    return ~0;
+    // Unreachable Value
+    return GL_INVALID_ENUM;
 }
 
 GLenum toValue(GPUTextureCompressedType type) {
     switch (type) {
-        case GPUTextureCompressedType::TEXTURE_NO_COMPRESSED:
-            return ~0;
+        case GPUTextureCompressedType::TEXTURE_UNCOMPRESSED:
+            return GL_INVALID_ENUM;
 
         // RGTC/Red-Green compression
         case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGTC1_RED:
@@ -267,8 +267,8 @@ GLenum toValue(GPUTextureCompressedType type) {
             return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR;
     }
 
-    // Unreachable
-    return ~0;
+    // Unreachable Value
+    return GL_INVALID_ENUM;
 }
 
 GLenum toValue(GPUTexturePixelFormat format) {
@@ -289,10 +289,12 @@ GLenum toValue(GPUTexturePixelFormat format) {
             return GL_DEPTH_COMPONENT;
         case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_STENCIL:
             return GL_DEPTH_STENCIL;
+        case GPUTexturePixelFormat::TEXTURE_FORMAT_COMPRESSED:
+            return GL_INVALID_ENUM;
     }
 
-    // Unreachable
-    return ~0;
+    // Unreachable Value
+    return GL_INVALID_ENUM;
 }
 
 // ------------------------
@@ -315,8 +317,8 @@ GLenum toValue(GPUTextureFilterMode filter) {
             return GL_LINEAR_MIPMAP_LINEAR;
     }
 
-    // Unreachable
-    return ~0;
+    // Unreachable Value
+    return GL_INVALID_ENUM;
 }
 
 GLenum toValue(GPUTextureSwizzleMode swizzle) {
@@ -335,8 +337,8 @@ GLenum toValue(GPUTextureSwizzleMode swizzle) {
             return GL_ONE;
     }
 
-    // Unreachable
-    return ~0;
+    // Unreachable Value
+    return GL_INVALID_ENUM;
 }
 
 GLenum toValue(GPUTextureWrapMode wrap) {
@@ -349,8 +351,8 @@ GLenum toValue(GPUTextureWrapMode wrap) {
             return GL_MIRRORED_REPEAT;
     }
 
-    // Unreachable
-    return ~0;
+    // Unreachable Value
+    return GL_INVALID_ENUM;
 }
 
 // --------------------------
@@ -376,6 +378,6 @@ GLenum toValue(GPUTextureCubemapSide side) {
             return GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
     }
 
-    // Unreachable
-    return ~0;
+    // Unreachable Value
+    return GL_INVALID_ENUM;
 }

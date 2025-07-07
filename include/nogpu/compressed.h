@@ -5,7 +5,7 @@
 #include "texture.h"
 
 enum class GPUTextureCompressedType : int {
-    TEXTURE_NO_COMPRESSED,
+    TEXTURE_UNCOMPRESSED,
 
     // RGTC/Red-Green compression
     TEXTURE_COMPRESSED_RGTC1_RED,

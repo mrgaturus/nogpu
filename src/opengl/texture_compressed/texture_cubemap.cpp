@@ -9,13 +9,11 @@
 // Texture 2D Cubemap: Constructor
 // -------------------------------
 
-GLCompressedCubemap::GLCompressedCubemap(
-    GLContext* ctx,
-    GPUTextureCompressedType type,
-    GPUTexturePixelFormat format) : GLTexture(ctx) {
-        m_compressed_type = type;
-        m_pixel_format = format;
+GLCompressedCubemap::GLCompressedCubemap(GLContext* ctx, GPUTextureCompressedType type) : GLTexture(ctx) {
+        m_pixel_type = GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED;
+        m_pixel_format = GPUTexturePixelFormat::TEXTURE_FORMAT_COMPRESSED;
         m_tex_target = GL_TEXTURE_CUBE_MAP;
+        m_compressed_type = type;
 }
 
 void GLCompressedCubemap::allocate(int w, int h, int levels) {

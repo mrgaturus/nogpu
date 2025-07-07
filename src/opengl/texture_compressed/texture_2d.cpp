@@ -9,13 +9,11 @@
 // Texture 2D: Constructor
 // -----------------------
 
-GLCompressed2D::GLCompressed2D(
-    GLContext* ctx,
-    GPUTextureCompressedType type,
-    GPUTexturePixelFormat format) : GLTexture(ctx) {
-        m_compressed_type = type;
-        m_pixel_format = format;
+GLCompressed2D::GLCompressed2D(GLContext* ctx, GPUTextureCompressedType type) : GLTexture(ctx) {
+        m_pixel_type = GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED;
+        m_pixel_format = GPUTexturePixelFormat::TEXTURE_FORMAT_COMPRESSED;
         m_tex_target = GL_TEXTURE_2D;
+        m_compressed_type = type;
 }
 
 GPUTexture2DMode GLCompressed2D::getMode() {

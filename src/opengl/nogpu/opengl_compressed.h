@@ -13,11 +13,9 @@ class GLCompressed1D : GLTexture, GPUCompressed1D {
     void upload(int x, int size, int level, void* data, int bytes) override;
     void unpack(int x, int size, int level, GPUBuffer *pbo, int bytes, int offset) override;
 
-    protected: GLCompressed1D(
-        GLContext* ctx,
-        GPUTextureCompressedType type,
-        GPUTexturePixelFormat format);
-        friend GLContext;
+    // Texture Buffer Constructor
+    protected: GLCompressed1D(GLContext* ctx, GPUTextureCompressedType type);
+    friend GLContext;
 };
 
 class GLCompressed2D : GLTexture, GPUCompressed2D {
@@ -29,11 +27,9 @@ class GLCompressed2D : GLTexture, GPUCompressed2D {
     void upload(int x, int y, int w, int h, int level, void* data, int bytes) override;
     void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int bytes, int offset) override;
 
-    protected: GLCompressed2D(
-        GLContext* ctx,
-        GPUTextureCompressedType type,
-        GPUTexturePixelFormat format);
-        friend GLContext;
+    // Texture Buffer Constructor
+    protected: GLCompressed2D(GLContext* ctx, GPUTextureCompressedType type);
+    friend GLContext;
 };
 
 class GLCompressed3D : GLTexture, GPUCompressed3D {
@@ -45,11 +41,9 @@ class GLCompressed3D : GLTexture, GPUCompressed3D {
     void upload(int x, int y, int z, int w, int h, int depth, int level, void* data, int bytes) override;
     void unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int bytes, int offset) override;
 
-    protected: GLCompressed3D(
-        GLContext* ctx,
-        GPUTextureCompressedType type,
-        GPUTexturePixelFormat format);
-        friend GLContext;
+    // Texture Buffer Constructor
+    protected: GLCompressed3D(GLContext* ctx, GPUTextureCompressedType type);
+    friend GLContext;
 };
 
 class GLCompressedCubemap : GLTexture, GPUCompressedCubemap {
@@ -58,11 +52,9 @@ class GLCompressedCubemap : GLTexture, GPUCompressedCubemap {
     void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, void* data, int bytes) override;
     void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, GPUBuffer *pbo, int bytes, int offset) override;
 
-    protected: GLCompressedCubemap(
-        GLContext* ctx,
-        GPUTextureCompressedType type,
-        GPUTexturePixelFormat format);
-        friend GLContext;
+    // Texture Buffer Constructor
+    protected: GLCompressedCubemap(GLContext* ctx, GPUTextureCompressedType type);
+    friend GLContext;
 };
 
 class GLCompressedCubemapArray : GLTexture, GPUCompressedCubemapArray {
@@ -71,11 +63,9 @@ class GLCompressedCubemapArray : GLTexture, GPUCompressedCubemapArray {
     void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data, int bytes) override;
     void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int bytes, int offset) override;
 
-    protected: GLCompressedCubemapArray(
-        GLContext* ctx,
-        GPUTextureCompressedType type,
-        GPUTexturePixelFormat format);
-        friend GLContext;
+    // Texture Buffer Constructor
+    protected: GLCompressedCubemapArray(GLContext* ctx, GPUTextureCompressedType type);
+    friend GLContext;
 };
 
 #endif // OPENGL_COMPRESSED_H
