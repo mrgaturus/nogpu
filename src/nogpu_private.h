@@ -5,7 +5,7 @@
 #include <nogpu/texture.h>
 
 unsigned int next_power_of_two(unsigned int v);
-bool is_color(GPUTexturePixelType type);
+bool isPixelColor(GPUTexturePixelType type);
 
 // ------------------
 // GPU Logger Console
