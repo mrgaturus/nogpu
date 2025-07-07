@@ -28,10 +28,10 @@ enum class GPUTextureCompressedType : int {
     // ETC2 compression
     TEXTURE_COMPRESSED_ETC2_RGB,
     TEXTURE_COMPRESSED_ETC2_RGBA,
+    TEXTURE_COMPRESSED_ETC2_RGBA_PUNCH,
     TEXTURE_COMPRESSED_ETC2_sRGB,
     TEXTURE_COMPRESSED_ETC2_sRGBA,
     TEXTURE_COMPRESSED_ETC2_sRGBA_PUNCH,
-    TEXTURE_COMPRESSED_ETC2_RGBA_PUNCH,
 
     // ASTC compression: RGBA
     TEXTURE_ASTC_RGBA_4x4,
@@ -71,8 +71,8 @@ class GPUCompressed1D : virtual GPUTexture {
 
     public: // Texture Pixels Manipulation
         virtual void allocate(int size, int levels) = 0;
-        virtual void upload(int x, int size, int level, void* data) = 0;
-        virtual void unpack(int x, int size, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void upload(int x, int size, int level, void* data, int bytes) = 0;
+        virtual void unpack(int x, int size, int level, GPUBuffer *pbo, int bytes, int offset) = 0;
 };
 
 class GPUCompressed2D : virtual GPUTexture {
@@ -82,8 +82,8 @@ class GPUCompressed2D : virtual GPUTexture {
     public: // Texture Pixels Manipulation
         virtual GPUTexture2DMode getMode();
         virtual void allocate(GPUTexture2DMode mode, int w, int h, int levels) = 0;
-        virtual void upload(int x, int y, int w, int h, int level, void* data) = 0;
-        virtual void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void upload(int x, int y, int w, int h, int level, void* data, int bytes) = 0;
+        virtual void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int bytes, int offset) = 0;
 };
 
 class GPUCompressed3D : virtual GPUTexture {
@@ -93,8 +93,8 @@ class GPUCompressed3D : virtual GPUTexture {
     public: // Texture Pixels Manipulation
         virtual GPUTexture3DMode getMode();
         virtual void allocate(GPUTexture3DMode mode, int w, int h, int depth, int levels) = 0;
-        virtual void upload(int x, int y, int z, int w, int h, int depth, int level, void* data) = 0;
-        virtual void unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void upload(int x, int y, int z, int w, int h, int depth, int level, void* data, int bytes) = 0;
+        virtual void unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int bytes, int offset) = 0;
 };
 
 class GPUCompressedCubemap : virtual GPUTexture {
@@ -103,8 +103,8 @@ class GPUCompressedCubemap : virtual GPUTexture {
 
     public: // Texture Pixels Manipulation
         virtual void allocate(int w, int h, int levels) = 0;
-        virtual void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, void* data) = 0;
-        virtual void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, void* data, int bytes) = 0;
+        virtual void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, GPUBuffer *pbo, int bytes, int offset) = 0;
 };
 
 class GPUCompressedCubemapArray : virtual GPUTexture {
@@ -113,8 +113,8 @@ class GPUCompressedCubemapArray : virtual GPUTexture {
 
     public: // Texture Pixels Manipulation
         virtual void allocate(int w, int h, int layers, int levels) = 0;
-        virtual void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data) = 0;
-        virtual void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data, int bytes) = 0;
+        virtual void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int bytes, int offset) = 0;
 };
 
 #endif // NOGPU_COMPRESSED_H

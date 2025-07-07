@@ -57,13 +57,13 @@ void GLCompressedCubemapArray::allocate(int w, int h, int layers, int levels) {
 // Texture Cubemap: Buffer Manipulation
 // ------------------------------------
 
-void GLCompressedCubemapArray::upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data) {
+void GLCompressedCubemapArray::upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data, int bytes) {
     m_ctx->gl__makeCurrent();
 
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
     glCompressedTexSubImage2D(toValue(side), level, x, y, w, h,
-        toValue(m_pixel_format), toValue(m_transfer_type), data);
+        toValue(m_compressed_type), bytes, data);
 
     // Check Uploading Error
     GLenum error = glGetError();
@@ -81,12 +81,12 @@ void GLCompressedCubemapArray::upload(GPUTextureCubemapSide side, int x, int y, 
 // Texture Cubemap: Buffer Manipulation using PBO
 // ----------------------------------------------
 
-void GLCompressedCubemapArray::unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) {
+void GLCompressedCubemapArray::unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int bytes, int offset) {
     m_ctx->gl__makeCurrent();
 
     // Copy PBO Pixels to Texture
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf->m_vbo);
-    this->upload(side, x, y, w, h, layer, level, reinterpret_cast<void*>(offset));
+    this->upload(side, x, y, w, h, layer, level, reinterpret_cast<void*>(offset), bytes);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 }

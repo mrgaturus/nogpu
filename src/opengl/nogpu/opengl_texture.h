@@ -8,7 +8,6 @@
 GLenum toValue(GPUTextureTransferType type);
 GLenum toValue(GPUTexturePixelType type);
 GLenum toValue(GPUTexturePixelFormat format);
-GLenum toValue(GPUTextureCompressedType type);
 
 GLenum toValue(GPUTextureFilterMode swizzle);
 GLenum toValue(GPUTextureSwizzleMode filter);

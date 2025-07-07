@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include "nogpu/opengl_texture.h"
+#include "nogpu/opengl_compressed.h"
 #include "glad/glad.h"
 
 // --------------------------
@@ -33,6 +34,10 @@ GLenum toValue(GPUTextureTransferType type) {
 
 GLenum toValue(GPUTexturePixelType type) {
     switch (type) {
+        case GPUTexturePixelType::TEXTURE_NO_UNCOMPRESSED:
+            return ~0;
+
+        // Unsigned/Signed integer normalized formats
         case GPUTexturePixelType::TEXTURE_PIXEL_R8:
             return GL_R8;
         case GPUTexturePixelType::TEXTURE_PIXEL_R8_SNORM:
@@ -154,49 +159,112 @@ GLenum toValue(GPUTexturePixelType type) {
 
 GLenum toValue(GPUTextureCompressedType type) {
     switch (type) {
-        // Simple Compression
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RED:
-            return GL_COMPRESSED_RED;
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RG:
-            return GL_COMPRESSED_RG;
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGB:
-            return GL_COMPRESSED_RGB;
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGBA:
-            return GL_COMPRESSED_RGBA;
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_SRGB:
-            return GL_COMPRESSED_SRGB;
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_SRGB_ALPHA:
-            return GL_COMPRESSED_SRGB_ALPHA;
+        case GPUTextureCompressedType::TEXTURE_NO_COMPRESSED:
+            return ~0;
 
-        // RGTC: Red-Green Texture Compression
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RED_RGTC1:
+        // RGTC/Red-Green compression
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGTC1_RED:
             return GL_COMPRESSED_RED_RGTC1;
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_SIGNED_RED_RGTC1:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGTC1_RED_SNORM:
             return GL_COMPRESSED_SIGNED_RED_RGTC1;
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RG_RGTC2:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGTC2_RG:
             return GL_COMPRESSED_RG_RGTC2;
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_SIGNED_RG_RGTC2:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGTC2_RG_SNORM:
             return GL_COMPRESSED_SIGNED_RG_RGTC2;
 
-        // S3TC/DXT compression
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGB_S3TC_DXT1:
+        // DXTC/S3TC compression
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_DXTC1_RGB:
             return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGBA_S3TC_DXT1:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_DXTC1_RGBA:
             return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGBA_S3TC_DXT3:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_DXTC3_RGBA:
             return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGBA_S3TC_DXT5:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_DXTC5_RGBA:
             return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 
-        // BPTC Float/UNORM compression
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGBA_BPTC_UNORM:
+        // BC7/BPTC compression
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_BC7_RGBA:
             return GL_COMPRESSED_RGBA_BPTC_UNORM_ARB;
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_BC7_sRGBA:
             return GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB;
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGB_BPTC_SIGNED_FLOAT:
-            return GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_ARB;
-        case GPUTextureCompressedType::TEXTURE_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT:
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_BC7_RGB_FLOAT32:
             return GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_ARB;
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_BC7_RGB_FLOAT32_SNORM:
+            return GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_ARB;
+
+        // ETC2 compression
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_ETC2_RGB:
+            return GL_COMPRESSED_RGB8_ETC2;
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_ETC2_RGBA:
+            return GL_COMPRESSED_RGBA8_ETC2_EAC;
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_ETC2_RGBA_PUNCH:
+            return GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2;
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_ETC2_sRGB:
+            return GL_COMPRESSED_SRGB8_ETC2;
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_ETC2_sRGBA:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC;
+        case GPUTextureCompressedType::TEXTURE_COMPRESSED_ETC2_sRGBA_PUNCH:   
+            return GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2;
+
+        // ASTC compression: RGBA
+        case GPUTextureCompressedType::TEXTURE_ASTC_RGBA_4x4:
+            return GL_COMPRESSED_RGBA_ASTC_4x4_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_RGBA_5x4:
+            return GL_COMPRESSED_RGBA_ASTC_5x4_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_RGBA_5x5:
+            return GL_COMPRESSED_RGBA_ASTC_5x5_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_RGBA_6x5:
+            return GL_COMPRESSED_RGBA_ASTC_6x5_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_RGBA_6x6:
+            return GL_COMPRESSED_RGBA_ASTC_6x6_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_RGBA_8x5:
+            return GL_COMPRESSED_RGBA_ASTC_8x5_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_RGBA_8x6:
+            return GL_COMPRESSED_RGBA_ASTC_8x6_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_RGBA_8x8:
+            return GL_COMPRESSED_RGBA_ASTC_8x8_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_RGBA_10x5:
+            return GL_COMPRESSED_RGBA_ASTC_10x5_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_RGBA_10x6:
+            return GL_COMPRESSED_RGBA_ASTC_10x6_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_RGBA_10x8:
+            return GL_COMPRESSED_RGBA_ASTC_10x8_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_RGBA_10x10:
+            return GL_COMPRESSED_RGBA_ASTC_10x10_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_RGBA_12x10:
+            return GL_COMPRESSED_RGBA_ASTC_12x10_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_RGBA_12x12:
+            return GL_COMPRESSED_RGBA_ASTC_12x12_KHR;
+
+        // ASTC compression: SRGBA
+        case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_4x4:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_5x4:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_5x5:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_6x5:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_6x6:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_8x5:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_8x6:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_8x8:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_10x5:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_10x6:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_10x8:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_10x10:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_12x10:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR;
+        case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_12x12:
+            return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR;
     }
 
     // Unreachable

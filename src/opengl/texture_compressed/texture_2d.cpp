@@ -78,13 +78,13 @@ void GLCompressed2D::allocate(GPUTexture2DMode mode, int w, int h, int levels) {
     m_depth = 1;
 }
 
-void GLCompressed2D::upload(int x, int y, int w, int h, int level, void* data) {
+void GLCompressed2D::upload(int x, int y, int w, int h, int level, void* data, int bytes) {
     m_ctx->gl__makeCurrent();
 
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
     glCompressedTexSubImage2D(target, level, x, y, w, h,
-        toValue(m_pixel_format), toValue(m_transfer_type), data);
+        toValue(m_compressed_type), bytes, data);
 
     // Check Uploading Error
     GLenum error = glGetError();
@@ -102,12 +102,12 @@ void GLCompressed2D::upload(int x, int y, int w, int h, int level, void* data) {
 // Texture 2D: Buffer Manipulation using PBO
 // -----------------------------------------
 
-void GLCompressed2D::unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) {
+void GLCompressed2D::unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int bytes, int offset) {
     m_ctx->gl__makeCurrent();
 
     // Copy PBO Pixels to Texture
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf->m_vbo);
-    this->upload(x, y, w, h, level, reinterpret_cast<void*>(offset));
+    this->upload(x, y, w, h, level, reinterpret_cast<void*>(offset), bytes);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 }

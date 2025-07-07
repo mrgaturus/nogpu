@@ -50,13 +50,13 @@ void GLCompressed1D::allocate(int size, int levels) {
     m_depth = 1;
 }
 
-void GLCompressed1D::upload(int x, int size, int level, void* data) {
+void GLCompressed1D::upload(int x, int size, int level, void* data, int bytes) {
     m_ctx->gl__makeCurrent();
 
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
     glCompressedTexSubImage1D(target, level, x, size,
-        toValue(m_pixel_format), toValue(m_transfer_type), data);
+        toValue(m_compressed_type), bytes, data);
 
     // Check Uploading Error
     GLenum error = glGetError();
@@ -74,12 +74,12 @@ void GLCompressed1D::upload(int x, int size, int level, void* data) {
 // Texture 1D: Buffer Manipulation using PBO
 // -----------------------------------------
 
-void GLCompressed1D::unpack(int x, int size, int level, GPUBuffer *pbo, int offset) {
+void GLCompressed1D::unpack(int x, int size, int level, GPUBuffer *pbo, int bytes, int offset) {
     m_ctx->gl__makeCurrent();
 
     // Copy PBO Pixels to Texture
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf->m_vbo);
-    this->upload(x, size, level, reinterpret_cast<void*>(offset));
+    this->upload(x, size, level, reinterpret_cast<void*>(offset), bytes);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 }

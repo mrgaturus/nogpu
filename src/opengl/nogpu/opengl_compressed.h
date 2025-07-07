@@ -5,11 +5,13 @@
 #include <nogpu/compressed.h>
 #include "opengl_texture.h"
 
+GLenum toValue(GPUTextureCompressedType type);
+
 class GLCompressed1D : GLTexture, GPUCompressed1D {
     // Texture Buffer Manipulation
     void allocate(int size, int levels) override;
-    void upload(int x, int size, int level, void* data) override;
-    void unpack(int x, int size, int level, GPUBuffer *pbo, int offset) override;
+    void upload(int x, int size, int level, void* data, int bytes) override;
+    void unpack(int x, int size, int level, GPUBuffer *pbo, int bytes, int offset) override;
 
     protected: GLCompressed1D(
         GLContext* ctx,
@@ -24,8 +26,8 @@ class GLCompressed2D : GLTexture, GPUCompressed2D {
 
     // Texture Buffer Manipulation
     void allocate(GPUTexture2DMode mode, int w, int h, int levels) override;
-    void upload(int x, int y, int w, int h, int level, void* data) override;
-    void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
+    void upload(int x, int y, int w, int h, int level, void* data, int bytes) override;
+    void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int bytes, int offset) override;
 
     protected: GLCompressed2D(
         GLContext* ctx,
@@ -40,8 +42,8 @@ class GLCompressed3D : GLTexture, GPUCompressed3D {
 
     // Texture Buffer Manipulation
     void allocate(GPUTexture3DMode mode, int w, int h, int depth, int levels) override;
-    void upload(int x, int y, int z, int w, int h, int depth, int level, void* data) override;
-    void unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) override;
+    void upload(int x, int y, int z, int w, int h, int depth, int level, void* data, int bytes) override;
+    void unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int bytes, int offset) override;
 
     protected: GLCompressed3D(
         GLContext* ctx,
@@ -53,8 +55,8 @@ class GLCompressed3D : GLTexture, GPUCompressed3D {
 class GLCompressedCubemap : GLTexture, GPUCompressedCubemap {
     // Texture Buffer Manipulation
     void allocate(int w, int h, int levels) override;
-    void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, void* data) override;
-    void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
+    void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, void* data, int bytes) override;
+    void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, GPUBuffer *pbo, int bytes, int offset) override;
 
     protected: GLCompressedCubemap(
         GLContext* ctx,
@@ -66,8 +68,8 @@ class GLCompressedCubemap : GLTexture, GPUCompressedCubemap {
 class GLCompressedCubemapArray : GLTexture, GPUCompressedCubemapArray {
     // Texture Buffer Manipulation
     void allocate(int w, int h, int layers, int levels) override;
-    void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data) override;
-    void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) override;
+    void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data, int bytes) override;
+    void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int bytes, int offset) override;
 
     protected: GLCompressedCubemapArray(
         GLContext* ctx,
