@@ -3,7 +3,7 @@
 #ifndef OPENGL_COMPRESSED_H
 #define OPENGL_COMPRESSED_H
 #include <nogpu/compressed.h>
-#include "opengl_texture.h"
+#include "texture.h"
 
 GLenum toValue(GPUTextureCompressedType type);
 

@@ -3,7 +3,7 @@
 #ifndef OPENGL_CONTEXT_H
 #define OPENGL_CONTEXT_H
 #include <nogpu/context.h>
-#include "opengl_driver.h"
+#include "driver.h"
 
 // ------------------
 // OpenGL GPU Context

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include <nogpu_private.h>
-#include "nogpu/opengl_buffer.h"
-#include "nogpu/opengl_context.h"
-#include "glad/glad.h"
+#include "private/buffer.h"
+#include "private/context.h"
+#include "private/glad.h"
 
 static GLenum toValue(GPUBufferUsage usage) {
     switch (usage) {

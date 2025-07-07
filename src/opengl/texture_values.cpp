@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
-#include "nogpu/opengl_texture.h"
-#include "nogpu/opengl_compressed.h"
-#include "glad/glad.h"
+#include "private/texture.h"
+#include "private/compressed.h"
+#include "private/glad.h"
 
 // --------------------------
 // GPU Enums: Texture Formats

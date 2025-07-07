@@ -3,7 +3,7 @@
 #ifndef OPENGL_TEXTURE_H
 #define OPENGL_TEXTURE_H
 #include <nogpu/texture.h>
-#include "opengl_buffer.h"
+#include "buffer.h"
 
 GLenum toValue(GPUTextureTransferType type);
 GLenum toValue(GPUTexturePixelType type);

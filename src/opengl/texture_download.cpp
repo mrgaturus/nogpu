@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include <nogpu_private.h>
-#include "nogpu/opengl_texture.h"
-#include "glad/glad.h"
+#include "private/texture.h"
+#include "private/glad.h"
 
 static GLenum valueAttachmentType(GPUTexturePixelFormat format) {
     switch (format) {
@@ -33,6 +33,7 @@ static int valueTransferBytes(GPUTextureTransferType type, GPUTexturePixelFormat
     }
 
     switch (format) {
+        case GPUTexturePixelFormat::TEXTURE_FORMAT_COMPRESSED:
         case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_COMPONENT:
         case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_STENCIL:
         case GPUTexturePixelFormat::TEXTURE_FORMAT_RED:

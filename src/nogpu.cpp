@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
-#include <opengl/nogpu/opengl_context.h>
+#include <opengl/private/context.h>
 #include <nogpu_private.h>
 #include <nogpu.h>
 // Global Driver Definition

@@ -1,4 +1,4 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
-#include "nogpu/opengl_driver.h"
-#include "nogpu/opengl_context.h"
+#include "private/driver.h"
+#include "private/context.h"
