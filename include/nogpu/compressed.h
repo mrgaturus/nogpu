@@ -66,9 +66,6 @@ enum class GPUTextureCompressedType : int {
 };
 
 class GPUCompressed1D : virtual GPUTexture {
-    protected: GPUCompressed1D();
-    protected: ~GPUCompressed1D();
-
     public: // Texture Pixels Manipulation
         virtual void allocate(int size, int levels) = 0;
         virtual void upload(int x, int size, int level, void* data, int bytes) = 0;
@@ -76,31 +73,22 @@ class GPUCompressed1D : virtual GPUTexture {
 };
 
 class GPUCompressed2D : virtual GPUTexture {
-    protected: GPUCompressed2D();
-    protected: ~GPUCompressed2D();
-
     public: // Texture Pixels Manipulation
-        virtual GPUTexture2DMode getMode();
+        virtual GPUTexture2DMode getMode() = 0;
         virtual void allocate(GPUTexture2DMode mode, int w, int h, int levels) = 0;
         virtual void upload(int x, int y, int w, int h, int level, void* data, int bytes) = 0;
         virtual void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int bytes, int offset) = 0;
 };
 
 class GPUCompressed3D : virtual GPUTexture {
-    protected: GPUCompressed3D();
-    protected: ~GPUCompressed3D();
-
     public: // Texture Pixels Manipulation
-        virtual GPUTexture3DMode getMode();
+        virtual GPUTexture3DMode getMode() = 0;
         virtual void allocate(GPUTexture3DMode mode, int w, int h, int depth, int levels) = 0;
         virtual void upload(int x, int y, int z, int w, int h, int depth, int level, void* data, int bytes) = 0;
         virtual void unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int bytes, int offset) = 0;
 };
 
 class GPUCompressedCubemap : virtual GPUTexture {
-    protected: GPUCompressedCubemap();
-    protected: ~GPUCompressedCubemap();
-
     public: // Texture Pixels Manipulation
         virtual void allocate(int w, int h, int levels) = 0;
         virtual void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, void* data, int bytes) = 0;
@@ -108,9 +96,6 @@ class GPUCompressedCubemap : virtual GPUTexture {
 };
 
 class GPUCompressedCubemapArray : virtual GPUTexture {
-    protected: GPUCompressedCubemapArray();
-    protected: ~GPUCompressedCubemapArray();
-
     public: // Texture Pixels Manipulation
         virtual void allocate(int w, int h, int layers, int levels) = 0;
         virtual void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data, int bytes) = 0;

@@ -2,7 +2,6 @@
 # Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 add_definitions(-DNOGPU_OPENGL)
 add_library(nogpu_opengl OBJECT
-    private/glad.c
     buffer_vao.cpp
     buffer.cpp
     commands.cpp
@@ -10,6 +9,7 @@ add_library(nogpu_opengl OBJECT
     framebuffer.cpp
     pipeline.cpp
     shader.cpp
+    private/glad.c
     texture_standard/texture_1d.cpp
     texture_standard/texture_2d.cpp
     texture_standard/texture_3d.cpp

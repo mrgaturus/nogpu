@@ -53,8 +53,6 @@ typedef struct {
 
 class GPUCommands {
     protected:
-        GPUCommands();
-        ~GPUCommands();
         GPUCommandState m_state;
         bool m_recorded;
     public: virtual void destroy() = 0;

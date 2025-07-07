@@ -47,18 +47,3 @@ GPUMemoryBarrier operator|(GPUMemoryBarrier a, GPUMemoryBarrier b) {
 GPUMemoryBarrier operator&(GPUMemoryBarrier a, GPUMemoryBarrier b) {
     return (GPUMemoryBarrier) ((int) a & (int) b);
 }
-
-// ------------------
-// Dummy Initializers
-// ------------------
-
-// -- GPU Buffer --
-GPUBuffer::GPUBuffer() = default;
-GPUBuffer::~GPUBuffer() = default;
-// -- GPU Vertex Array --
-GPUVertexArray::GPUVertexArray() = default;
-GPUVertexArray::~GPUVertexArray() = default;
-
-// -- GPU Texture --
-GPUTexture::GPUTexture() = default;
-GPUTexture::~GPUTexture() = default;

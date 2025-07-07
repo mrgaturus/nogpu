@@ -32,8 +32,6 @@ enum class GPUBufferMapping : int {
 
 class GPUBuffer {
     protected: int m_bytes;
-    protected: GPUBuffer();
-    protected: ~GPUBuffer();
     public: virtual void destroy() = 0;
     public: int getBytes() { return m_bytes; };
 
@@ -77,8 +75,6 @@ class GPUVertexArray {
     protected:
         GPUBuffer* m_array_buffer;
         GPUBuffer* m_elements_buffer;
-    protected: GPUVertexArray();
-    protected: ~GPUVertexArray();
     public: virtual void destroy() = 0;
 
     public: // GPU Vertex Array: Register
