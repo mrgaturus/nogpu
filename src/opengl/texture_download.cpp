@@ -33,7 +33,6 @@ static int valueTransferBytes(GPUTextureTransferType type, GPUTexturePixelFormat
     }
 
     switch (format) {
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_COMPRESSED:
         case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_COMPONENT:
         case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_STENCIL:
         case GPUTexturePixelFormat::TEXTURE_FORMAT_RED:
@@ -43,6 +42,7 @@ static int valueTransferBytes(GPUTextureTransferType type, GPUTexturePixelFormat
         case GPUTexturePixelFormat::TEXTURE_FORMAT_RGB:
         case GPUTexturePixelFormat::TEXTURE_FORMAT_BGR:
             bytes *= 3;
+        case GPUTexturePixelFormat::TEXTURE_FORMAT_COMPRESSED:
         case GPUTexturePixelFormat::TEXTURE_FORMAT_RGBA:
         case GPUTexturePixelFormat::TEXTURE_FORMAT_BGRA:
             bytes *= 4;
