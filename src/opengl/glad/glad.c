@@ -35,6 +35,7 @@ int GLAD_GL_VERSION_3_0 = 0;
 int GLAD_GL_VERSION_3_1 = 0;
 int GLAD_GL_VERSION_3_2 = 0;
 int GLAD_GL_VERSION_3_3 = 0;
+int GLAD_GL_ARB_ES3_compatibility = 0;
 int GLAD_GL_ARB_compute_shader = 0;
 int GLAD_GL_ARB_debug_output = 0;
 int GLAD_GL_ARB_get_texture_sub_image = 0;
@@ -49,6 +50,8 @@ int GLAD_GL_ARB_texture_cube_map_array = 0;
 int GLAD_GL_ARB_texture_storage = 0;
 int GLAD_GL_ARB_texture_storage_multisample = 0;
 int GLAD_GL_EXT_texture_compression_s3tc = 0;
+int GLAD_GL_KHR_texture_compression_astc_hdr = 0;
+int GLAD_GL_KHR_texture_compression_astc_ldr = 0;
 
 
 
@@ -939,6 +942,7 @@ static int glad_gl_find_extensions_gl(void) {
     char **exts_i = NULL;
     if (!glad_gl_get_extensions(&exts, &exts_i)) return 0;
 
+    GLAD_GL_ARB_ES3_compatibility = glad_gl_has_extension(exts, exts_i, "GL_ARB_ES3_compatibility");
     GLAD_GL_ARB_compute_shader = glad_gl_has_extension(exts, exts_i, "GL_ARB_compute_shader");
     GLAD_GL_ARB_debug_output = glad_gl_has_extension(exts, exts_i, "GL_ARB_debug_output");
     GLAD_GL_ARB_get_texture_sub_image = glad_gl_has_extension(exts, exts_i, "GL_ARB_get_texture_sub_image");
@@ -953,6 +957,8 @@ static int glad_gl_find_extensions_gl(void) {
     GLAD_GL_ARB_texture_storage = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_storage");
     GLAD_GL_ARB_texture_storage_multisample = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_storage_multisample");
     GLAD_GL_EXT_texture_compression_s3tc = glad_gl_has_extension(exts, exts_i, "GL_EXT_texture_compression_s3tc");
+    GLAD_GL_KHR_texture_compression_astc_hdr = glad_gl_has_extension(exts, exts_i, "GL_KHR_texture_compression_astc_hdr");
+    GLAD_GL_KHR_texture_compression_astc_ldr = glad_gl_has_extension(exts, exts_i, "GL_KHR_texture_compression_astc_ldr");
 
     glad_gl_free_extensions(exts_i);
 

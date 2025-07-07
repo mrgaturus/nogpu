@@ -55,7 +55,7 @@ void GLCompressed1D::upload(int x, int size, int level, void* data) {
 
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
-    glTexSubImage1D(target, level, x, size,
+    glCompressedTexSubImage1D(target, level, x, size,
         toValue(m_pixel_format), toValue(m_transfer_type), data);
 
     // Check Uploading Error

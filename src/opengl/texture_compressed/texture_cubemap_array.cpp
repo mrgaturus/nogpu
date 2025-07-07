@@ -62,7 +62,7 @@ void GLCompressedCubemapArray::upload(GPUTextureCubemapSide side, int x, int y, 
 
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
-    glTexSubImage2D(toValue(side), level, x, y, w, h,
+    glCompressedTexSubImage2D(toValue(side), level, x, y, w, h,
         toValue(m_pixel_format), toValue(m_transfer_type), data);
 
     // Check Uploading Error
