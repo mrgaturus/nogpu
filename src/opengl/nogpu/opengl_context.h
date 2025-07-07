@@ -18,13 +18,22 @@ class GLContext : GPUContext {
     // GPU Object Creation
     GPUBuffer* createBuffer() override;
     GPUVertexArray* createVertexArray() override;
-    GPUTextureBuffer* createTextureBuffer(GPUTexturePixelFormat format) override;
+    GPUTextureBuffer* createTextureBuffer(GPUTexturePixelType type) override;
+    GPURenderBuffer* createRenderBuffer(GPURenderBufferMode mode, GPUTexturePixelFormat format) override;
+
+    // GPU Texture Objects: Standard
     GPUTexture1D* createTexture1D(GPUTexturePixelType type, GPUTexturePixelFormat format) override;
     GPUTexture2D* createTexture2D(GPUTexturePixelType type, GPUTexturePixelFormat format) override;
     GPUTexture3D* createTexture3D(GPUTexturePixelType type, GPUTexturePixelFormat format) override;
     GPUTextureCubemap* createTextureCubemap(GPUTexturePixelType type, GPUTexturePixelFormat format) override;
     GPUTextureCubemapArray* createTextureCubemapArray(GPUTexturePixelType type, GPUTexturePixelFormat format) override;
-    GPURenderBuffer* createRenderBuffer(GPURenderBufferMode mode, GPUTexturePixelFormat format) override;
+    // GPU Texture Objects: Compressed
+    GPUCompressed1D* createCompressed1D(GPUTextureCompressedType type) override;
+    GPUCompressed2D* createCompressed2D(GPUTextureCompressedType type) override;
+    GPUCompressed3D* createCompressed3D(GPUTextureCompressedType type) override;
+    GPUCompressedCubemap* createCompressedCubemap(GPUTextureCompressedType type) override;
+    GPUCompressedCubemapArray* createCompressedCubemapArray(GPUTextureCompressedType type) override;
+
     // GPU Rendering Objects
     GPUFrameBuffer* createFrameBuffer() override;
     GPUProgram* createProgram() override;

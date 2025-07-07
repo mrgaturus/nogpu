@@ -2,6 +2,8 @@
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include "nogpu/opengl_buffer.h"
 #include "nogpu/opengl_context.h"
+#include "nogpu/opengl_texture.h"
+#include "nogpu/opengl_compressed.h"
 #include "glad/glad.h"
 
 bool GLContext::isTransparent() {
@@ -17,36 +19,68 @@ GPUBuffer* GLContext::createBuffer() {
 }
 
 GPUVertexArray* GLContext::createVertexArray() {
-    return nullptr;
+    return new GLVertexArray(this);
 };
 
-GPUTextureBuffer* GLContext::createTextureBuffer(GPUTexturePixelFormat format) {
-    return nullptr;
-}
-
-GPUTexture1D* GLContext::createTexture1D(GPUTexturePixelType type, GPUTexturePixelFormat format) {
-    return nullptr;
-}
-
-GPUTexture2D* GLContext::createTexture2D(GPUTexturePixelType type, GPUTexturePixelFormat format) {
-    return nullptr;
-}
-
-GPUTexture3D* GLContext::createTexture3D(GPUTexturePixelType type, GPUTexturePixelFormat format) {
-    return nullptr;
-}
-
-GPUTextureCubemap* GLContext::createTextureCubemap(GPUTexturePixelType type, GPUTexturePixelFormat format) {
-    return nullptr;
-}
-
-GPUTextureCubemapArray* GLContext::createTextureCubemapArray(GPUTexturePixelType type, GPUTexturePixelFormat format) {
-    return nullptr;
+GPUTextureBuffer* GLContext::createTextureBuffer(GPUTexturePixelType type) {
+    return new GLTextureBuffer(this, type);
 }
 
 GPURenderBuffer* GLContext::createRenderBuffer(GPURenderBufferMode mode, GPUTexturePixelFormat format) {
     return nullptr;
 }
+
+// -------------------------------------
+// GPU Object Creation: Texture Standard
+// -------------------------------------
+
+GPUTexture1D* GLContext::createTexture1D(GPUTexturePixelType type, GPUTexturePixelFormat format) {
+    return new GLTexture1D(this, type, format);
+}
+
+GPUTexture2D* GLContext::createTexture2D(GPUTexturePixelType type, GPUTexturePixelFormat format) {
+    return new GLTexture2D(this, type, format);
+}
+
+GPUTexture3D* GLContext::createTexture3D(GPUTexturePixelType type, GPUTexturePixelFormat format) {
+    return new GLTexture3D(this, type, format);
+}
+
+GPUTextureCubemap* GLContext::createTextureCubemap(GPUTexturePixelType type, GPUTexturePixelFormat format) {
+    return new GLTextureCubemap(this, type, format);
+}
+
+GPUTextureCubemapArray* GLContext::createTextureCubemapArray(GPUTexturePixelType type, GPUTexturePixelFormat format) {
+    return new GLTextureCubemapArray(this, type, format);
+}
+
+// ---------------------------------------
+// GPU Object Creation: Texture Compressed
+// ---------------------------------------
+
+GPUCompressed1D* GLContext::createCompressed1D(GPUTextureCompressedType type) {
+    return new GLCompressed1D(this, type);
+};
+
+GPUCompressed2D* GLContext::createCompressed2D(GPUTextureCompressedType type) {
+    return new GLCompressed2D(this, type);
+};
+
+GPUCompressed3D* GLContext::createCompressed3D(GPUTextureCompressedType type) {
+    return new GLCompressed3D(this, type);
+};
+
+GPUCompressedCubemap* GLContext::createCompressedCubemap(GPUTextureCompressedType type) {
+    return new GLCompressedCubemap(this, type);
+};
+
+GPUCompressedCubemapArray* GLContext::createCompressedCubemapArray(GPUTextureCompressedType type) {
+    return new GLCompressedCubemapArray(this, type);
+};
+
+// -----------------------------------
+// GPU Object Creation: Render Objects
+// -----------------------------------
 
 GPUFrameBuffer* GLContext::createFrameBuffer() {
     return nullptr;

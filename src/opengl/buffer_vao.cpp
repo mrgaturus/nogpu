@@ -29,8 +29,8 @@ static GLenum toValue(GPUAttributeType type) {
             return GL_DOUBLE;
     }
 
-    // Reachable?
-    return ~0;
+    // Unreachable Value
+    return GL_INVALID_ENUM;
 }
 
 // -----------------------------

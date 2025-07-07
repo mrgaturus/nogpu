@@ -3,6 +3,7 @@
 #ifndef NOGPU_CONTEXT_H
 #define NOGPU_CONTEXT_H
 #include "driver.h"
+#include "compressed.h"
 #include "commands.h"
 
 // -----------
@@ -23,13 +24,22 @@ class GPUContext {
         // GPU Buffer Objects
         virtual GPUBuffer* createBuffer() = 0;
         virtual GPUVertexArray* createVertexArray() = 0;
-        virtual GPUTextureBuffer* createTextureBuffer(GPUTexturePixelFormat format) = 0;
+        virtual GPUTextureBuffer* createTextureBuffer(GPUTexturePixelType type) = 0;
+        virtual GPURenderBuffer* createRenderBuffer(GPURenderBufferMode mode, GPUTexturePixelFormat format) = 0;
+
+        // GPU Texture Objects: Standard
         virtual GPUTexture1D* createTexture1D(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
         virtual GPUTexture2D* createTexture2D(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
         virtual GPUTexture3D* createTexture3D(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
         virtual GPUTextureCubemap* createTextureCubemap(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
         virtual GPUTextureCubemapArray* createTextureCubemapArray(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
-        virtual GPURenderBuffer* createRenderBuffer(GPURenderBufferMode mode, GPUTexturePixelFormat format) = 0;
+        // GPU Texture Objects: Compressed
+        virtual GPUCompressed1D* createCompressed1D(GPUTextureCompressedType type) = 0;
+        virtual GPUCompressed2D* createCompressed2D(GPUTextureCompressedType type) = 0;
+        virtual GPUCompressed3D* createCompressed3D(GPUTextureCompressedType type) = 0;
+        virtual GPUCompressedCubemap* createCompressedCubemap(GPUTextureCompressedType type) = 0;
+        virtual GPUCompressedCubemapArray* createCompressedCubemapArray(GPUTextureCompressedType type) = 0;
+
         // GPU Rendering Objects
         virtual GPUFrameBuffer* createFrameBuffer() = 0;
         virtual GPUProgram* createProgram() = 0;

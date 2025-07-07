@@ -30,8 +30,8 @@ static GLenum toValue(GPUBufferUsage usage) {
             return GL_DYNAMIC_COPY;
     }
 
-    // Reachable?
-    return ~0;
+    // Unreachable Value
+    return GL_INVALID_ENUM;
 }
 
 static GLenum toValue(GPUBufferMapping flags) {
