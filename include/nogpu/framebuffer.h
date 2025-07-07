@@ -17,7 +17,6 @@ enum class GPURenderBufferMode : int {
 class GPURenderBuffer {
     protected:
         GPURenderBufferMode m_mode;
-        GPUTexturePixelFormat m_format;
         int m_msaa_samples;
         int m_width;
         int m_height;
@@ -35,7 +34,6 @@ class GPURenderBuffer {
         int getMultisamples() { return m_msaa_samples; }
         GPUTextureSize getSize() { return (GPUTextureSize) { m_width, m_height }; }
         GPURenderBufferMode getMode() { return m_mode; }
-        GPUTexturePixelFormat getFormat() { return m_format; }
         virtual GPUTexture* getTexture();
 };
 

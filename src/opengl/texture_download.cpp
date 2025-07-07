@@ -4,47 +4,48 @@
 #include "private/texture.h"
 #include "private/glad.h"
 
-static GLenum valueAttachmentType(GPUTexturePixelFormat format) {
+static GLenum valueAttachmentType(GPUTextureTransferFormat format) {
     switch (format) {
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_COMPONENT:
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_DEPTH_COMPONENT:
             return GL_DEPTH_ATTACHMENT;
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_STENCIL:
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_DEPTH_STENCIL:
             return GL_DEPTH_STENCIL_ATTACHMENT;
         default: // RGBA Color Fallback
             return GL_COLOR_ATTACHMENT0;
     }
 }
 
-static int valueTransferBytes(GPUTextureTransferType type, GPUTexturePixelFormat format) {
+static int valueTransferBytes(GPUTextureTransferSize type, GPUTextureTransferFormat format) {
     int bytes = 0;
 
     switch (type) {
-        case GPUTextureTransferType::TEXTURE_TRANSFER_UNSIGNED_BYTE:
-        case GPUTextureTransferType::TEXTURE_TRANSFER_BYTE:
+        case GPUTextureTransferSize::TEXTURE_SIZE_COMPRESSED:
+        case GPUTextureTransferSize::TEXTURE_SIZE_UNSIGNED_BYTE:
+        case GPUTextureTransferSize::TEXTURE_SIZE_BYTE:
             bytes = (int) sizeof(unsigned char);
-        case GPUTextureTransferType::TEXTURE_TRANSFER_UNSIGNED_SHORT:
-        case GPUTextureTransferType::TEXTURE_TRANSFER_SHORT:
+        case GPUTextureTransferSize::TEXTURE_SIZE_UNSIGNED_SHORT:
+        case GPUTextureTransferSize::TEXTURE_SIZE_SHORT:
             bytes = (int) sizeof(unsigned short);
-        case GPUTextureTransferType::TEXTURE_TRANSFER_FLOAT:
-        case GPUTextureTransferType::TEXTURE_TRANSFER_DEPTH24_STENCIL8:
-        case GPUTextureTransferType::TEXTURE_TRANSFER_UNSIGNED_INT:
-        case GPUTextureTransferType::TEXTURE_TRANSFER_INT:
+        case GPUTextureTransferSize::TEXTURE_SIZE_FLOAT:
+        case GPUTextureTransferSize::TEXTURE_SIZE_DEPTH24_STENCIL8:
+        case GPUTextureTransferSize::TEXTURE_SIZE_UNSIGNED_INT:
+        case GPUTextureTransferSize::TEXTURE_SIZE_INT:
             bytes = (int) sizeof(unsigned int);
     }
 
     switch (format) {
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_COMPONENT:
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_STENCIL:
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_RED:
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_DEPTH_COMPONENT:
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_DEPTH_STENCIL:
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_RED:
             bytes *= 1;
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_RG:
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_RG:
             bytes *= 2;
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_RGB:
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_BGR:
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_RGB:
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_BGR:
             bytes *= 3;
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_COMPRESSED:
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_RGBA:
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_BGRA:
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_COMPRESSED:
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_RGBA:
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_BGRA:
             bytes *= 4;
     }
 
@@ -59,7 +60,7 @@ static int valueTransferBytes(GPUTextureTransferType type, GPUTexturePixelFormat
 GLenum GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data) {
     if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
 
-    GLenum attachment = valueAttachmentType(m_pixel_format);
+    GLenum attachment = valueAttachmentType(m_transfer_format);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
     glFramebufferTextureLayer(GL_READ_FRAMEBUFFER,
         attachment, m_tex, level, z);
@@ -77,7 +78,7 @@ GLenum GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth,
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 
     unsigned char* dst = static_cast<unsigned char*>(data);
-    int transfer_bytes = valueTransferBytes(m_transfer_type, m_pixel_format);
+    int transfer_bytes = valueTransferBytes(m_transfer_size, m_transfer_format);
     int layer_bytes = transfer_bytes * w * h;
 
     // Read Framebuffer for Layers
@@ -85,8 +86,8 @@ GLenum GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth,
         glFramebufferTextureLayer(GL_READ_FRAMEBUFFER,
             GL_COLOR_ATTACHMENT0, m_tex, level, z + i);
         glReadPixels(x, y, w, h,
-            toValue(m_pixel_format),
-            toValue(m_transfer_type),
+            toValue(m_transfer_format),
+            toValue(m_transfer_size),
             dst); dst += layer_bytes;
 
         // Check Read Error
@@ -106,7 +107,7 @@ GLenum GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth,
 GLenum GLTexture::compatDownload2D(int x, int y, int w, int h, int level, void* data) {
     if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
 
-    GLenum attachment = valueAttachmentType(m_pixel_format);
+    GLenum attachment = valueAttachmentType(m_transfer_format);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
     glFramebufferTexture(GL_READ_FRAMEBUFFER,
         attachment, m_tex, level);
@@ -124,8 +125,8 @@ GLenum GLTexture::compatDownload2D(int x, int y, int w, int h, int level, void* 
     glGetIntegerv(GL_READ_BUFFER, &read);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
     glReadPixels(x, y, w, h,
-        toValue(m_pixel_format),
-        toValue(m_transfer_type),
+        toValue(m_transfer_format),
+        toValue(m_transfer_size),
         data);
 
     error = glGetError();

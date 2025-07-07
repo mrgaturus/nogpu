@@ -11,15 +11,9 @@
 // -------------------------------
 
 GLTextureCubemapArray::GLTextureCubemapArray(
-    GLContext* ctx,
-    GPUTexturePixelType type,
-    GPUTexturePixelFormat format) : GLTexture(ctx) {
+    GLContext* ctx, GPUTexturePixelType type) : GLTexture(ctx) {
         m_pixel_type = type;
-        m_pixel_format = format;
         m_tex_target = GL_TEXTURE_CUBE_MAP_ARRAY_ARB;
-        // Check Depth Stencil Transfer Type
-        if (type == GPUTexturePixelType::TEXTURE_PIXEL_DEPTH24_STENCIL8)
-            m_transfer_type = GPUTextureTransferType::TEXTURE_TRANSFER_DEPTH24_STENCIL8;
 
         // Check if Cubemap Array is Supported
         if (!GLAD_GL_ARB_texture_cube_map_array) {
@@ -67,7 +61,8 @@ void GLTextureCubemapArray::upload(GPUTextureCubemapSide side, int x, int y, int
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
     glTexSubImage2D(toValue(side), level, x, y, w, h,
-        toValue(m_pixel_format), toValue(m_transfer_type), data);
+        toValue(m_transfer_format),
+        toValue(m_transfer_size), data);
 
     // Check Uploading Error
     GLenum error = glGetError();
@@ -94,8 +89,8 @@ void GLTextureCubemapArray::download(GPUTextureCubemapSide side, int x, int y, i
     if (GLAD_GL_ARB_get_texture_sub_image) {
         glGetTextureSubImage(m_tex, level,
             x, y, target_index, w, h, 1,
-            toValue(m_pixel_format),
-            toValue(m_transfer_type),
+            toValue(m_transfer_format),
+            toValue(m_transfer_size),
             INT_MAX, data);
         error = glGetError();
     } else {

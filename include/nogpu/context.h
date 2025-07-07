@@ -25,14 +25,14 @@ class GPUContext {
         virtual GPUBuffer* createBuffer() = 0;
         virtual GPUVertexArray* createVertexArray() = 0;
         virtual GPUTextureBuffer* createTextureBuffer(GPUTexturePixelType type) = 0;
-        virtual GPURenderBuffer* createRenderBuffer(GPURenderBufferMode mode, GPUTexturePixelFormat format) = 0;
+        virtual GPURenderBuffer* createRenderBuffer(GPURenderBufferMode mode) = 0;
 
         // GPU Texture Objects: Standard
-        virtual GPUTexture1D* createTexture1D(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
-        virtual GPUTexture2D* createTexture2D(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
-        virtual GPUTexture3D* createTexture3D(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
-        virtual GPUTextureCubemap* createTextureCubemap(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
-        virtual GPUTextureCubemapArray* createTextureCubemapArray(GPUTexturePixelType type, GPUTexturePixelFormat format) = 0;
+        virtual GPUTexture1D* createTexture1D(GPUTexturePixelType type) = 0;
+        virtual GPUTexture2D* createTexture2D(GPUTexturePixelType type) = 0;
+        virtual GPUTexture3D* createTexture3D(GPUTexturePixelType type) = 0;
+        virtual GPUTextureCubemap* createTextureCubemap(GPUTexturePixelType type) = 0;
+        virtual GPUTextureCubemapArray* createTextureCubemapArray(GPUTexturePixelType type) = 0;
         // GPU Texture Objects: Compressed
         virtual GPUCompressed1D* createCompressed1D(GPUTextureCompressedType type) = 0;
         virtual GPUCompressed2D* createCompressed2D(GPUTextureCompressedType type) = 0;

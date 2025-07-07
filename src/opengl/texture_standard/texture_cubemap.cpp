@@ -11,15 +11,9 @@
 // -------------------------------
 
 GLTextureCubemap::GLTextureCubemap(
-    GLContext* ctx,
-    GPUTexturePixelType type,
-    GPUTexturePixelFormat format) : GLTexture(ctx) {
+    GLContext* ctx, GPUTexturePixelType type) : GLTexture(ctx) {
         m_pixel_type = type;
-        m_pixel_format = format;
         m_tex_target = GL_TEXTURE_CUBE_MAP;
-        // Check Depth Stencil Transfer Type
-        if (type == GPUTexturePixelType::TEXTURE_PIXEL_DEPTH24_STENCIL8)
-            m_transfer_type = GPUTextureTransferType::TEXTURE_TRANSFER_DEPTH24_STENCIL8;
 }
 
 void GLTextureCubemap::allocate(int w, int h, int levels) {
@@ -60,7 +54,8 @@ void GLTextureCubemap::upload(GPUTextureCubemapSide side, int x, int y, int w, i
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
     glTexSubImage2D(toValue(side), level, x, y, w, h,
-        toValue(m_pixel_format), toValue(m_transfer_type), data);
+        toValue(m_transfer_format),
+        toValue(m_transfer_size), data);
 
     // Check Uploading Error
     GLenum error = glGetError();
@@ -86,15 +81,15 @@ void GLTextureCubemap::download(GPUTextureCubemapSide side, int x, int y, int w,
     if (GLAD_GL_ARB_get_texture_sub_image) {
         glGetTextureSubImage(m_tex, level,
             x, y, target_side - 0x8515, w, h, 1,
-            toValue(m_pixel_format),
-            toValue(m_transfer_type),
+            toValue(m_transfer_format),
+            toValue(m_transfer_size),
             INT_MAX, data);
         error = glGetError();
     // Use Optimized glGetTexImage when full image
     } else if (x == 0 && y == 0 && w == m_width && h == m_height) {
         glGetTexImage(target_side, level,
-            toValue(m_pixel_format),
-            toValue(m_transfer_type),
+            toValue(m_transfer_format),
+            toValue(m_transfer_size),
             data);
         error = glGetError();
     // Use Framebuffer Trick for Old Devices

@@ -4,33 +4,65 @@
 #include "private/compressed.h"
 #include "private/glad.h"
 
-// --------------------------
-// GPU Enums: Texture Formats
-// --------------------------
+// ---------------------------
+// GPU Enums: Texture Transfer
+// ---------------------------
 
-GLenum toValue(GPUTextureTransferType type) {
+GLenum toValue(GPUTextureTransferSize type) {
     switch (type) {
-        case GPUTextureTransferType::TEXTURE_TRANSFER_UNSIGNED_BYTE:
+        case GPUTextureTransferSize::TEXTURE_SIZE_UNSIGNED_BYTE:
             return GL_UNSIGNED_BYTE;
-        case GPUTextureTransferType::TEXTURE_TRANSFER_UNSIGNED_SHORT:
+        case GPUTextureTransferSize::TEXTURE_SIZE_UNSIGNED_SHORT:
             return GL_UNSIGNED_SHORT;
-        case GPUTextureTransferType::TEXTURE_TRANSFER_UNSIGNED_INT:
+        case GPUTextureTransferSize::TEXTURE_SIZE_UNSIGNED_INT:
             return GL_UNSIGNED_INT;
-        case GPUTextureTransferType::TEXTURE_TRANSFER_DEPTH24_STENCIL8:
-            return GL_UNSIGNED_INT_24_8;
-        case GPUTextureTransferType::TEXTURE_TRANSFER_BYTE:
+        case GPUTextureTransferSize::TEXTURE_SIZE_BYTE:
             return GL_BYTE;
-        case GPUTextureTransferType::TEXTURE_TRANSFER_SHORT:
+        case GPUTextureTransferSize::TEXTURE_SIZE_SHORT:
             return GL_SHORT;
-        case GPUTextureTransferType::TEXTURE_TRANSFER_INT:
+        case GPUTextureTransferSize::TEXTURE_SIZE_INT:
             return GL_INT;
-        case GPUTextureTransferType::TEXTURE_TRANSFER_FLOAT:
+        case GPUTextureTransferSize::TEXTURE_SIZE_FLOAT:
             return GL_FLOAT;
+        case GPUTextureTransferSize::TEXTURE_SIZE_DEPTH24_STENCIL8:
+            return GL_UNSIGNED_INT_24_8;
+        case GPUTextureTransferSize::TEXTURE_SIZE_COMPRESSED:
+            return GL_INVALID_ENUM;
     }
 
     // Unreachable Value
     return GL_INVALID_ENUM;
 }
+
+GLenum toValue(GPUTextureTransferFormat format) {
+    switch (format) {
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_RED:
+            return GL_RED;
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_RG:
+            return GL_RG;
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_RGB:
+            return GL_RGB;
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_RGBA:
+            return GL_RGBA;
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_BGR:
+            return GL_BGR;
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_BGRA:
+            return GL_BGRA;
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_DEPTH_COMPONENT:
+            return GL_DEPTH_COMPONENT;
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_DEPTH_STENCIL:
+            return GL_DEPTH_STENCIL;
+        case GPUTextureTransferFormat::TEXTURE_FORMAT_COMPRESSED:
+            return GL_INVALID_ENUM;
+    }
+
+    // Unreachable Value
+    return GL_INVALID_ENUM;
+}
+
+// -----------------------
+// GPU Enums: Texture Type
+// -----------------------
 
 GLenum toValue(GPUTexturePixelType type) {
     switch (type) {
@@ -265,32 +297,6 @@ GLenum toValue(GPUTextureCompressedType type) {
             return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR;
         case GPUTextureCompressedType::TEXTURE_ASTC_sRGBA_12x12:
             return GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR;
-    }
-
-    // Unreachable Value
-    return GL_INVALID_ENUM;
-}
-
-GLenum toValue(GPUTexturePixelFormat format) {
-    switch (format) {
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_RED:
-            return GL_RED;
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_RG:
-            return GL_RG;
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_RGB:
-            return GL_RGB;
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_RGBA:
-            return GL_RGBA;
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_BGR:
-            return GL_BGR;
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_BGRA:
-            return GL_BGRA;
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_COMPONENT:
-            return GL_DEPTH_COMPONENT;
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_DEPTH_STENCIL:
-            return GL_DEPTH_STENCIL;
-        case GPUTexturePixelFormat::TEXTURE_FORMAT_COMPRESSED:
-            return GL_INVALID_ENUM;
     }
 
     // Unreachable Value

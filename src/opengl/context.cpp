@@ -26,7 +26,7 @@ GPUTextureBuffer* GLContext::createTextureBuffer(GPUTexturePixelType type) {
     return new GLTextureBuffer(this, type);
 }
 
-GPURenderBuffer* GLContext::createRenderBuffer(GPURenderBufferMode mode, GPUTexturePixelFormat format) {
+GPURenderBuffer* GLContext::createRenderBuffer(GPURenderBufferMode mode) {
     return nullptr;
 }
 
@@ -34,24 +34,24 @@ GPURenderBuffer* GLContext::createRenderBuffer(GPURenderBufferMode mode, GPUText
 // GPU Object Creation: Texture Standard
 // -------------------------------------
 
-GPUTexture1D* GLContext::createTexture1D(GPUTexturePixelType type, GPUTexturePixelFormat format) {
-    return new GLTexture1D(this, type, format);
+GPUTexture1D* GLContext::createTexture1D(GPUTexturePixelType type) {
+    return new GLTexture1D(this, type);
 }
 
-GPUTexture2D* GLContext::createTexture2D(GPUTexturePixelType type, GPUTexturePixelFormat format) {
-    return new GLTexture2D(this, type, format);
+GPUTexture2D* GLContext::createTexture2D(GPUTexturePixelType type) {
+    return new GLTexture2D(this, type);
 }
 
-GPUTexture3D* GLContext::createTexture3D(GPUTexturePixelType type, GPUTexturePixelFormat format) {
-    return new GLTexture3D(this, type, format);
+GPUTexture3D* GLContext::createTexture3D(GPUTexturePixelType type) {
+    return new GLTexture3D(this, type);
 }
 
-GPUTextureCubemap* GLContext::createTextureCubemap(GPUTexturePixelType type, GPUTexturePixelFormat format) {
-    return new GLTextureCubemap(this, type, format);
+GPUTextureCubemap* GLContext::createTextureCubemap(GPUTexturePixelType type) {
+    return new GLTextureCubemap(this, type);
 }
 
-GPUTextureCubemapArray* GLContext::createTextureCubemapArray(GPUTexturePixelType type, GPUTexturePixelFormat format) {
-    return new GLTextureCubemapArray(this, type, format);
+GPUTextureCubemapArray* GLContext::createTextureCubemapArray(GPUTexturePixelType type) {
+    return new GLTextureCubemapArray(this, type);
 }
 
 // ---------------------------------------

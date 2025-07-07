@@ -5,9 +5,9 @@
 #include <nogpu/texture.h>
 #include "buffer.h"
 
-GLenum toValue(GPUTextureTransferType type);
 GLenum toValue(GPUTexturePixelType type);
-GLenum toValue(GPUTexturePixelFormat format);
+GLenum toValue(GPUTextureTransferSize type);
+GLenum toValue(GPUTextureTransferFormat format);
 
 GLenum toValue(GPUTextureFilterMode swizzle);
 GLenum toValue(GPUTextureSwizzleMode filter);
@@ -43,7 +43,8 @@ class GLTextureBuffer : GPUTextureBuffer {
 
 class GLTexture : virtual public GPUTexture {
     // GPU Texture Attributes
-    void setTransferType(GPUTextureTransferType type) override;
+    void setTransferSize(GPUTextureTransferSize type) override;
+    void setTransferFormat(GPUTextureTransferFormat format) override;
     void setSwizzle(GPUTextureSwizzle swizzle) override;
     void setFilter(GPUTextureFilter filter) override;
     void setWrap(GPUTextureWrap wrap) override;
@@ -62,7 +63,7 @@ class GLTexture : virtual public GPUTexture {
         GLTexture(GLContext* ctx);
         void generateTexture();
         void destroy() override;
-        // Texture Compatibile Download
+        // Texture Compatible Download
         GLenum compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data);
         GLenum compatDownload2D(int x, int y, int w, int h, int level, void* data);
         friend GLContext;
@@ -76,11 +77,9 @@ class GLTexture1D : GLTexture, GPUTexture1D {
     void unpack(int x, int size, int level, GPUBuffer *pbo, int offset) override;
     void pack(int x, int size, int level, GPUBuffer *pbo, int offset) override;
 
-    protected: GLTexture1D(
-        GLContext* ctx,
-        GPUTexturePixelType type,
-        GPUTexturePixelFormat format);
-        friend GLContext;
+    // Texture Object Constructor
+    protected: GLTexture1D(GLContext* ctx, GPUTexturePixelType type);
+    friend GLContext;
 };
 
 class GLTexture2D : GLTexture, GPUTexture2D {
@@ -94,11 +93,9 @@ class GLTexture2D : GLTexture, GPUTexture2D {
     void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
     void pack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
 
-    protected: GLTexture2D(
-        GLContext* ctx,
-        GPUTexturePixelType type,
-        GPUTexturePixelFormat format);
-        friend GLContext;
+    // Texture Object Constructor
+    protected: GLTexture2D(GLContext* ctx, GPUTexturePixelType type);
+    friend GLContext;
 };
 
 class GLTexture3D : GLTexture, GPUTexture3D {
@@ -112,11 +109,9 @@ class GLTexture3D : GLTexture, GPUTexture3D {
     void unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) override;
     void pack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) override;
 
-    protected: GLTexture3D(
-        GLContext* ctx,
-        GPUTexturePixelType type,
-        GPUTexturePixelFormat format);
-        friend GLContext;
+    // Texture Object Constructor
+    protected: GLTexture3D(GLContext* ctx, GPUTexturePixelType type);
+    friend GLContext;
 };
 
 class GLTextureCubemap : GLTexture, GPUTextureCubemap {
@@ -127,11 +122,9 @@ class GLTextureCubemap : GLTexture, GPUTextureCubemap {
     void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
     void pack(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
 
-    protected: GLTextureCubemap(
-        GLContext* ctx,
-        GPUTexturePixelType type,
-        GPUTexturePixelFormat format);
-        friend GLContext;
+    // Texture Object Constructor
+    protected: GLTextureCubemap(GLContext* ctx, GPUTexturePixelType type);
+    friend GLContext;
 };
 
 class GLTextureCubemapArray : GLTexture, GPUTextureCubemapArray {
@@ -142,11 +135,9 @@ class GLTextureCubemapArray : GLTexture, GPUTextureCubemapArray {
     void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) override;
     void pack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) override;
 
-    protected: GLTextureCubemapArray(
-        GLContext* ctx,
-        GPUTexturePixelType type,
-        GPUTexturePixelFormat format);
-        friend GLContext;
+    // Texture Object Constructor
+    protected: GLTextureCubemapArray(GLContext* ctx, GPUTexturePixelType type);
+    friend GLContext;
 };
 
 #endif // OPENGL_TEXTURE_H

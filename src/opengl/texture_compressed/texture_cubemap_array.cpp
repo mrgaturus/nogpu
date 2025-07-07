@@ -11,7 +11,8 @@
 
 GLCompressedCubemapArray::GLCompressedCubemapArray(GLContext* ctx, GPUTextureCompressedType type) : GLTexture(ctx) {
         m_pixel_type = GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED;
-        m_pixel_format = GPUTexturePixelFormat::TEXTURE_FORMAT_COMPRESSED;
+        m_transfer_format = GPUTextureTransferFormat::TEXTURE_FORMAT_COMPRESSED;
+        m_transfer_size = GPUTextureTransferSize::TEXTURE_SIZE_COMPRESSED;
         m_tex_target = GL_TEXTURE_CUBE_MAP_ARRAY_ARB;
         m_compressed_type = type;
 

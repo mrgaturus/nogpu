@@ -11,7 +11,7 @@
 class GLContext;
 class GLRenderBuffer : GPURenderBuffer {
     protected: // RenderBuffer Constructor
-        GLRenderBuffer(GPURenderBufferMode mode, GPUTexturePixelFormat format);
+        GLRenderBuffer(GPURenderBufferMode mode, GPUTextureTransferFormat format);
         void allocate(int w, int h, int msaa_samples) override;
         void allocate(int w, int h, int layers, int msaa_samples) override;
 

@@ -33,9 +33,14 @@ void GLTexture::destroy() {
 // GPU Objects: Texture Base
 // -------------------------
 
-void GLTexture::setTransferType(GPUTextureTransferType type) {
+void GLTexture::setTransferSize(GPUTextureTransferSize type) {
     m_ctx->gl__makeCurrent();
-    m_transfer_type = type;
+    m_transfer_size = type;
+};
+
+void GLTexture::setTransferFormat(GPUTextureTransferFormat format) {
+    m_ctx->gl__makeCurrent();
+    m_transfer_format = format;
 };
 
 void GLTexture::setSwizzle(GPUTextureSwizzle swizzle) {

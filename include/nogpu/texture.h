@@ -8,15 +8,28 @@
 // GPU Enums: Texture Formats
 // --------------------------
 
-enum class GPUTextureTransferType : int {
-    TEXTURE_TRANSFER_UNSIGNED_BYTE,
-    TEXTURE_TRANSFER_UNSIGNED_SHORT,
-    TEXTURE_TRANSFER_UNSIGNED_INT,
-    TEXTURE_TRANSFER_DEPTH24_STENCIL8,
-    TEXTURE_TRANSFER_BYTE,
-    TEXTURE_TRANSFER_SHORT,
-    TEXTURE_TRANSFER_INT,
-    TEXTURE_TRANSFER_FLOAT,
+enum class GPUTextureTransferSize : int {
+    TEXTURE_SIZE_UNSIGNED_BYTE,
+    TEXTURE_SIZE_UNSIGNED_SHORT,
+    TEXTURE_SIZE_UNSIGNED_INT,
+    TEXTURE_SIZE_BYTE,
+    TEXTURE_SIZE_SHORT,
+    TEXTURE_SIZE_INT,
+    TEXTURE_SIZE_FLOAT,
+    TEXTURE_SIZE_DEPTH24_STENCIL8,
+    TEXTURE_SIZE_COMPRESSED
+};
+
+enum class GPUTextureTransferFormat : int {
+    TEXTURE_FORMAT_RED,
+    TEXTURE_FORMAT_RG,
+    TEXTURE_FORMAT_RGB,
+    TEXTURE_FORMAT_RGBA,
+    TEXTURE_FORMAT_BGR,
+    TEXTURE_FORMAT_BGRA,
+    TEXTURE_FORMAT_DEPTH_COMPONENT,
+    TEXTURE_FORMAT_DEPTH_STENCIL,
+    TEXTURE_FORMAT_COMPRESSED
 };
 
 enum class GPUTextureCompressedType : int;
@@ -82,18 +95,6 @@ enum class GPUTexturePixelType: int {
     TEXTURE_PIXEL_DEPTH_COMPONENT24,
     TEXTURE_PIXEL_DEPTH_COMPONENT32,
     TEXTURE_PIXEL_DEPTH24_STENCIL8
-};
-
-enum class GPUTexturePixelFormat : int {
-    TEXTURE_FORMAT_RED,
-    TEXTURE_FORMAT_RG,
-    TEXTURE_FORMAT_RGB,
-    TEXTURE_FORMAT_RGBA,
-    TEXTURE_FORMAT_BGR,
-    TEXTURE_FORMAT_BGRA,
-    TEXTURE_FORMAT_DEPTH_COMPONENT,
-    TEXTURE_FORMAT_DEPTH_STENCIL,
-    TEXTURE_FORMAT_COMPRESSED
 };
 
 // ------------------------
@@ -166,9 +167,9 @@ typedef struct {
 class GPUTexture {
     protected:
         GPUTexturePixelType m_pixel_type;
-        GPUTexturePixelFormat m_pixel_format;
-        GPUTextureTransferType m_transfer_type;
         GPUTextureCompressedType m_compressed_type;
+        GPUTextureTransferSize m_transfer_size;
+        GPUTextureTransferFormat m_transfer_format;
         GPUTextureSwizzle m_swizzle;
         GPUTextureFilter m_filter;
         GPUTextureWrap m_wrap;
@@ -180,7 +181,8 @@ class GPUTexture {
     public: virtual void destroy() = 0;
 
     public: // GPU Texture Attributes
-        virtual void setTransferType(GPUTextureTransferType type) = 0;
+        virtual void setTransferSize(GPUTextureTransferSize type) = 0;
+        virtual void setTransferFormat(GPUTextureTransferFormat format) = 0;
         virtual void setSwizzle(GPUTextureSwizzle swizzle) = 0;
         virtual void setFilter(GPUTextureFilter filter) = 0;
         virtual void setWrap(GPUTextureWrap wrap) = 0;
@@ -195,8 +197,8 @@ class GPUTexture {
         int getLayers() { return m_depth; }
         GPUTextureSize getSize() { return (GPUTextureSize) { m_width, m_height }; }
         GPUTexturePixelType getPixelType() { return m_pixel_type; }
-        GPUTexturePixelFormat getPixelFormat() { return m_pixel_format; }
-        GPUTextureTransferType getTransferType() { return m_transfer_type; }
+        GPUTextureTransferSize getTransferSize() { return m_transfer_size; }
+        GPUTextureTransferFormat getTransferFormat() { return m_transfer_format; }
         GPUTextureCompressedType getCompressedType() { return m_compressed_type; }
         GPUTextureSwizzle getPixelSwizzle() { return m_swizzle; }
         GPUTextureFilter getPixelFilter() { return m_filter; }
@@ -207,7 +209,7 @@ class GPUTexture {
 // GPU Objects: Texture
 // --------------------
 
-class GPUTexture1D : virtual GPUTexture {
+class GPUTexture1D : public virtual GPUTexture {
     public: // Texture Pixels Manipulation
         virtual void allocate(int size, int levels) = 0;
         virtual void upload(int x, int size, int level, void* data) = 0;
@@ -222,7 +224,7 @@ enum class GPUTexture2DMode : int {
     TEXTURE_1D_ARRAY,
 };
 
-class GPUTexture2D : virtual GPUTexture {
+class GPUTexture2D : public virtual GPUTexture {
     public: // Texture Pixels Manipulation
         virtual GPUTexture2DMode getMode() = 0;
         virtual void allocate(GPUTexture2DMode mode, int w, int h, int levels) = 0;
@@ -237,7 +239,7 @@ enum class GPUTexture3DMode : int {
     TEXTURE_2D_ARRAY,
 };
 
-class GPUTexture3D : virtual GPUTexture {
+class GPUTexture3D : public virtual GPUTexture {
     public: // Texture Pixels Manipulation
         virtual GPUTexture3DMode getMode() = 0;
         virtual void allocate(GPUTexture3DMode mode, int w, int h, int depth, int levels) = 0;
@@ -256,7 +258,7 @@ enum class GPUTextureCubemapSide : int {
     TEXTURE_CUBEMAP_NEGATIVE_Z
 };
 
-class GPUTextureCubemap : virtual GPUTexture {
+class GPUTextureCubemap : public virtual GPUTexture {
     public: // Texture Pixels Manipulation
         virtual void allocate(int w, int h, int levels) = 0;
         virtual void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, void* data) = 0;
@@ -265,7 +267,7 @@ class GPUTextureCubemap : virtual GPUTexture {
         virtual void pack(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) = 0;
 };
 
-class GPUTextureCubemapArray : virtual GPUTexture {
+class GPUTextureCubemapArray : public virtual GPUTexture {
     public: // Texture Pixels Manipulation
         virtual void allocate(int w, int h, int layers, int levels) = 0;
         virtual void upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data) = 0;

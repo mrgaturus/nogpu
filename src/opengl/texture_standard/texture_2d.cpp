@@ -11,15 +11,9 @@
 // -----------------------
 
 GLTexture2D::GLTexture2D(
-    GLContext* ctx,
-    GPUTexturePixelType type,
-    GPUTexturePixelFormat format) : GLTexture(ctx) {
+    GLContext* ctx, GPUTexturePixelType type) : GLTexture(ctx) {
         m_pixel_type = type;
-        m_pixel_format = format;
         m_tex_target = GL_TEXTURE_2D;
-        // Check Depth Stencil Transfer Type
-        if (type == GPUTexturePixelType::TEXTURE_PIXEL_DEPTH24_STENCIL8)
-            m_transfer_type = GPUTextureTransferType::TEXTURE_TRANSFER_DEPTH24_STENCIL8;
 }
 
 GPUTexture2DMode GLTexture2D::getMode() {
@@ -88,7 +82,8 @@ void GLTexture2D::upload(int x, int y, int w, int h, int level, void* data) {
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
     glTexSubImage2D(target, level, x, y, w, h,
-        toValue(m_pixel_format), toValue(m_transfer_type), data);
+        toValue(m_transfer_format),
+        toValue(m_transfer_size), data);
 
     // Check Uploading Error
     GLenum error = glGetError();
@@ -113,15 +108,15 @@ void GLTexture2D::download(int x, int y, int w, int h, int level, void* data) {
     if (GLAD_GL_ARB_get_texture_sub_image) {
         glGetTextureSubImage(m_tex, level,
             x, y, 0, w, h, 1,
-            toValue(m_pixel_format),
-            toValue(m_transfer_type),
+            toValue(m_transfer_format),
+            toValue(m_transfer_size),
             INT_MAX, data);
         error = glGetError();
     // Use Optimized glGetTexImage when full image
     } else if (x == 0 && y == 0 && w == m_width && h == m_height) {
         glGetTexImage(target, level,
-            toValue(m_pixel_format),
-            toValue(m_transfer_type),
+            toValue(m_transfer_format),
+            toValue(m_transfer_size),
             data);
         error = glGetError();
     // Use Framebuffer Trick for Old Devices
