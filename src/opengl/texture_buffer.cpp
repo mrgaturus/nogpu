@@ -102,6 +102,8 @@ void GLTextureBuffer::setRange(GPUTextureBufferRange range) {
 }
 
 void GLTextureBuffer::clearRange() {
+    m_ctx->gl__makeCurrent();
+    // Clear Buffer Range
     m_offset = 0;
     m_size = 0;
 
