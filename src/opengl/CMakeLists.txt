@@ -13,7 +13,6 @@ add_library(nogpu_opengl OBJECT
     texture_standard/texture_1d.cpp
     texture_standard/texture_2d.cpp
     texture_standard/texture_3d.cpp
-    texture_standard/texture_buffer.cpp
     texture_standard/texture_cubemap.cpp
     texture_standard/texture_cubemap_array.cpp
     texture_compressed/texture_1d.cpp
@@ -21,6 +20,7 @@ add_library(nogpu_opengl OBJECT
     texture_compressed/texture_3d.cpp
     texture_compressed/texture_cubemap.cpp
     texture_compressed/texture_cubemap_array.cpp
+    texture_buffer.cpp
     texture_download.cpp
     texture_values.cpp
     texture.cpp

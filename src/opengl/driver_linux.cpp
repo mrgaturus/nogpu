@@ -118,6 +118,8 @@ GLDriver::GLDriver(int msaa_samples, bool rgba) {
             features |= feature__flag(GPUDriverFeature::DRIVER_FEATURE_COMPUTE);
         if (GLAD_GL_ARB_debug_output) // Debug Feature
             features |= feature__flag(GPUDriverFeature::DRIVER_FEATURE_DEBUG);
+        if (GLAD_GL_ARB_texture_buffer_range) // Texture Buffer Feature
+            features |= feature__flag(GPUDriverFeature::DRIVER_TEXTURE_BUFFER);
         if (GLAD_GL_ARB_texture_cube_map_array) // Texture Cubemap Array Feature
             features |= feature__flag(GPUDriverFeature::DRIVER_TEXTURE_CUBEMAP_ARRAY);
         if (GLAD_GL_ARB_texture_storage_multisample) // Texture Multisample Feature

@@ -45,6 +45,7 @@ int GLAD_GL_ARB_shader_image_load_store = 0;
 int GLAD_GL_ARB_shader_image_size = 0;
 int GLAD_GL_ARB_shader_storage_buffer_object = 0;
 int GLAD_GL_ARB_spirv_extensions = 0;
+int GLAD_GL_ARB_texture_buffer_range = 0;
 int GLAD_GL_ARB_texture_compression_bptc = 0;
 int GLAD_GL_ARB_texture_cube_map_array = 0;
 int GLAD_GL_ARB_texture_storage = 0;
@@ -291,6 +292,7 @@ PFNGLSTENCILMASKSEPARATEPROC glad_glStencilMaskSeparate = NULL;
 PFNGLSTENCILOPPROC glad_glStencilOp = NULL;
 PFNGLSTENCILOPSEPARATEPROC glad_glStencilOpSeparate = NULL;
 PFNGLTEXBUFFERPROC glad_glTexBuffer = NULL;
+PFNGLTEXBUFFERRANGEPROC glad_glTexBufferRange = NULL;
 PFNGLTEXIMAGE1DPROC glad_glTexImage1D = NULL;
 PFNGLTEXIMAGE2DPROC glad_glTexImage2D = NULL;
 PFNGLTEXIMAGE2DMULTISAMPLEPROC glad_glTexImage2DMultisample = NULL;
@@ -836,6 +838,10 @@ static void glad_gl_load_GL_ARB_shader_storage_buffer_object( GLADuserptrloadfun
     if(!GLAD_GL_ARB_shader_storage_buffer_object) return;
     glad_glShaderStorageBlockBinding = (PFNGLSHADERSTORAGEBLOCKBINDINGPROC) load(userptr, "glShaderStorageBlockBinding");
 }
+static void glad_gl_load_GL_ARB_texture_buffer_range( GLADuserptrloadfunc load, void* userptr) {
+    if(!GLAD_GL_ARB_texture_buffer_range) return;
+    glad_glTexBufferRange = (PFNGLTEXBUFFERRANGEPROC) load(userptr, "glTexBufferRange");
+}
 static void glad_gl_load_GL_ARB_texture_storage( GLADuserptrloadfunc load, void* userptr) {
     if(!GLAD_GL_ARB_texture_storage) return;
     glad_glTexStorage1D = (PFNGLTEXSTORAGE1DPROC) load(userptr, "glTexStorage1D");
@@ -952,6 +958,7 @@ static int glad_gl_find_extensions_gl(void) {
     GLAD_GL_ARB_shader_image_size = glad_gl_has_extension(exts, exts_i, "GL_ARB_shader_image_size");
     GLAD_GL_ARB_shader_storage_buffer_object = glad_gl_has_extension(exts, exts_i, "GL_ARB_shader_storage_buffer_object");
     GLAD_GL_ARB_spirv_extensions = glad_gl_has_extension(exts, exts_i, "GL_ARB_spirv_extensions");
+    GLAD_GL_ARB_texture_buffer_range = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_buffer_range");
     GLAD_GL_ARB_texture_compression_bptc = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_compression_bptc");
     GLAD_GL_ARB_texture_cube_map_array = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_cube_map_array");
     GLAD_GL_ARB_texture_storage = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_storage");
@@ -1033,6 +1040,7 @@ int gladLoadGLUserPtr( GLADuserptrloadfunc load, void *userptr) {
     glad_gl_load_GL_ARB_shader_atomic_counters(load, userptr);
     glad_gl_load_GL_ARB_shader_image_load_store(load, userptr);
     glad_gl_load_GL_ARB_shader_storage_buffer_object(load, userptr);
+    glad_gl_load_GL_ARB_texture_buffer_range(load, userptr);
     glad_gl_load_GL_ARB_texture_storage(load, userptr);
     glad_gl_load_GL_ARB_texture_storage_multisample(load, userptr);
 
