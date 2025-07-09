@@ -10,18 +10,18 @@
 // -------------------------------
 
 GLCompressedCubemapArray::GLCompressedCubemapArray(GLContext* ctx, GPUTextureCompressedType type) : GLTexture(ctx) {
-        m_pixel_type = GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED;
-        m_transfer_format = GPUTextureTransferFormat::TEXTURE_FORMAT_COMPRESSED;
-        m_transfer_size = GPUTextureTransferSize::TEXTURE_SIZE_COMPRESSED;
-        m_tex_target = GL_TEXTURE_CUBE_MAP_ARRAY_ARB;
-        m_compressed_type = type;
+    m_pixel_type = GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED;
+    m_transfer_format = GPUTextureTransferFormat::TEXTURE_FORMAT_COMPRESSED;
+    m_transfer_size = GPUTextureTransferSize::TEXTURE_SIZE_COMPRESSED;
+    m_tex_target = GL_TEXTURE_CUBE_MAP_ARRAY_ARB;
+    m_compressed_type = type;
 
-        // Check if Cubemap Array is Supported
-        if (!GLAD_GL_ARB_texture_cube_map_array) {
-            GPULogger::error("cubemap array is not supported");
-            delete this;
-            return;
-        }
+    // Check if Cubemap Array is Supported
+    if (!GLAD_GL_ARB_texture_cube_map_array) {
+        GPULogger::error("cubemap array is not supported");
+        delete this;
+        return;
+    }
 }
 
 void GLCompressedCubemapArray::allocate(int w, int h, int layers, int levels) {
