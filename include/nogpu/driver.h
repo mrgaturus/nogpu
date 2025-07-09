@@ -88,12 +88,9 @@ class GPUDriver {
         GPUContext* cached__find(void* window);
         void cached__add(GPUContext* ctx);
         void cached__remove(GPUContext* ctx);
-
+        // Driver Abstrack Lock
         static GPUDriver *m_driver;
         static thread_local GPUDriver *m_driver_lock;
-        static unsigned int feature__flag(GPUDriverFeature feature) {
-            return ((unsigned int) 1 << (unsigned int) feature);
-        }
 
         // Driver Abstract Implementation
         virtual bool impl__shutdown() = 0;

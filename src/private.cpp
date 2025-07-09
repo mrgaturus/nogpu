@@ -17,6 +17,10 @@ unsigned int next_power_of_two(unsigned int v) {
     return v;
 }
 
+unsigned int feature_flag(GPUDriverFeature feature) {
+    return 1 << static_cast<unsigned int>(feature);
+}
+
 // -----------------------
 // Enum Bit-flags Operator
 // -----------------------
@@ -37,9 +41,68 @@ GPUMemoryBarrier operator&(GPUMemoryBarrier a, GPUMemoryBarrier b) {
     return (GPUMemoryBarrier) (static_cast<int>(a) & static_cast<int>(b));
 }
 
-// -------------------
-// Texture Pixel Types
-// -------------------
+// -----------------------------------
+// Texture Pixel Types: Texture Buffer
+// -----------------------------------
+
+bool canTextureBuffer(GPUTexturePixelType type) {
+    switch (type) {
+        case GPUTexturePixelType::TEXTURE_PIXEL_R8:
+        case GPUTexturePixelType::TEXTURE_PIXEL_R16:
+        case GPUTexturePixelType::TEXTURE_PIXEL_R16F:
+        case GPUTexturePixelType::TEXTURE_PIXEL_R32F:
+        case GPUTexturePixelType::TEXTURE_PIXEL_R8I:
+        case GPUTexturePixelType::TEXTURE_PIXEL_R16I:
+        case GPUTexturePixelType::TEXTURE_PIXEL_R32I:
+        case GPUTexturePixelType::TEXTURE_PIXEL_R8UI:
+        case GPUTexturePixelType::TEXTURE_PIXEL_R16UI:
+        case GPUTexturePixelType::TEXTURE_PIXEL_R32UI:
+            return true;
+
+        case GPUTexturePixelType::TEXTURE_PIXEL_RG8:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RG16:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RG16F:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RG32F:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RG8I:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RG16I:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RG32I:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RG8UI:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RG16UI:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RG32UI:
+            return true;
+
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGB8:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGB16:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGB16F:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGB32F:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGB8I:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGB16I:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGB32I:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGB8UI:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGB16UI:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGB32UI:
+            return true;
+
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGBA8:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGBA16:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGBA16F:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGBA32F:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGBA8I:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGBA16I:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGBA32I:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGBA8UI:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGBA16UI:
+        case GPUTexturePixelType::TEXTURE_PIXEL_RGBA32UI:
+            return true;
+
+        default: // Invalid Type
+            return false;
+    }
+}
+
+// -----------------------------------
+// Texture Pixel Types: Transfer Modes
+// -----------------------------------
 
 bool canTransferChange(GPUTexturePixelType type) {
     switch (type) {

@@ -106,39 +106,39 @@ GLDriver::GLDriver(int msaa_samples, bool rgba) {
         }
 
         unsigned int features =
-            feature__flag(GPUDriverFeature::DRIVER_FEATURE_RASTERIZE) |
-            feature__flag(GPUDriverFeature::DRIVER_TEXTURE_1D) |
-            feature__flag(GPUDriverFeature::DRIVER_TEXTURE_RGBA16) |
-            feature__flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_RGTC) |
-            feature__flag(GPUDriverFeature::DRIVER_SHADER_GLSL) |
-            feature__flag(GPUDriverFeature::DRIVER_SHADER_LOW_GLSL);
+            feature_flag(GPUDriverFeature::DRIVER_FEATURE_RASTERIZE) |
+            feature_flag(GPUDriverFeature::DRIVER_TEXTURE_1D) |
+            feature_flag(GPUDriverFeature::DRIVER_TEXTURE_RGBA16) |
+            feature_flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_RGTC) |
+            feature_flag(GPUDriverFeature::DRIVER_SHADER_GLSL) |
+            feature_flag(GPUDriverFeature::DRIVER_SHADER_LOW_GLSL);
 
         // Check Extra Extensions
         if (GLAD_GL_ARB_compute_shader && GLAD_GL_ARB_shader_image_load_store)
-            features |= feature__flag(GPUDriverFeature::DRIVER_FEATURE_COMPUTE);
+            features |= feature_flag(GPUDriverFeature::DRIVER_FEATURE_COMPUTE);
         if (GLAD_GL_ARB_debug_output) // Debug Feature
-            features |= feature__flag(GPUDriverFeature::DRIVER_FEATURE_DEBUG);
+            features |= feature_flag(GPUDriverFeature::DRIVER_FEATURE_DEBUG);
         if (GLAD_GL_ARB_texture_buffer_range) // Texture Buffer Feature
-            features |= feature__flag(GPUDriverFeature::DRIVER_TEXTURE_BUFFER);
+            features |= feature_flag(GPUDriverFeature::DRIVER_TEXTURE_BUFFER);
         if (GLAD_GL_ARB_texture_cube_map_array) // Texture Cubemap Array Feature
-            features |= feature__flag(GPUDriverFeature::DRIVER_TEXTURE_CUBEMAP_ARRAY);
+            features |= feature_flag(GPUDriverFeature::DRIVER_TEXTURE_CUBEMAP_ARRAY);
         if (GLAD_GL_ARB_texture_storage_multisample) // Texture Multisample Feature
-            features |= feature__flag(GPUDriverFeature::DRIVER_TEXTURE_MULTISAMPLE);
+            features |= feature_flag(GPUDriverFeature::DRIVER_TEXTURE_MULTISAMPLE);
 
         // Check Extra Extensions: Compressed Textures
         if (GLAD_GL_EXT_texture_compression_s3tc)
-            features |= feature__flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_DXTC);
+            features |= feature_flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_DXTC);
         if (GLAD_GL_ARB_texture_compression_bptc)
-            features |= feature__flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_BC7);
+            features |= feature_flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_BC7);
         if (GLAD_GL_ARB_ES3_compatibility)
-            features |= feature__flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_ETC2);
+            features |= feature_flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_ETC2);
         if (GLAD_GL_KHR_texture_compression_astc_ldr || GLAD_GL_KHR_texture_compression_astc_ldr)
-            features |= feature__flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_ASTC);
+            features |= feature_flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_ASTC);
 
         // Check Extra Extensions: SPIR-V
         if (GLAD_GL_ARB_gl_spirv) {
-            features |= feature__flag(GPUDriverFeature::DRIVER_SHADER_SPIRV);
-            features |= feature__flag(GPUDriverFeature::DRIVER_SHADER_LOW_SPIRV);
+            features |= feature_flag(GPUDriverFeature::DRIVER_SHADER_SPIRV);
+            features |= feature_flag(GPUDriverFeature::DRIVER_SHADER_LOW_SPIRV);
         }
 
         // Define Features
@@ -208,7 +208,7 @@ bool GLDriver::impl__checkVerticalSync() {
 }
 
 bool GLDriver::impl__checkFeature(GPUDriverFeature feature) {
-    return m_features & feature__flag(feature);
+    return m_features & feature_flag(feature);
 }
 
 int GLDriver::impl__getMultisamplesCount() {
