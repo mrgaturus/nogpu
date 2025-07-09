@@ -33,13 +33,27 @@ void GLTexture::destroy() {
 // GPU Objects: Texture Base
 // -------------------------
 
-void GLTexture::setTransferSize(GPUTextureTransferSize type) {
+void GLTexture::setTransferSize(GPUTextureTransferSize size) {
     m_ctx->gl__makeCurrent();
-    m_transfer_size = type;
+    // Check if Pixel Type has transfer mode not fixed
+    if (!canTransferChange(m_pixel_type)) {
+        GPULogger::error("transfer size cannot be changed for %p", this);
+        return;
+    }
+    
+    // Change Transfer Size
+    m_transfer_size = size;
 };
 
 void GLTexture::setTransferFormat(GPUTextureTransferFormat format) {
     m_ctx->gl__makeCurrent();
+    // Check if Pixel Type has transfer mode not fixed
+    if (!canTransferChange(m_pixel_type)) {
+        GPULogger::error("transfer format cannot be changed for %p", this);
+        return;
+    }
+
+    // Change Transfer Format
     m_transfer_format = format;
 };
 

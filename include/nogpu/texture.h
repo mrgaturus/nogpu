@@ -36,22 +36,23 @@ enum class GPUTextureCompressedType : int;
 enum class GPUTexturePixelType: int {
     TEXTURE_PIXEL_COMPRESSED,
 
-    // Unsigned Integer Formats
+    // Normalized Formats
     TEXTURE_PIXEL_R8,
-    TEXTURE_PIXEL_R8_SNORM,
     TEXTURE_PIXEL_R16,
-    TEXTURE_PIXEL_R16_SNORM,
     TEXTURE_PIXEL_RG8,
-    TEXTURE_PIXEL_RG8_SNORM,
     TEXTURE_PIXEL_RG16,
-    TEXTURE_PIXEL_RG16_SNORM,
     TEXTURE_PIXEL_RGB8,
-    TEXTURE_PIXEL_RGB8_SNORM,
     TEXTURE_PIXEL_RGB16,
-    TEXTURE_PIXEL_RGB16_SNORM,
     TEXTURE_PIXEL_RGBA8,
-    TEXTURE_PIXEL_RGBA8_SNORM,
     TEXTURE_PIXEL_RGBA16,
+    // Signed Normalized Formats
+    TEXTURE_PIXEL_R8_SNORM,
+    TEXTURE_PIXEL_R16_SNORM,
+    TEXTURE_PIXEL_RG8_SNORM,
+    TEXTURE_PIXEL_RG16_SNORM,
+    TEXTURE_PIXEL_RGB8_SNORM,
+    TEXTURE_PIXEL_RGB16_SNORM,
+    TEXTURE_PIXEL_RGBA8_SNORM,
     TEXTURE_PIXEL_RGBA16_SNORM,
 
     // Floating-point formats
@@ -195,6 +196,7 @@ class GPUTexture {
         int getHeight() { return m_height; }
         int getDepth() { return m_depth; }
         int getLayers() { return m_depth; }
+        int getTransferBytesPerPixel();
         GPUTextureSize getSize() { return (GPUTextureSize) { m_width, m_height }; }
         GPUTexturePixelType getPixelType() { return m_pixel_type; }
         GPUTextureTransferSize getTransferSize() { return m_transfer_size; }

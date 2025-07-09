@@ -13,6 +13,8 @@
 GLTexture2D::GLTexture2D(
     GLContext* ctx, GPUTexturePixelType type) : GLTexture(ctx) {
         m_pixel_type = type;
+        m_transfer_format = computeTransferFormat(type);
+        m_transfer_size = computeTransferSize(type);
         m_tex_target = GL_TEXTURE_2D;
 }
 

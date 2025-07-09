@@ -5,7 +5,10 @@
 #include <nogpu/texture.h>
 
 unsigned int next_power_of_two(unsigned int v);
-bool isPixelColor(GPUTexturePixelType type);
+bool canTransferChange(GPUTexturePixelType type);
+GPUTextureTransferFormat computeTransferFormat(GPUTexturePixelType type);
+GPUTextureTransferSize computeTransferSize(GPUTexturePixelType type);
+int computeBytesPerPixel(GPUTextureTransferFormat format, GPUTextureTransferSize size);
 
 // ------------------
 // GPU Logger Console

@@ -4,53 +4,17 @@
 #include "private/texture.h"
 #include "private/glad.h"
 
-static GLenum valueAttachmentType(GPUTextureTransferFormat format) {
-    switch (format) {
-        case GPUTextureTransferFormat::TEXTURE_FORMAT_DEPTH_COMPONENT:
+static GLenum valueAttachmentType(GPUTexturePixelType type) {
+    switch (type) {
+        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH_COMPONENT16:
+        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH_COMPONENT24:
+        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH_COMPONENT32:
             return GL_DEPTH_ATTACHMENT;
-        case GPUTextureTransferFormat::TEXTURE_FORMAT_DEPTH_STENCIL:
+        case GPUTexturePixelType::TEXTURE_PIXEL_DEPTH24_STENCIL8:
             return GL_DEPTH_STENCIL_ATTACHMENT;
-        default: // RGBA Color Fallback
+        default: // RGBA Color Attachment
             return GL_COLOR_ATTACHMENT0;
     }
-}
-
-static int valueTransferBytes(GPUTextureTransferSize type, GPUTextureTransferFormat format) {
-    int bytes = 0;
-
-    switch (type) {
-        case GPUTextureTransferSize::TEXTURE_SIZE_COMPRESSED:
-        case GPUTextureTransferSize::TEXTURE_SIZE_UNSIGNED_BYTE:
-        case GPUTextureTransferSize::TEXTURE_SIZE_BYTE:
-            bytes = (int) sizeof(unsigned char);
-        case GPUTextureTransferSize::TEXTURE_SIZE_UNSIGNED_SHORT:
-        case GPUTextureTransferSize::TEXTURE_SIZE_SHORT:
-            bytes = (int) sizeof(unsigned short);
-        case GPUTextureTransferSize::TEXTURE_SIZE_FLOAT:
-        case GPUTextureTransferSize::TEXTURE_SIZE_DEPTH24_STENCIL8:
-        case GPUTextureTransferSize::TEXTURE_SIZE_UNSIGNED_INT:
-        case GPUTextureTransferSize::TEXTURE_SIZE_INT:
-            bytes = (int) sizeof(unsigned int);
-    }
-
-    switch (format) {
-        case GPUTextureTransferFormat::TEXTURE_FORMAT_DEPTH_COMPONENT:
-        case GPUTextureTransferFormat::TEXTURE_FORMAT_DEPTH_STENCIL:
-        case GPUTextureTransferFormat::TEXTURE_FORMAT_RED:
-            bytes *= 1;
-        case GPUTextureTransferFormat::TEXTURE_FORMAT_RG:
-            bytes *= 2;
-        case GPUTextureTransferFormat::TEXTURE_FORMAT_RGB:
-        case GPUTextureTransferFormat::TEXTURE_FORMAT_BGR:
-            bytes *= 3;
-        case GPUTextureTransferFormat::TEXTURE_FORMAT_COMPRESSED:
-        case GPUTextureTransferFormat::TEXTURE_FORMAT_RGBA:
-        case GPUTextureTransferFormat::TEXTURE_FORMAT_BGRA:
-            bytes *= 4;
-    }
-
-    // Return Transfer Bytes
-    return bytes;
 }
 
 // -------------------------------------
@@ -60,7 +24,7 @@ static int valueTransferBytes(GPUTextureTransferSize type, GPUTextureTransferFor
 GLenum GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data) {
     if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
 
-    GLenum attachment = valueAttachmentType(m_transfer_format);
+    GLenum attachment = valueAttachmentType(m_pixel_type);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
     glFramebufferTextureLayer(GL_READ_FRAMEBUFFER,
         attachment, m_tex, level, z);
@@ -78,7 +42,7 @@ GLenum GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth,
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 
     unsigned char* dst = static_cast<unsigned char*>(data);
-    int transfer_bytes = valueTransferBytes(m_transfer_size, m_transfer_format);
+    int transfer_bytes = computeBytesPerPixel(m_transfer_format, m_transfer_size);
     int layer_bytes = transfer_bytes * w * h;
 
     // Read Framebuffer for Layers
@@ -107,7 +71,7 @@ GLenum GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth,
 GLenum GLTexture::compatDownload2D(int x, int y, int w, int h, int level, void* data) {
     if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
 
-    GLenum attachment = valueAttachmentType(m_transfer_format);
+    GLenum attachment = valueAttachmentType(m_pixel_type);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
     glFramebufferTexture(GL_READ_FRAMEBUFFER,
         attachment, m_tex, level);
