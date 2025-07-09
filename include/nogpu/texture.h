@@ -130,12 +130,29 @@ enum class GPUTextureWrapMode : int {
 // GPU Objects: Texture Buffer
 // ---------------------------
 
+typedef struct {
+    int offset;
+    int size;
+} GPUTextureBufferRange;
+
 class GPUTextureBuffer {
-    public:// Texture Pixels Manipulation
+    protected:
+        int m_offset;
+        int m_size;
+
+    public: // Texture Buffer Setters
         virtual void destroy() = 0;
         virtual void setType(GPUTexturePixelType type) = 0;
+        virtual void setBuffer(GPUBuffer* buffer) = 0;
+        virtual void setRange(GPUTextureBufferRange range) = 0;
+        virtual void clearRange() = 0;
+
+    public: // Texture Buffer Getters
         virtual GPUTexturePixelType getType() = 0;
         virtual GPUBuffer* getBuffer() = 0;
+        GPUTextureBufferRange getRange() {
+            return (GPUTextureBufferRange) {m_offset, m_size};
+        };
 };
 
 // -------------------------

@@ -22,8 +22,8 @@ GPUVertexArray* GLContext::createVertexArray() {
     return new GLVertexArray(this);
 };
 
-GPUTextureBuffer* GLContext::createTextureBuffer(GPUTexturePixelType type) {
-    return new GLTextureBuffer(this, type);
+GPUTextureBuffer* GLContext::createTextureBuffer(GPUBuffer* buffer, GPUTexturePixelType type) {
+    return new GLTextureBuffer(this, static_cast<GLBuffer*>(buffer), type);
 }
 
 GPURenderBuffer* GLContext::createRenderBuffer(GPURenderBufferMode mode) {

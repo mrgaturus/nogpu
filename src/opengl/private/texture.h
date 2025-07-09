@@ -19,19 +19,27 @@ GLenum toValue(GPUTextureCubemapSide side);
 // -------------------------
 
 class GLTextureBuffer : GPUTextureBuffer {
-    // Texture Pixels Manipulation
+    void updateTexture();
+
+     // Texture Buffer Setters
     void setType(GPUTexturePixelType type) override;
+    void setBuffer(GPUBuffer* buffer) override;
+    void setRange(GPUTextureBufferRange range) override;
+    void clearRange() override;
+     // Texture Buffer Getters
     GPUTexturePixelType getType() override;
     GPUBuffer* getBuffer() override;
 
-    public: // Texture Attributes
-        GPUTexturePixelType m_pixel_type;
-        GLBuffer* m_buffer;
+    public: // Buffer Attributes
         GLContext* m_ctx;
+        GLBuffer* m_buffer;
+        GPUTexturePixelType m_type;
+        GLuint m_tex;
 
     protected: // Texture Constructor
         GLTextureBuffer(
             GLContext* ctx,
+            GLBuffer* buffer,
             GPUTexturePixelType type);
         void destroy() override;
         friend GLContext;

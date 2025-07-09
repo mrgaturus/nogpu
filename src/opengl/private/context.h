@@ -18,7 +18,7 @@ class GLContext : GPUContext {
     // GPU Object Creation
     GPUBuffer* createBuffer() override;
     GPUVertexArray* createVertexArray() override;
-    GPUTextureBuffer* createTextureBuffer(GPUTexturePixelType type) override;
+    GPUTextureBuffer* createTextureBuffer(GPUBuffer* buffer, GPUTexturePixelType type) override;
     GPURenderBuffer* createRenderBuffer(GPURenderBufferMode mode) override;
 
     // GPU Texture Objects: Standard
