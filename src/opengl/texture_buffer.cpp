@@ -8,9 +8,9 @@
 void GLTextureBuffer::updateTexture() {
     glBindTexture(GL_TEXTURE_BUFFER, m_tex);
     if (m_size > 0) glTexBufferRange(GL_TEXTURE_BUFFER,
-        toValue(m_type), m_buffer->m_vbo, m_offset, m_size);
+        toValue(m_pixel_type), m_buffer->m_vbo, m_offset, m_size);
     else glTexBuffer(GL_TEXTURE_BUFFER,
-        toValue(m_type), m_buffer->m_vbo);
+        toValue(m_pixel_type), m_buffer->m_vbo);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
 }
 
@@ -34,7 +34,7 @@ GLTextureBuffer::GLTextureBuffer(GLContext* ctx, GLBuffer* buffer, GPUTexturePix
     }
 
     // Define Texture Buffer
-    m_type = type;
+    m_pixel_type = type;
     m_buffer = buffer;
     m_ctx = ctx;
 
@@ -66,7 +66,7 @@ void GLTextureBuffer::setType(GPUTexturePixelType type) {
     }
 
     // Update Texture Type
-    m_type = type;
+    m_pixel_type = type;
     this->updateTexture();
 }
 
@@ -117,7 +117,7 @@ void GLTextureBuffer::clearRange() {
 
 GPUTexturePixelType GLTextureBuffer::getType() {
     m_ctx->gl__makeCurrent();
-    return m_type;
+    return m_pixel_type;
 }
 
 GPUBuffer* GLTextureBuffer::getBuffer() {

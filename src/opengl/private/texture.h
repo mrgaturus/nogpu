@@ -33,7 +33,8 @@ class GLTextureBuffer : GPUTextureBuffer {
     public: // Buffer Attributes
         GLContext* m_ctx;
         GLBuffer* m_buffer;
-        GPUTexturePixelType m_type;
+    public: // Texture Attributes
+        GPUTexturePixelType m_pixel_type;
         GLuint m_tex;
 
     protected: // Texture Constructor
