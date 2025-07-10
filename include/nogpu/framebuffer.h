@@ -5,36 +5,41 @@
 #include "texture.h"
 
 // ------------------------
-// GPU Objects: FrameBuffer
+// GPU Objects: Framebuffer
 // ------------------------
 
 enum class GPURenderBufferMode : int {
+    RENDERBUFFER_OFFSCREEN,
     RENDERBUFFER_TEXTURE,
     RENDERBUFFER_TEXTURE_ARRAY,
-    RENDERBUFFER_OFFSCREEN
+    RENDERBUFFER_TARGET,
+    RENDERBUFFER_TARGET_ARRAY,
+    RENDERBUFFER_TARGET_CUBEMAP,
+    RENDERBUFFER_TARGET_CUBEMAP_ARRAY
 };
 
 class GPURenderBuffer {
     protected:
+        GPUTexturePixelType m_pixel_type;
         GPURenderBufferMode m_mode;
-        int m_msaa_samples;
-        int m_width;
-        int m_height;
+        GPUTexture* m_texture;
 
-    // GPU Renderbuffer Constructor
-    protected: GPURenderBuffer();
-    protected: ~GPURenderBuffer();
-    public: virtual void destroy() = 0;
-    public: virtual void allocate(int w, int h, int msaa_samples) = 0;
-    public: virtual void allocate(int w, int h, int layers, int msaa_samples) = 0;
+    public: // Renderbuffer Manipulation
+        virtual void destroy() = 0;
+        virtual void useTexture(GPUTexture* texture) = 0;
+        virtual void createTexture(int w, int h, int samples) = 0;
+        virtual void createTextureArray(int w, int h, int samples, int layers) = 0;
+        virtual void createOffscreen(int w, int h, int samples) = 0;
 
     public: // Renderbuffer Attributes
-        int getWidth() { return m_width; }
-        int getHeight() { return m_height; }
-        int getMultisamples() { return m_msaa_samples; }
-        GPUTextureSize getSize() { return (GPUTextureSize) { m_width, m_height }; }
+        virtual int getSamples() = 0;
+        virtual void getWidth() = 0;
+        virtual void getHeight() = 0;
+        virtual int getLayers() = 0;
+        virtual GPUTextureSize getSize() = 0;
+        GPUTexturePixelType getPixelType() { return m_pixel_type; }
         GPURenderBufferMode getMode() { return m_mode; }
-        virtual GPUTexture* getTexture();
+        GPUTexture* getTexture() { return m_texture; }
 };
 
 enum class GPUFrameBufferStatus : int {
@@ -46,30 +51,16 @@ enum class GPUFrameBufferStatus : int {
 };
 
 class GPUFrameBuffer {
-    protected:
-        GPUTexture *m_colors[64];
-        GPUTexture *m_stencil;
-        GPUTexture *m_depth;
-    // GPU Framebuffer Constructor
-    protected: GPUFrameBuffer();
-    protected: ~GPUFrameBuffer();
-    public: virtual void destroy() = 0;
-
-    public: // GPU Texture Attach
+    public: // Framebuffer Manipulation
+        virtual void destroy() = 0;
+        virtual void attachColor(GPURenderBuffer *target, int index) = 0;
+        virtual void attachStencil(GPURenderBuffer *target) = 0;
+        virtual void attachDepth(GPURenderBuffer *target) = 0;
+    public: // Framebuffer Attributes
         virtual GPUFrameBufferStatus checkStatus() = 0;
-        virtual void attachColor(GPUTexture *color, int index) = 0;
-        virtual void attachDepthStencil(GPUTexture *depth_stencil) = 0;
-        virtual void attachStencil(GPUTexture *stencil) = 0;
-        virtual void attachDepth(GPUTexture *depth) = 0;
-        // GPU Renderbuffer Attachment
-        virtual void attachColor(GPURenderBuffer *color, int index) = 0;
-        virtual void attachDepthStencil(GPURenderBuffer *depth_stencil) = 0;
-        virtual void attachStencil(GPURenderBuffer *stencil) = 0;
-        virtual void attachDepth(GPURenderBuffer *depth) = 0;
-    public: // GPU Framebuffer Attributes
-        GPUTexture *getColor(int index) { return m_colors[index]; }
-        GPUTexture *getStencil() { return m_stencil; }
-        GPUTexture *getDepth() { return m_depth; }
+        virtual GPURenderBuffer* getColor(int index) = 0;
+        virtual GPURenderBuffer* getStencil() = 0;
+        virtual GPURenderBuffer* getDepth() = 0;
 };
 
 #endif // NOGPU_FRAMEBUFFER_H

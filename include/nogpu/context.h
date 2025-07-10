@@ -25,7 +25,7 @@ class GPUContext {
         virtual GPUBuffer* createBuffer() = 0;
         virtual GPUVertexArray* createVertexArray() = 0;
         virtual GPUTextureBuffer* createTextureBuffer(GPUBuffer* buffer, GPUTexturePixelType type) = 0;
-        virtual GPURenderBuffer* createRenderBuffer(GPURenderBufferMode mode) = 0;
+        virtual GPURenderBuffer* createRenderBuffer(GPUTexturePixelType type) = 0;
 
         // GPU Texture Objects: Standard
         virtual GPUTexture1D* createTexture1D(GPUTexturePixelType type) = 0;
