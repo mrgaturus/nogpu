@@ -4,11 +4,12 @@
 #define NOGPU_FRAMEBUFFER_H
 #include "texture.h"
 
-// ------------------------
-// GPU Objects: Framebuffer
-// ------------------------
+// -------------------------------
+// GPU Objects: Framebuffer Target
+// -------------------------------
 
 enum class GPURenderBufferMode : int {
+    RENDERBUFFER_UNDEFINED,
     RENDERBUFFER_OFFSCREEN,
     RENDERBUFFER_TEXTURE,
     RENDERBUFFER_TEXTURE_ARRAY,
@@ -22,7 +23,6 @@ class GPURenderBuffer {
     protected:
         GPUTexturePixelType m_pixel_type;
         GPURenderBufferMode m_mode;
-        GPUTexture* m_texture;
 
     public: // Renderbuffer Manipulation
         virtual void destroy() = 0;
@@ -32,15 +32,19 @@ class GPURenderBuffer {
         virtual void createOffscreen(int w, int h, int samples) = 0;
 
     public: // Renderbuffer Attributes
-        virtual int getSamples() = 0;
-        virtual void getWidth() = 0;
-        virtual void getHeight() = 0;
-        virtual int getLayers() = 0;
+        virtual GPUTexture* getTexture() = 0;
         virtual GPUTextureSize getSize() = 0;
+        virtual int getSamples() = 0;
+        virtual int getWidth() = 0;
+        virtual int getHeight() = 0;
+        virtual int getLayers() = 0;
         GPUTexturePixelType getPixelType() { return m_pixel_type; }
         GPURenderBufferMode getMode() { return m_mode; }
-        GPUTexture* getTexture() { return m_texture; }
 };
+
+// ------------------------
+// GPU Objects: Framebuffer
+// ------------------------
 
 enum class GPUFrameBufferStatus : int {
     FRAMEBUFFER_UNDEFINED,

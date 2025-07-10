@@ -4,6 +4,7 @@
 #include "private/context.h"
 #include "private/texture.h"
 #include "private/compressed.h"
+#include "private/framebuffer.h"
 #include "private/glad.h"
 
 bool GLContext::isTransparent() {
@@ -26,8 +27,8 @@ GPUTextureBuffer* GLContext::createTextureBuffer(GPUBuffer* buffer, GPUTexturePi
     return new GLTextureBuffer(this, static_cast<GLBuffer*>(buffer), type);
 }
 
-GPURenderBuffer* GLContext::createRenderBuffer(GPURenderBufferMode mode) {
-    return nullptr;
+GPURenderBuffer* GLContext::createRenderBuffer(GPUTexturePixelType type) {
+    return new GLRenderBuffer(this, type);
 }
 
 // -------------------------------------
@@ -83,7 +84,7 @@ GPUCompressedCubemapArray* GLContext::createCompressedCubemapArray(GPUTextureCom
 // -----------------------------------
 
 GPUFrameBuffer* GLContext::createFrameBuffer() {
-    return nullptr;
+    return new GLFrameBuffer(this);
 }
 
 GPUProgram* GLContext::createProgram() {
@@ -106,7 +107,6 @@ GPUPipeline* GLContext::createPipeline(GPUProgram* program) {
 void GLContext::gl__makeCurrent() {
     m_driver->makeCurrent(this);
 }
-
 
 GPUCommands* GLContext::createCommands() {
     return nullptr;

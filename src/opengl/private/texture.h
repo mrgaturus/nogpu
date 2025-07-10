@@ -30,10 +30,9 @@ class GLTextureBuffer : GPUTextureBuffer {
     GPUTexturePixelType getType() override;
     GPUBuffer* getBuffer() override;
 
-    public: // Buffer Attributes
+    public: // Texture Attributes
         GLContext* m_ctx;
         GLBuffer* m_buffer;
-    public: // Texture Attributes
         GPUTexturePixelType m_pixel_type;
         GLuint m_tex;
 

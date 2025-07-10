@@ -3,37 +3,56 @@
 #ifndef OPENGL_FRAMEBUFFER_H
 #define OPENGL_FRAMEBUFFER_H
 #include <nogpu/framebuffer.h>
+#include "texture.h"
 
-// ----------------------
-// OpenGL GPU FrameBuffer
-// ----------------------
+// ------------------------------
+// OpenGL GPU: Framebuffer Target
+// ------------------------------
 
 class GLContext;
 class GLRenderBuffer : GPURenderBuffer {
-    protected: // RenderBuffer Constructor
-        GLRenderBuffer(GPURenderBufferMode mode, GPUTextureTransferFormat format);
-        void allocate(int w, int h, int msaa_samples) override;
-        void allocate(int w, int h, int layers, int msaa_samples) override;
+    // Renderbuffer Manipulation
+    void useTexture(GPUTexture* texture) override;
+    void createTexture(int w, int h, int samples) override;
+    void createTextureArray(int w, int h, int samples, int layers) override;
+    void createOffscreen(int w, int h, int samples) override;
+    // Renderbuffer Attributes
+    GPUTexture* getTexture() override;
+    GPUTextureSize getSize() override;
+    int getSamples() override;
+    int getWidth() override;
+    int getHeight() override;
+    int getLayers() override;
 
-        GPUTexture* getTexture() override;
+    public:
+        GLContext* m_ctx;
+        GLTexture* m_texture;
+
+    protected: // Renderbuffer Constructor
+        GLRenderBuffer(GLContext* ctx, GPUTexturePixelType type);
         void destroy() override;
         friend GLContext;
 };
 
-class GLFrameBuffer : GPUFrameBuffer {
-    GPUFrameBufferStatus checkStatus() override;
-    void attachColor(GPUTexture *color, int index) override;
-    void attachDepthStencil(GPUTexture *depth_stencil) override;
-    void attachStencil(GPUTexture *stencil) override;
-    void attachDepth(GPUTexture *depth) override;
-    // GPU RenderBuffer Attachment
-    void attachColor(GPURenderBuffer *color, int index) override;
-    void attachDepthStencil(GPURenderBuffer *depth_stencil) override;
-    void attachStencil(GPURenderBuffer *stencil) override;
-    void attachDepth(GPURenderBuffer *depth) override;
+// -----------------------
+// OpenGL GPU: Framebuffer
+// -----------------------
 
-    protected: // FrameBuffer Constructor
-        GLFrameBuffer();
+class GLFrameBuffer : GPUFrameBuffer {
+    GLContext* m_ctx;
+
+    // Framebuffer Manipulation
+    void attachColor(GPURenderBuffer *target, int index) override;
+    void attachStencil(GPURenderBuffer *target) override;
+    void attachDepth(GPURenderBuffer *target) override;
+    // Framebuffer Attributes
+    GPUFrameBufferStatus checkStatus() override;
+    GPURenderBuffer* getColor(int index) override;
+    GPURenderBuffer* getStencil() override;
+    GPURenderBuffer* getDepth() override;
+
+    protected: // Framebuffer Constructor
+        GLFrameBuffer(GLContext* ctx);
         void destroy() override;
         friend GLContext;
 };
