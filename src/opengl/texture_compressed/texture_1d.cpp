@@ -26,6 +26,8 @@ void GLCompressed1D::allocate(int size, int levels) {
 
     this->generateTexture();
     GLenum target = m_tex_target;
+    // Allocate Texture Storage
+    levels = levels_power_of_two(size, size, levels);
     glTexStorage1D(target, levels, toValue(m_pixel_type), size);
 
     // Check Allocation Error
@@ -44,6 +46,7 @@ void GLCompressed1D::allocate(int size, int levels) {
         return;
 
     // Set Texture Dimensions
+    m_levels = levels;
     m_width = size;
     m_height = 1;
     m_depth = 1;
@@ -63,7 +66,7 @@ void GLCompressed1D::upload(int x, int size, int level, void* data, int bytes) {
         case GL_INVALID_OPERATION:
             GPULogger::error("failed uploading pixels for 1D %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("failed uploading parameters for 1D %p", this);
+            GPULogger::error("invalid upload parameters for 1D %p", this);
         case GL_INVALID_ENUM:
             GPULogger::error("invalid pixel format/type for 1D %p", this);
     }

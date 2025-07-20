@@ -55,6 +55,8 @@ void GLTexture2D::allocate(GPUTexture2DMode mode, int w, int h, int levels) {
     this->setMode(mode);
     this->generateTexture();
     GLenum target = m_tex_target;
+    // Allocate Texture Storage
+    levels = levels_power_of_two(w, h, levels);
     glTexStorage2D(target, levels, toValue(m_pixel_type), w, h);
 
     // Check Allocation Error
@@ -73,6 +75,7 @@ void GLTexture2D::allocate(GPUTexture2DMode mode, int w, int h, int levels) {
         return;
 
     // Set Texture Dimensions
+    m_levels = levels;
     m_width = w;
     m_height = h;
     m_depth = 1;
@@ -93,7 +96,7 @@ void GLTexture2D::upload(int x, int y, int w, int h, int level, void* data) {
         case GL_INVALID_OPERATION:
             GPULogger::error("failed uploading pixels for 2D %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("failed uploading parameters for 2D %p", this);
+            GPULogger::error("invalid upload parameters for 2D %p", this);
         case GL_INVALID_ENUM:
             GPULogger::error("invalid pixel format/type for 2D %p", this);
     }

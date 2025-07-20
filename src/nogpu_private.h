@@ -5,8 +5,9 @@
 #include <nogpu/driver.h>
 #include <nogpu/texture.h>
 
-unsigned int next_power_of_two(unsigned int v);
 unsigned int feature_flag(GPUDriverFeature feature);
+unsigned int next_power_of_two(unsigned int v);
+unsigned int levels_power_of_two(int w, int h, int limit);
 // Texture Pixel Types: Operations
 bool canTextureBuffer(GPUTexturePixelType type);
 bool canTransferChange(GPUTexturePixelType type);

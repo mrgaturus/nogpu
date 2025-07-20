@@ -51,6 +51,8 @@ void GLTexture3D::allocate(GPUTexture3DMode mode, int w, int h, int depth, int l
     this->setMode(mode);
     this->generateTexture();
     GLenum target = m_tex_target;
+    // Allocate Texture Storage
+    levels = levels_power_of_two(w, h, levels);
     glTexStorage3D(target, levels, toValue(m_pixel_type), w, h, depth);
 
     // Check Allocation Error
@@ -69,6 +71,7 @@ void GLTexture3D::allocate(GPUTexture3DMode mode, int w, int h, int depth, int l
         return;
 
     // Set Texture Dimensions
+    m_levels = levels;
     m_width = w;
     m_height = h;
     m_depth = depth;
@@ -89,7 +92,7 @@ void GLTexture3D::upload(int x, int y, int z, int w, int h, int depth, int level
         case GL_INVALID_OPERATION:
             GPULogger::error("failed uploading pixels for 3D %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("failed uploading parameters for 3D %p", this);
+            GPULogger::error("invalid upload parameters for 3D %p", this);
         case GL_INVALID_ENUM:
             GPULogger::error("invalid pixel format/type for 3D %p", this);
     }

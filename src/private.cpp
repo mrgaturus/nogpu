@@ -3,6 +3,15 @@
 #include <nogpu_private.h>
 #include <nogpu/buffer.h>
 #include <nogpu/commands.h>
+#include <cmath>
+
+unsigned int feature_flag(GPUDriverFeature feature) {
+    return 1 << static_cast<unsigned int>(feature);
+}
+
+// -----------------------
+// Power of Two Operations
+// -----------------------
 
 unsigned int next_power_of_two(unsigned int v) {
     v--;
@@ -17,8 +26,20 @@ unsigned int next_power_of_two(unsigned int v) {
     return v;
 }
 
-unsigned int feature_flag(GPUDriverFeature feature) {
-    return 1 << static_cast<unsigned int>(feature);
+unsigned int levels_power_of_two(int w, int h, int limit) {
+    if (w <= 0 || h <= 0)
+        return 0;
+
+    // Calculate Mipmap Levels
+    double levels0 = (double) ((w > h) ? w : h);
+    levels0 = log2(levels0) + 1;
+    // Clamp With Levels Limit
+    int levels = (unsigned int) levels0;
+    if (limit > 0 && limit < levels)
+        levels = limit;
+
+    // Return Calculated Levels
+    return levels;
 }
 
 // -----------------------
@@ -311,4 +332,19 @@ int computeBytesPerPixel(GPUTextureTransferFormat format, GPUTextureTransferSize
 
 int GPUTexture::getTransferBytesPerPixel() {
     return computeBytesPerPixel(m_transfer_format, m_transfer_size);
+}
+
+GPUTextureSize GPUTexture::getSize(int level) {
+    GPUTextureSize size = {0, 0};
+    if (level <= 0 || level >= m_levels)
+        return size;
+
+    // Calculate Current Levels
+    size.width = m_width >> level;
+    size.height = m_height >> level;
+    if (size.width <= 0) size.width = 1;
+    if (size.height <= 0) size.height = 1;
+
+    // Return Level Size
+    return size;
 }

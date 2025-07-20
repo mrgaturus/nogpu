@@ -22,6 +22,8 @@ void GLCompressedCubemap::allocate(int w, int h, int levels) {
 
     this->generateTexture();
     GLenum target = m_tex_target;
+    // Allocate Texture Storage
+    levels = levels_power_of_two(w, h, levels);
     glTexStorage2D(target, levels, toValue(m_pixel_type), w, h);
 
     // Check Allocation Error
@@ -40,6 +42,7 @@ void GLCompressedCubemap::allocate(int w, int h, int levels) {
         return;
 
     // Set Texture Dimensions
+    m_levels = levels;
     m_width = w;
     m_height = h;
     m_depth = 1;
@@ -63,7 +66,7 @@ void GLCompressedCubemap::upload(GPUTextureCubemapSide side, int x, int y, int w
         case GL_INVALID_OPERATION:
             GPULogger::error("failed uploading pixels for Cubemap %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("failed uploading parameters for Cubemap %p", this);
+            GPULogger::error("invalid upload parameters for Cubemap %p", this);
         case GL_INVALID_ENUM:
             GPULogger::error("invalid pixel format/type for Cubemap %p", this);
     }

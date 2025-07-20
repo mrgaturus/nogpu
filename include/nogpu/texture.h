@@ -192,6 +192,7 @@ class GPUTexture {
         GPUTextureFilter m_filter;
         GPUTextureWrap m_wrap;
         // Texture Dimensions
+        int m_levels;
         int m_width;
         int m_height;
         int m_depth;
@@ -208,13 +209,16 @@ class GPUTexture {
         virtual void syncCPU() = 0;
         virtual void syncGPU() = 0;
 
-    public: // GPU Texture Attributes
+    public: // GPU Texture Attributes: Size
+        int getLevels() { return m_levels; }
         int getWidth() { return m_width; }
         int getHeight() { return m_height; }
         int getDepth() { return m_depth; }
         int getLayers() { return m_depth; }
+
+    public: // GPU Texture Attributes
         int getTransferBytesPerPixel();
-        GPUTextureSize getSize() { return (GPUTextureSize) { m_width, m_height }; }
+        GPUTextureSize getSize(int level);
         GPUTexturePixelType getPixelType() { return m_pixel_type; }
         GPUTextureTransferSize getTransferSize() { return m_transfer_size; }
         GPUTextureTransferFormat getTransferFormat() { return m_transfer_format; }
