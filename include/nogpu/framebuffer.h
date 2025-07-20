@@ -12,6 +12,7 @@ enum class GPURenderBufferMode : int {
     RENDERBUFFER_UNDEFINED,
     RENDERBUFFER_OFFSCREEN,
     RENDERBUFFER_TEXTURE,
+    RENDERBUFFER_TEXTURE_MULTISAMPLE,
     RENDERBUFFER_TEXTURE_ARRAY,
     RENDERBUFFER_TARGET,
     RENDERBUFFER_TARGET_ARRAY,
@@ -55,11 +56,16 @@ enum class GPUFrameBufferStatus : int {
 };
 
 class GPUFrameBuffer {
-    public: // Framebuffer Manipulation
+    public: // Framebuffer Attachment
         virtual void destroy() = 0;
         virtual void attachColor(GPURenderBuffer *target, int index) = 0;
         virtual void attachStencil(GPURenderBuffer *target) = 0;
         virtual void attachDepth(GPURenderBuffer *target) = 0;
+    public: // Framebuffer Detachment
+        virtual void detachColor() = 0;
+        virtual void detachStencil() = 0;
+        virtual void detachDepth() = 0;
+
     public: // Framebuffer Attributes
         virtual GPUFrameBufferStatus checkStatus() = 0;
         virtual GPURenderBuffer* getColor(int index) = 0;

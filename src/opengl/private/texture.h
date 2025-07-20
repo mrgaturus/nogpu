@@ -49,6 +49,7 @@ class GLTextureBuffer : GPUTextureBuffer {
 // OpenGL GPU Texture
 // ------------------
 
+class GLRenderBuffer;
 class GLTexture : virtual public GPUTexture {
     // GPU Texture Attributes
     void setTransferSize(GPUTextureTransferSize type) override;
@@ -75,6 +76,7 @@ class GLTexture : virtual public GPUTexture {
         GLenum compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data);
         GLenum compatDownload2D(int x, int y, int w, int h, int level, void* data);
         friend GLContext;
+        friend GLRenderBuffer;
 };
 
 class GLTexture1D : GLTexture, GPUTexture1D {
@@ -88,6 +90,7 @@ class GLTexture1D : GLTexture, GPUTexture1D {
     // Texture Object Constructor
     protected: GLTexture1D(GLContext* ctx, GPUTexturePixelType type);
     friend GLContext;
+    friend GLRenderBuffer;
 };
 
 class GLTexture2D : GLTexture, GPUTexture2D {
@@ -104,6 +107,7 @@ class GLTexture2D : GLTexture, GPUTexture2D {
     // Texture Object Constructor
     protected: GLTexture2D(GLContext* ctx, GPUTexturePixelType type);
     friend GLContext;
+    friend GLRenderBuffer;
 };
 
 class GLTexture3D : GLTexture, GPUTexture3D {
@@ -120,6 +124,7 @@ class GLTexture3D : GLTexture, GPUTexture3D {
     // Texture Object Constructor
     protected: GLTexture3D(GLContext* ctx, GPUTexturePixelType type);
     friend GLContext;
+    friend GLRenderBuffer;
 };
 
 class GLTextureCubemap : GLTexture, GPUTextureCubemap {
@@ -133,6 +138,7 @@ class GLTextureCubemap : GLTexture, GPUTextureCubemap {
     // Texture Object Constructor
     protected: GLTextureCubemap(GLContext* ctx, GPUTexturePixelType type);
     friend GLContext;
+    friend GLRenderBuffer;
 };
 
 class GLTextureCubemapArray : GLTexture, GPUTextureCubemapArray {
@@ -146,6 +152,7 @@ class GLTextureCubemapArray : GLTexture, GPUTextureCubemapArray {
     // Texture Object Constructor
     protected: GLTextureCubemapArray(GLContext* ctx, GPUTexturePixelType type);
     friend GLContext;
+    friend GLRenderBuffer;
 };
 
 #endif // OPENGL_TEXTURE_H

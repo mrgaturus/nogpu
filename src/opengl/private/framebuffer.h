@@ -27,9 +27,11 @@ class GLRenderBuffer : GPURenderBuffer {
     public:
         GLContext* m_ctx;
         GLTexture* m_texture;
+        GLuint* m_object;
 
     protected: // Renderbuffer Constructor
         GLRenderBuffer(GLContext* ctx, GPUTexturePixelType type);
+        void destroyInternal();
         void destroy() override;
         friend GLContext;
 };
@@ -41,10 +43,15 @@ class GLRenderBuffer : GPURenderBuffer {
 class GLFrameBuffer : GPUFrameBuffer {
     GLContext* m_ctx;
 
-    // Framebuffer Manipulation
+    // Framebuffer Attachment
     void attachColor(GPURenderBuffer *target, int index) override;
     void attachStencil(GPURenderBuffer *target) override;
     void attachDepth(GPURenderBuffer *target) override;
+    // Framebuffer Detachment
+    void detachColor() override;
+    void detachStencil() override;
+    void detachDepth() override;
+
     // Framebuffer Attributes
     GPUFrameBufferStatus checkStatus() override;
     GPURenderBuffer* getColor(int index) override;
