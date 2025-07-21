@@ -44,7 +44,7 @@ void GLTexture::setTransferSize(GPUTextureTransferSize size) {
     
     // Change Transfer Size
     m_transfer_size = size;
-};
+}
 
 void GLTexture::setTransferFormat(GPUTextureTransferFormat format) {
     m_ctx->gl__makeCurrent();
@@ -56,7 +56,7 @@ void GLTexture::setTransferFormat(GPUTextureTransferFormat format) {
 
     // Change Transfer Format
     m_transfer_format = format;
-};
+}
 
 void GLTexture::setSwizzle(GPUTextureSwizzle swizzle) {
     m_ctx->gl__makeCurrent();
@@ -72,7 +72,7 @@ void GLTexture::setSwizzle(GPUTextureSwizzle swizzle) {
 
     if (glGetError() != GL_NO_ERROR)
         GPULogger::error("failed set texture swizzle for %p", this);
-};
+}
 
 void GLTexture::setFilter(GPUTextureFilter filter) {
     m_ctx->gl__makeCurrent();
@@ -86,7 +86,7 @@ void GLTexture::setFilter(GPUTextureFilter filter) {
 
     if (glGetError() != GL_NO_ERROR)
         GPULogger::error("failed set texture filtering for %p", this);
-};
+}
 
 void GLTexture::setWrap(GPUTextureWrap wrap) {
     m_ctx->gl__makeCurrent();
@@ -101,7 +101,7 @@ void GLTexture::setWrap(GPUTextureWrap wrap) {
 
     if (glGetError() != GL_NO_ERROR)
         GPULogger::error("failed set texture wrapping for %p", this);
-};
+}
 
 // ---------------------------------
 // GPU Objects: Texture Base Mipmaps
@@ -132,7 +132,7 @@ void GLTexture::generateMipmaps() {
 
     if (glGetError() != GL_NO_ERROR)
         GPULogger::error("failed generate texture mipmaps for %p", this);
-};
+}
 
 // -------------------------
 // GPU Objects: Texture Sync
@@ -143,19 +143,19 @@ void GLTexture::syncCPU() {
     // Stall CPU until Fence Signaled
     if (m_sync_check && m_sync)
         glClientWaitSync(m_sync, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
-};
+}
 
 void GLTexture::syncGPU() {
     m_ctx->gl__makeCurrent();
     // Stall GL Queue until Fence Signaled
     if (m_sync_check && m_sync)
         glWaitSync(m_sync, 0, GL_TIMEOUT_IGNORED);
-};
+}
 
 void GLTexture::syncEnable() {
     m_ctx->gl__makeCurrent();
     m_sync_check = true;
-};
+}
 
 void GLTexture::syncDisable() {
     m_ctx->gl__makeCurrent();
@@ -166,7 +166,7 @@ void GLTexture::syncDisable() {
         glDeleteSync(m_sync);
         m_sync = nullptr;
     }
-};
+}
 
 // -------------------------------
 // GPU Objects: Texture Sync Stamp

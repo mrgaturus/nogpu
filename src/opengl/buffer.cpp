@@ -152,7 +152,7 @@ void* GLBuffer::map(int bytes, int offset, GPUBufferMapping flags) {
             offset, bytes, this);
 
     // Create Sync Object when Unsynchronized
-    if (flags0 & GL_MAP_UNSYNCHRONIZED_BIT) {
+    if ((flags0 & GL_MAP_UNSYNCHRONIZED_BIT) && m_sync_check) {
         if (m_sync) glDeleteSync(m_sync);
         m_sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     }
@@ -177,16 +177,36 @@ void GLBuffer::unmap() {
     m_mapping = nullptr;
 };
 
-// -------------------------------
-// OpenGL GPU Buffer: Mapping Sync
-// -------------------------------
+// ------------------------------
+// OpenGL GPU Buffer: Buffer Sync
+// ------------------------------
 
 void GLBuffer::syncCPU() {
     m_ctx->gl__makeCurrent();
-    if (m_sync) glClientWaitSync(m_sync, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
-};
+    // Stall CPU until Fence Signaled
+    if (m_sync_check && m_sync)
+        glClientWaitSync(m_sync, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
+}
 
 void GLBuffer::syncGPU() {
     m_ctx->gl__makeCurrent();
-    if (m_sync) glWaitSync(m_sync, 0, GL_TIMEOUT_IGNORED);
-};
+    // Stall GL Queue until Fence Signaled
+    if (m_sync_check && m_sync)
+        glWaitSync(m_sync, 0, GL_TIMEOUT_IGNORED);
+}
+
+void GLBuffer::syncEnable() {
+    m_ctx->gl__makeCurrent();
+    m_sync_check = true;
+}
+
+void GLBuffer::syncDisable() {
+    m_ctx->gl__makeCurrent();
+    m_sync_check = false;
+
+    // Remove Sync Object
+    if (m_sync) {
+        glDeleteSync(m_sync);
+        m_sync = nullptr;
+    }
+}

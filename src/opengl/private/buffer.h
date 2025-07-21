@@ -17,17 +17,21 @@ class GLBuffer : public GPUBuffer {
     void update(int bytes, int offset, void *data) override;
     void download(int bytes, int offset, void *data) override;
     void copy(GPUBuffer *data, int bytes, int offset_read, int offset_write) override;
-
     // GPU Buffer Usage: Mapping
     void* map(int bytes, int offset, GPUBufferMapping flags) override;
     void unmap() override;
+
+    // GPU Buffer Fences
     void syncCPU() override;
     void syncGPU() override;
+    void syncEnable() override;
+    void syncDisable() override;
 
     public: // GL Attributes
         GLContext* m_ctx;
         void* m_mapping;
         GLuint m_vbo;
+        GLuint m_sync_check;
         GLsync m_sync;
 
     public: // Buffer Constructor

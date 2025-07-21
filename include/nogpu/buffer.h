@@ -41,12 +41,15 @@ class GPUBuffer {
         virtual void update(int bytes, int offset, void *data) = 0;
         virtual void download(int bytes, int offset, void *data) = 0;
         virtual void copy(GPUBuffer *dst, int bytes, int offset_read, int offset_write) = 0;
-
     public: // GPU Buffer Usage: Mapping
         virtual void* map(int bytes, int offset, GPUBufferMapping flags) = 0;
         virtual void unmap() = 0;
+
+    public: // GPU Buffer Fences
         virtual void syncCPU() = 0;
         virtual void syncGPU() = 0;
+        virtual void syncEnable() = 0;
+        virtual void syncDisable() = 0;
 };
 
 // -------------------------
