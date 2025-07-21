@@ -109,4 +109,5 @@ void GLCompressed3D::unpack(int x, int y, int z, int w, int h, int depth, int le
     this->upload(x, y, z, w, h, depth, level,
         reinterpret_cast<void*>(offset), bytes);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    this->generateSync();
 }

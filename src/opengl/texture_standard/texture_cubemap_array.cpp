@@ -121,6 +121,7 @@ void GLTextureCubemapArray::unpack(GPUTextureCubemapSide side, int x, int y, int
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf->m_vbo);
     this->upload(side, x, y, w, h, layer, level, reinterpret_cast<void*>(offset));
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    this->generateSync();
 }
 
 void GLTextureCubemapArray::pack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) {
@@ -131,4 +132,5 @@ void GLTextureCubemapArray::pack(GPUTextureCubemapSide side, int x, int y, int w
     glBindBuffer(GL_PIXEL_PACK_BUFFER, buf->m_vbo);
     this->download(side, x, y, w, h, layer, level, reinterpret_cast<void*>(offset));
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+    this->generateSync();
 }

@@ -196,18 +196,21 @@ class GPUTexture {
         int m_width;
         int m_height;
         int m_depth;
-    // GPU Texture Destructor
-    public: virtual void destroy() = 0;
 
     public: // GPU Texture Attributes
+        virtual void destroy() = 0;
         virtual void setTransferSize(GPUTextureTransferSize type) = 0;
         virtual void setTransferFormat(GPUTextureTransferFormat format) = 0;
         virtual void setSwizzle(GPUTextureSwizzle swizzle) = 0;
         virtual void setFilter(GPUTextureFilter filter) = 0;
         virtual void setWrap(GPUTextureWrap wrap) = 0;
         virtual void generateMipmaps() = 0;
+
+    public: // GPU Texture Fences
         virtual void syncCPU() = 0;
         virtual void syncGPU() = 0;
+        virtual void syncEnable() = 0;
+        virtual void syncDisable() = 0;
 
     public: // GPU Texture Attributes: Size
         int getLevels() { return m_levels; }

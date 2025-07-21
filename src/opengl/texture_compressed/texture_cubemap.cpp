@@ -84,4 +84,5 @@ void GLCompressedCubemap::unpack(GPUTextureCubemapSide side, int x, int y, int w
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf->m_vbo);
     this->upload(side, x, y, w, h, level, reinterpret_cast<void*>(offset), bytes);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    this->generateSync();
 }

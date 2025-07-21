@@ -84,4 +84,5 @@ void GLCompressed1D::unpack(int x, int size, int level, GPUBuffer *pbo, int byte
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf->m_vbo);
     this->upload(x, size, level, reinterpret_cast<void*>(offset), bytes);
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    this->generateSync();
 }

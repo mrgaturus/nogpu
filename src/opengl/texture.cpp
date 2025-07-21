@@ -10,6 +10,7 @@ GLTexture::GLTexture(GLContext* ctx) {
 
     // Generate OpenGL Texture
     glGenTextures(1, &m_tex);
+    m_sync_check = true;
     m_sync = nullptr;
     m_tex_fbo = 0;
     m_ctx = ctx;
@@ -133,22 +134,49 @@ void GLTexture::generateMipmaps() {
         GPULogger::error("failed generate texture mipmaps for %p", this);
 };
 
-// ------------------------------
-// GPU Objects: Texture Base Sync
-// ------------------------------
+// -------------------------
+// GPU Objects: Texture Sync
+// -------------------------
 
 void GLTexture::syncCPU() {
     m_ctx->gl__makeCurrent();
-    // Wait Texture PBO Fence Sync
-    if (m_sync) glDeleteSync(m_sync);
-    m_sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-    if (m_sync) glClientWaitSync(m_sync, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
+    // Stall CPU until Fence Signaled
+    if (m_sync_check && m_sync)
+        glClientWaitSync(m_sync, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
 };
 
 void GLTexture::syncGPU() {
     m_ctx->gl__makeCurrent();
-    // Wait Texture PBO Fence Sync
+    // Stall GL Queue until Fence Signaled
+    if (m_sync_check && m_sync)
+        glWaitSync(m_sync, 0, GL_TIMEOUT_IGNORED);
+};
+
+void GLTexture::syncEnable() {
+    m_ctx->gl__makeCurrent();
+    m_sync_check = true;
+};
+
+void GLTexture::syncDisable() {
+    m_ctx->gl__makeCurrent();
+    m_sync_check = false;
+
+    // Remove Sync Object
+    if (m_sync) {
+        glDeleteSync(m_sync);
+        m_sync = nullptr;
+    }
+};
+
+// -------------------------------
+// GPU Objects: Texture Sync Stamp
+// -------------------------------
+
+void GLTexture::generateSync() {
+    if (!m_sync_check) return;
+    m_ctx->gl__makeCurrent();
+
+    // Stamp Sync Object
     if (m_sync) glDeleteSync(m_sync);
     m_sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-    if (m_sync) glWaitSync(m_sync, 0, GL_TIMEOUT_IGNORED);
-};
+}

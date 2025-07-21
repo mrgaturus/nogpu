@@ -143,6 +143,7 @@ void GLTexture3D::unpack(int x, int y, int z, int w, int h, int depth, int level
     this->upload(x, y, z, w, h, depth, level,
         reinterpret_cast<void*>(offset));
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    this->generateSync();
 }
 
 void GLTexture3D::pack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) {
@@ -154,4 +155,5 @@ void GLTexture3D::pack(int x, int y, int z, int w, int h, int depth, int level, 
     this->download(x, y, z, w, h, depth, level,
         reinterpret_cast<void*>(offset));
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+    this->generateSync();
 }

@@ -58,20 +58,25 @@ class GLTexture : virtual public GPUTexture {
     void setFilter(GPUTextureFilter filter) override;
     void setWrap(GPUTextureWrap wrap) override;
     void generateMipmaps() override;
+    // GPU Texture Fences
     void syncCPU() override;
     void syncGPU() override;
+    void syncEnable() override;
+    void syncDisable() override;
 
     public: // Texture Attributes
         GLContext* m_ctx;
         GLenum m_tex_target;
         GLuint m_tex_fbo;
         GLuint m_tex;
+        GLuint m_sync_check;
         GLsync m_sync;
 
     protected: // Texture Constructor
         GLTexture(GLContext* ctx);
-        void generateTexture();
         void destroy() override;
+        void generateTexture();
+        void generateSync();
         // Texture Compatible Download
         GLenum compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data);
         GLenum compatDownload2D(int x, int y, int w, int h, int level, void* data);
