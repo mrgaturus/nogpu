@@ -51,26 +51,49 @@ enum class GPUFrameBufferStatus : int {
     FRAMEBUFFER_UNDEFINED,
     FRAMEBUFFER_UNSUPPORTED,
     FRAMEBUFFER_INCOMPLETE_ATTACHMENT,
-    FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT,
-    FRAMEBUFFER_INCOMPLETE_MULTISAMPLE
+    FRAMEBUFFER_INCOMPLETE_MULTISAMPLE,
+    FRAMEBUFFER_INCOMPLETE_MISSING,
 };
 
+typedef struct {
+    int layer, level;
+} GPUFrameBufferSlice;
+
 class GPUFrameBuffer {
+    protected:
+        GPUFrameBufferSlice m_color_slice;
+        GPUFrameBufferSlice m_depth_slice;
+        GPUFrameBufferSlice m_stencil_slice;
+
     public: // Framebuffer Attachment
         virtual void destroy() = 0;
+        virtual GPUFrameBufferStatus checkAttachments() = 0;
         virtual void attachColor(GPURenderBuffer *target, int index) = 0;
-        virtual void attachStencil(GPURenderBuffer *target) = 0;
         virtual void attachDepth(GPURenderBuffer *target) = 0;
+        virtual void attachStencil(GPURenderBuffer *target) = 0;
     public: // Framebuffer Detachment
-        virtual void detachColor() = 0;
-        virtual void detachStencil() = 0;
+        virtual void detachColor(int index) = 0;
         virtual void detachDepth() = 0;
+        virtual void detachStencil() = 0;
+
+    public: // Framebuffer Usage
+        virtual void setColorNone() = 0;
+        virtual void setColorIndex(int index) = 0;
+        virtual void setColorSlice(int layer, int level);
+        virtual void setDepthSlice(int layer, int level);
+        virtual void setStencilSlice(int layer, int level);
 
     public: // Framebuffer Attributes
-        virtual GPUFrameBufferStatus checkStatus() = 0;
+        virtual int getColorIndex();
+        virtual bool checkColorIndex();
+        virtual GPURenderBuffer* getColorCurrent();
         virtual GPURenderBuffer* getColor(int index) = 0;
-        virtual GPURenderBuffer* getStencil() = 0;
         virtual GPURenderBuffer* getDepth() = 0;
+        virtual GPURenderBuffer* getStencil() = 0;
+    public: // Framebuffer Attributes: Slice
+        GPUFrameBufferSlice getColorSlice() { return m_color_slice; }
+        GPUFrameBufferSlice getDepthSlice() { return m_depth_slice; }
+        GPUFrameBufferSlice getStencilSlice() { return m_stencil_slice; }
 };
 
 #endif // NOGPU_FRAMEBUFFER_H
