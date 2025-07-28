@@ -16,6 +16,43 @@ GPUTextureTransferSize computeTransferSize(GPUTexturePixelType type);
 int computeBytesPerPixel(GPUTextureTransferFormat format, GPUTextureTransferSize size);
 
 // ------------------
+// GPU Simple Hashmap
+// ------------------
+
+template <typename T> class GPUHashmap {
+    typedef struct {
+        unsigned int hash;
+        unsigned int pad;
+        T data;
+    } GPUHashmapEntry;
+    // Hashmap Buffer
+    typedef union {
+        GPUHashmapEntry* data_list;
+        GPUHashmapEntry data_fast;
+    } GPUHashmapData;
+
+    private: // Hashmap Attributes
+        int m_len, m_capacity;
+        GPUHashmapData m_data;
+        unsigned int find(unsigned int hash);
+        unsigned int crc32(char* name);
+
+    public: // Hashmap Constructor
+        GPUHashmap() noexcept;
+        ~GPUHashmap() noexcept;
+    public: // Hashmap Manipulation: ID
+        bool add(unsigned int hash, T &data);
+        bool check(unsigned int hash);
+        bool remove(unsigned int hash);
+        T* get(unsigned int hash);
+    public: // Hashmap Manipulation: Name
+        bool add(char* name, T &data);
+        bool check(char* name);
+        bool remove(char* name);
+        T* get(char* name);
+};
+
+// ------------------
 // GPU Logger Console
 // ------------------
 
