@@ -16,7 +16,7 @@ typedef enum {
     LOG_ERROR,
     LOG_ASSERT,
     LOG_DEBUG,
-} GPULoggerLevel;
+} GPUReportLevel;
 
 const char* log_headers[] = {
     "\e[0;34m[nogpu: info]\033[0m",
@@ -27,7 +27,7 @@ const char* log_headers[] = {
     "\e[0;37m[nogpu: debug]\033[0m",
 };
 
-static void inline printf_level(GPULoggerLevel level, const char *format, va_list args) {
+static void inline printf_level(GPUReportLevel level, const char *format, va_list args) {
     printf("%s ", log_headers[level]);
     vprintf(format, args);
     printf("\n");
@@ -37,28 +37,28 @@ static void inline printf_level(GPULoggerLevel level, const char *format, va_lis
 // Basic GPU Logging
 // -----------------
 
-void GPULogger::info(const char *format, ...) {
+void GPUReport::info(const char *format, ...) {
     va_list args;
     va_start(args, format);
     printf_level(LOG_INFO, format, args);
     va_end(args);
 }
 
-void GPULogger::success(const char *format, ...) {
+void GPUReport::success(const char *format, ...) {
     va_list args;
     va_start(args, format);
     printf_level(LOG_SUCCESS, format, args);
     va_end(args);
 }
 
-void GPULogger::warning(const char *format, ...) {
+void GPUReport::warning(const char *format, ...) {
     va_list args;
     va_start(args, format);
     printf_level(LOG_WARNING, format, args);
     va_end(args);
 }
 
-void GPULogger::error(const char *format, ...) {
+void GPUReport::error(const char *format, ...) {
     va_list args;
     va_start(args, format);
     printf_level(LOG_ERROR, format, args);
@@ -69,7 +69,7 @@ void GPULogger::error(const char *format, ...) {
 // Debug GPU Logging
 // -----------------
 
-void GPULogger::assert(bool condition, const char *format, ...) {
+void GPUReport::assert(bool condition, const char *format, ...) {
 #ifdef NOGPU_DEBUG
     if (condition)
         return;
@@ -86,7 +86,7 @@ void GPULogger::assert(bool condition, const char *format, ...) {
 #endif
 }
 
-void GPULogger::debug(const char *format, ...) {
+void GPUReport::debug(const char *format, ...) {
 #ifdef NOGPU_DEBUG
     va_list args;
     va_start(args, format);
@@ -95,7 +95,7 @@ void GPULogger::debug(const char *format, ...) {
 #endif
 }
 
-void GPULogger::stacktrace() {
+void GPUReport::stacktrace() {
 #ifdef NOGPU_DEBUG
     cpptrace::generate_trace().print();
 #endif

@@ -68,40 +68,40 @@ GLDriver::GLDriver(int msaa_samples, bool rgba) {
 
     // Use OpenGL API for EGL
     if (eglBindAPI(EGL_OPENGL_API) == EGL_FALSE) {
-        GPULogger::error("[opengl] failed initialize OpenGL API");
+        GPUReport::error("[opengl] failed initialize OpenGL API");
         return;
     }
 
     // Create Dummy Display to Check OpenGL
     egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (egl_display == EGL_NO_DISPLAY) {
-        GPULogger::error("[opengl] failed create EGL display");
+        GPUReport::error("[opengl] failed create EGL display");
         return;
     }
 
     // Initialize and Configure Display
     if (eglInitialize(egl_display, &egl_major, &egl_minor) == EGL_FALSE) {
-        GPULogger::error("[opengl] failed initialize EGL"); goto TERMINATE_EGL;
+        GPUReport::error("[opengl] failed initialize EGL"); goto TERMINATE_EGL;
     }
 
     egl_configure_msaa(msaa_samples, rgba);
     if (eglChooseConfig(egl_display, attr_egl, &egl_config, 1, &egl_num_config) == EGL_FALSE) {
-        GPULogger::error("[opengl] failed configure EGL"); goto TERMINATE_EGL;
+        GPUReport::error("[opengl] failed configure EGL"); goto TERMINATE_EGL;
     }
 
     // Create Dummy Context
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, attr_context);
     if (egl_context == EGL_NO_CONTEXT) {
-        GPULogger::error("[opengl] device doesn't support OpenGL 3.3"); goto TERMINATE_EGL;
+        GPUReport::error("[opengl] device doesn't support OpenGL 3.3"); goto TERMINATE_EGL;
     }
     if (eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context) == EGL_FALSE) {
-        GPULogger::error("[opengl] failed check OpenGL features"); goto TERMINATE_EGL;
+        GPUReport::error("[opengl] failed check OpenGL features"); goto TERMINATE_EGL;
     }
 
     // Load OpenGL Functions
     if (gladLoadGL((GLADloadfunc) eglGetProcAddress) != 0) {
         if (GLAD_GL_VERSION_3_3 == 0 && !GLAD_GL_ARB_texture_storage) {
-            GPULogger::error("[opengl] device doesn't support OpenGL 3.3");
+            GPUReport::error("[opengl] device doesn't support OpenGL 3.3");
             goto TERMINATE_EGL;
         }
 
@@ -148,10 +148,10 @@ GLDriver::GLDriver(int msaa_samples, bool rgba) {
 
         // Output EGL and OpenGL Information
         const char* vendor = (const char*) glGetString(0x1F02);
-        GPULogger::success("[opengl] EGL version: %d.%d", egl_major, egl_minor);
-        GPULogger::success("[opengl] OpenGL version: %s", vendor);
+        GPUReport::success("[opengl] EGL version: %d.%d", egl_major, egl_minor);
+        GPUReport::success("[opengl] OpenGL version: %s", vendor);
     } else {
-        GPULogger::error("[opengl] failed loading OpenGL functions");
+        GPUReport::error("[opengl] failed loading OpenGL functions");
     }
 
 TERMINATE_EGL:
@@ -186,8 +186,8 @@ bool GLDriver::impl__shutdown() {
     m_rgba = false;
 
     // Return Driver Shutdown Status
-    if (result) GPULogger::success("[opengl] terminated EGL display");
-    else GPULogger::error("[opengl] failed terminating EGL & OpenGL");
+    if (result) GPUReport::success("[opengl] terminated EGL display");
+    else GPUReport::error("[opengl] failed terminating EGL & OpenGL");
     return result;
 }
 
@@ -264,7 +264,7 @@ static void configureWaylandSurface(LinuxEGLContext* gtx, void* window) {
     if (!driver->so_wayland) driver->so_wayland =
         dlopen("libwayland-egl.so.1", RTLD_LAZY | RTLD_GLOBAL);
     if (!driver->so_wayland) {
-        GPULogger::error("[opengl] failed load libwayland-egl.so.1");
+        GPUReport::error("[opengl] failed load libwayland-egl.so.1");
         return;
     }
 
@@ -273,7 +273,7 @@ static void configureWaylandSurface(LinuxEGLContext* gtx, void* window) {
         dlsym(driver->so_wayland, "wl_egl_window_create");
     gtx->wl_surface = (void*) wl_egl_window_create(window, 64, 64);
     if (!gtx->wl_surface) {
-        GPULogger::error("[opengl] failed creating wayland EGL window");
+        GPUReport::error("[opengl] failed creating wayland EGL window");
         return;
     }
 
@@ -323,7 +323,7 @@ static void configureX11Surface(LinuxEGLContext* gtx, void* window) {
     if (!driver->so_x11) driver->so_x11 =
         dlopen("libX11.so.6", RTLD_LAZY | RTLD_GLOBAL);
     if (!driver->so_x11) {
-        GPULogger::error("[opengl] failed load libX11.so.6");
+        GPUReport::error("[opengl] failed load libX11.so.6");
         return;
     }
 
@@ -338,7 +338,7 @@ static void configureX11Surface(LinuxEGLContext* gtx, void* window) {
     // WEIRD BEHAVIOUR: x11 window depth forces EGL depth
     //                  so EGL depth is quite useless for X11
     if (attribs.depth != attribs.egl_depth)
-        GPULogger::warning("[opengl] color depth mismatch, EGL: %d ~ X11 window: %d",
+        GPUReport::warning("[opengl] color depth mismatch, EGL: %d ~ X11 window: %d",
             attribs.egl_depth, attribs.depth);
     gtx->linux_is_rgba = attribs.depth == 32;
 }
@@ -394,7 +394,7 @@ void GLDriver::makeDestroyed(GLContext* ctx) {
     // Destroy Context Surface
     this->cached__remove(ctx);
     if (eglDestroySurface(gtx->display, gtx->surface) == EGL_FALSE)
-        GPULogger::error("[opengl] failed destroying EGL surface");
+        GPUReport::error("[opengl] failed destroying EGL surface");
 
     // Destroy Wayland Context Surface
     if (gtx->wl_surface) {
@@ -428,20 +428,20 @@ void GLAD_API_PTR nogpu_debug_callback(
     switch (type)
     {
         case GL_DEBUG_TYPE_ERROR_ARB:
-            GPULogger::error("[opengl:debug %d %d - %p] %s",
+            GPUReport::error("[opengl:debug %d %d - %p] %s",
                 id, level, user, message);
-            GPULogger::stacktrace();
+            GPUReport::stacktrace();
             break;
         case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB:
         case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:
-            GPULogger::warning("[opengl:debug %d %d - %p] %s",
+            GPUReport::warning("[opengl:debug %d %d - %p] %s",
                 id, level, user, message);
-            GPULogger::stacktrace();
+            GPUReport::stacktrace();
             break;
         case GL_DEBUG_TYPE_PORTABILITY_ARB:
         case GL_DEBUG_TYPE_PERFORMANCE_ARB:
         case GL_DEBUG_TYPE_OTHER_ARB:
-            GPULogger::info("[opengl:debug %d %d - %p] %s",
+            GPUReport::info("[opengl:debug %d %d - %p] %s",
                 id, level, user, message);
             break;
         default: break;
@@ -471,18 +471,18 @@ static LinuxEGL* createLinuxEGL(void* display, LinuxEGLOption option) {
     // Create Native Specific EGL Display
     egl.display = eglGetPlatformDisplay(egl_option, display, nullptr);
     if (egl.display == EGL_NO_DISPLAY) {
-        GPULogger::error("[opengl] failed create EGL display");
+        GPUReport::error("[opengl] failed create EGL display");
         return nullptr;
     }
 
     // Initialize EGL Display
     if (eglInitialize(egl.display, &egl_major, &egl_minor) == EGL_FALSE) {
-        GPULogger::error("[opengl] failed initialize EGL for %x", egl_option);
+        GPUReport::error("[opengl] failed initialize EGL for %x", egl_option);
         goto TERMINATE_EGL;
     }
 
     if (eglChooseConfig(egl.display, attr_egl, &egl.config, 1, &egl_num_config) == EGL_FALSE) {
-        GPULogger::error("[opengl] failed configure EGL");
+        GPUReport::error("[opengl] failed configure EGL");
         goto TERMINATE_EGL;
     }
 
@@ -495,7 +495,7 @@ static LinuxEGL* createLinuxEGL(void* display, LinuxEGLOption option) {
     // Create EGL Native Context
     egl.context = eglCreateContext(egl.display, egl.config, EGL_NO_CONTEXT, attr_context);
     if (egl.context == EGL_NO_CONTEXT) {
-        GPULogger::error("[opengl] device doesn't support OpenGL 3.3");
+        GPUReport::error("[opengl] device doesn't support OpenGL 3.3");
         goto TERMINATE_EGL;
     }
 
@@ -559,7 +559,7 @@ static void configureEGLSurface(LinuxEGLContext* gtx, void* window, LinuxEGLOpti
     if (surface != EGL_NO_SURFACE) {
         gtx->surface = surface;
         gtx->linux_is_x11 = egl->linux_is_x11;
-    } else GPULogger::error("[opengl] failed create EGL surface for %p", window);
+    } else GPUReport::error("[opengl] failed create EGL surface for %p", window);
 }
 
 static void configureEGLContext(LinuxEGLContext* gtx, void* display, LinuxEGLOption option) {
@@ -599,7 +599,7 @@ GPUContext* GLDriver::impl__createContext(GPUWindowX11 win) {
 
     // Resize X11 Window if Success
     if (gtx.egl && gtx.surface) {
-        GPULogger::success("[opengl] EGL X11 surface created for XID:%ld", win.window);
+        GPUReport::success("[opengl] EGL X11 surface created for XID:%ld", win.window);
         x11_XResizeWindow_t XResizeWindow = (x11_XResizeWindow_t)
             dlsym(m_egl.so_x11, "XResizeWindow");
         XResizeWindow(gtx.egl->linux_display, win.window, win.w, win.h);
@@ -616,7 +616,7 @@ GPUContext* GLDriver::impl__createContext(GPUWindowWayland win) {
 
     // Resize Wayland EGL if Success
     if (gtx.egl && gtx.surface) {
-        GPULogger::success("[opengl] EGL Wayland surface created for wl_surface:%p", win.surface);
+        GPUReport::success("[opengl] EGL Wayland surface created for wl_surface:%p", win.surface);
         resizeWaylandSurface(&gtx, win.w, win.h);
     }
 
@@ -643,13 +643,13 @@ GPUContext* GLDriver::impl__createContext(GLFWwindow* win) {
     LinuxEGLContext gtx = {.driver = &m_egl};
 
     if (!win) {
-        GPULogger::error("invalid GLFW window");
+        GPUReport::error("invalid GLFW window");
         return nullptr;
     } else if (glfwGetGLXContext(win) || glfwGetEGLContext(win)) {
-        GPULogger::error("GLFW window must not have a GLX context or EGL context");
+        GPUReport::error("GLFW window must not have a GLX context or EGL context");
         return nullptr;
     } else if (glfwGetWindowAttrib(win, GLFW_CLIENT_API) != GLFW_NO_API) {
-        GPULogger::error("GLFW window hint GLFW_CLIENT_API must be GLFW_NO_API");
+        GPUReport::error("GLFW window hint GLFW_CLIENT_API must be GLFW_NO_API");
         return nullptr;
     }
 
@@ -661,7 +661,7 @@ GPUContext* GLDriver::impl__createContext(GLFWwindow* win) {
         configureEGLContext(&gtx, display, LinuxEGLOption::LINUX_WAYLAND);
         configureEGLSurface(&gtx, surface, LinuxEGLOption::LINUX_WAYLAND);
         if (gtx.egl && gtx.surface) {
-            GPULogger::success("[opengl] EGL Wayland surface created for GLFW3:%p", win);
+            GPUReport::success("[opengl] EGL Wayland surface created for GLFW3:%p", win);
             // Resize Wayland Surface
             int w, h; glfwGetWindowSize(win, &w, &h);
             resizeWaylandSurface(&gtx, w, h);
@@ -677,13 +677,13 @@ GPUContext* GLDriver::impl__createContext(GLFWwindow* win) {
         configureEGLContext(&gtx, (void*) display, LinuxEGLOption::LINUX_X11);
         configureEGLSurface(&gtx, (void*) xid, LinuxEGLOption::LINUX_X11);
         if (gtx.egl && gtx.surface) {
-            GPULogger::success("[opengl] EGL X11 surface created for GLFW3:%p", win);
+            GPUReport::success("[opengl] EGL X11 surface created for GLFW3:%p", win);
             return makeLinuxContext(gtx);
         }
     }
 
     // No Valid GLFW3 Window Found
-    GPULogger::error("GLFW window is not Wayland or X11");
+    GPUReport::error("GLFW window is not Wayland or X11");
     return nullptr;
 }
 
@@ -701,16 +701,16 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
 
     // Check Valid SDL3 Window
     if (!win || (win_props = SDL_GetWindowProperties(win)) == 0) {
-        GPULogger::error("invalid SDL3 window");
+        GPUReport::error("invalid SDL3 window");
         return nullptr;
     }
 
     // Check SDL3 Window Flags
     if (SDL_GetWindowFlags(win) & (SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL)) {
-        GPULogger::error("SDL3 window flags must not have SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL");
+        GPUReport::error("SDL3 window flags must not have SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL");
         return nullptr;
     } else if (SDL_WindowHasSurface(win) || SDL_GetRenderer(win)) {
-        GPULogger::error("SDL3 window must not have a SDL_Surface or SDL_Renderer");
+        GPUReport::error("SDL3 window must not have a SDL_Surface or SDL_Renderer");
         return nullptr;
     }
 
@@ -719,7 +719,7 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
         SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr);
     if (display != nullptr) {
         if (SDL_HasProperty(win_props, SDL_PROP_WINDOW_WAYLAND_EGL_WINDOW_POINTER)) {
-            GPULogger::error("SDL3 window must not have an egl_window");
+            GPUReport::error("SDL3 window must not have an egl_window");
             return nullptr;
         }
 
@@ -729,7 +729,7 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
         configureEGLContext(&gtx, display, LinuxEGLOption::LINUX_WAYLAND);
         configureEGLSurface(&gtx, surface, LinuxEGLOption::LINUX_WAYLAND);
         if (gtx.egl && gtx.surface) {
-            GPULogger::success("[opengl] EGL Wayland surface created for SDL3:%p", win);
+            GPUReport::success("[opengl] EGL Wayland surface created for SDL3:%p", win);
             // Resize Wayland Surface
             int w, h; SDL_GetWindowSize(win, &w, &h);
             resizeWaylandSurface(&gtx, w, h);
@@ -748,13 +748,13 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
         configureEGLContext(&gtx, (void*) display, LinuxEGLOption::LINUX_X11);
         configureEGLSurface(&gtx, (void*) xid, LinuxEGLOption::LINUX_X11);
         if (gtx.egl && gtx.surface) {
-            GPULogger::success("[opengl] EGL X11 surface created for SDL3:%p", win);
+            GPUReport::success("[opengl] EGL X11 surface created for SDL3:%p", win);
             return makeLinuxContext(gtx);
         }
     }
 
     // No Valid SDL3 Window Found
-    GPULogger::error("SDL3 window is not Wayland or X11");
+    GPUReport::error("SDL3 window is not Wayland or X11");
     return nullptr;
 }
 
@@ -765,16 +765,16 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
     SDL_SysWMinfo syswm;
     // Get SDL2 Native Info
     if (!win || !SDL_GetWindowWMInfo(win, &syswm)) {
-        GPULogger::error("invalid SDL2 window");
+        GPUReport::error("invalid SDL2 window");
         return nullptr;
     }
 
     // Check SDL2 Window Flags
     if (SDL_GetWindowFlags(win) & (SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL)) {
-        GPULogger::error("SDL2 window flags must not have SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL");
+        GPUReport::error("SDL2 window flags must not have SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL");
         return nullptr;
     } else if (SDL_HasWindowSurface(win) || SDL_GetRenderer(win)) {
-        GPULogger::error("SDL2 window must not have a SDL_Surface or SDL_Renderer");
+        GPUReport::error("SDL2 window must not have a SDL_Surface or SDL_Renderer");
         return nullptr;
     }
 
@@ -783,14 +783,14 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
     switch (syswm.subsystem) {
         case SDL_SYSWM_WAYLAND:
             if (syswm.info.wl.egl_window) {
-                GPULogger::error("SDL2 window must not have an egl_window");
+                GPUReport::error("SDL2 window must not have an egl_window");
                 return nullptr;
             }
 
             configureEGLContext(&gtx, syswm.info.wl.display, LinuxEGLOption::LINUX_WAYLAND);
             configureEGLSurface(&gtx, syswm.info.wl.surface, LinuxEGLOption::LINUX_WAYLAND);
             if (gtx.egl && gtx.surface) {
-                GPULogger::success("[opengl] EGL Wayland surface created for SDL2:%p", win);
+                GPUReport::success("[opengl] EGL Wayland surface created for SDL2:%p", win);
                 // Resize Wayland Surface
                 int w, h; SDL_GetWindowSize(win, &w, &h);
                 resizeWaylandSurface(&gtx, w, h);
@@ -799,10 +799,10 @@ GPUContext* GLDriver::impl__createContext(SDL_Window *win) {
             configureEGLContext(&gtx, (void*) syswm.info.x11.display, LinuxEGLOption::LINUX_X11);
             configureEGLSurface(&gtx, (void*) syswm.info.x11.window, LinuxEGLOption::LINUX_X11);
             if (gtx.egl && gtx.surface) {
-                GPULogger::success("[opengl] EGL X11 surface created for SDL2:%p", win);
+                GPUReport::success("[opengl] EGL X11 surface created for SDL2:%p", win);
             } break;
         default: // Invalid Windowing
-            GPULogger::error("SDL2 window is not Wayland or X11");
+            GPUReport::error("SDL2 window is not Wayland or X11");
             return nullptr;
     }
 

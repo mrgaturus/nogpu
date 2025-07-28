@@ -19,7 +19,7 @@ GLTextureCubemapArray::GLTextureCubemapArray(
 
         // Check if Cubemap Array is Supported
         if (!GLAD_GL_ARB_texture_cube_map_array) {
-            GPULogger::error("cubemap array is not supported");
+            GPUReport::error("cubemap array is not supported");
             delete this;
             return;
         }
@@ -38,11 +38,11 @@ void GLTextureCubemapArray::allocate(int w, int h, int layers, int levels) {
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel type for Cubemap Array %p", this);
+            GPUReport::error("invalid pixel type for Cubemap Array %p", this);
         case GL_INVALID_OPERATION:
-            GPULogger::error("invalid levels count for Cubemap Array %p", this);
+            GPUReport::error("invalid levels count for Cubemap Array %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("invalid size for Cubemap Array %p", this);
+            GPUReport::error("invalid size for Cubemap Array %p", this);
     }
 
     // Check Texture Errors
@@ -73,11 +73,11 @@ void GLTextureCubemapArray::upload(GPUTextureCubemapSide side, int x, int y, int
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_OPERATION:
-            GPULogger::error("failed uploading pixels for Cubemap Array %p", this);
+            GPUReport::error("failed uploading pixels for Cubemap Array %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("invalid upload parameters for Cubemap Array %p", this);
+            GPUReport::error("invalid upload parameters for Cubemap Array %p", this);
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel format/type for Cubemap Array %p", this);
+            GPUReport::error("invalid pixel format/type for Cubemap Array %p", this);
     }
 }
 
@@ -106,7 +106,7 @@ void GLTextureCubemapArray::download(GPUTextureCubemapSide side, int x, int y, i
 
     // Check Succesfull
     if (error != GL_NO_ERROR)
-        GPULogger::error("failed downloading pixels from Cubemap Array %p", this);
+        GPUReport::error("failed downloading pixels from Cubemap Array %p", this);
 }
 
 // ----------------------------------------------

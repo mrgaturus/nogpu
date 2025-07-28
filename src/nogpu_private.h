@@ -57,7 +57,7 @@ template <typename T> class GPUHashmap {
 // GPU Logger Console
 // ------------------
 
-class GPULogger {
+class GPUReport {
     #if defined(__clang__) || defined(__GNUC__)
         public:
             static void info(const char* format, ...)

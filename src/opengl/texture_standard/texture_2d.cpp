@@ -63,11 +63,11 @@ void GLTexture2D::allocate(GPUTexture2DMode mode, int w, int h, int levels) {
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel type for 2D %p", this);
+            GPUReport::error("invalid pixel type for 2D %p", this);
         case GL_INVALID_OPERATION:
-            GPULogger::error("invalid levels count for 2D %p", this);
+            GPUReport::error("invalid levels count for 2D %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("invalid size for 2D %p", this);
+            GPUReport::error("invalid size for 2D %p", this);
     }
 
     // Check Texture Errors
@@ -94,11 +94,11 @@ void GLTexture2D::upload(int x, int y, int w, int h, int level, void* data) {
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_OPERATION:
-            GPULogger::error("failed uploading pixels for 2D %p", this);
+            GPUReport::error("failed uploading pixels for 2D %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("invalid upload parameters for 2D %p", this);
+            GPUReport::error("invalid upload parameters for 2D %p", this);
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel format/type for 2D %p", this);
+            GPUReport::error("invalid pixel format/type for 2D %p", this);
     }
 }
 
@@ -133,7 +133,7 @@ void GLTexture2D::download(int x, int y, int w, int h, int level, void* data) {
 
     // Check Succesfull
     if (error != GL_NO_ERROR)
-        GPULogger::error("failed downloading pixels from 2D %p", this);
+        GPUReport::error("failed downloading pixels from 2D %p", this);
 }
 
 // -----------------------------------------

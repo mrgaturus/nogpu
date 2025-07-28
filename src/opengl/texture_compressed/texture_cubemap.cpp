@@ -30,11 +30,11 @@ void GLCompressedCubemap::allocate(int w, int h, int levels) {
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel type for Cubemap %p", this);
+            GPUReport::error("invalid pixel type for Cubemap %p", this);
         case GL_INVALID_OPERATION:
-            GPULogger::error("invalid levels count for Cubemap %p", this);
+            GPUReport::error("invalid levels count for Cubemap %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("invalid size for Cubemap %p", this);
+            GPUReport::error("invalid size for Cubemap %p", this);
     }
 
     // Check Texture Errors
@@ -64,11 +64,11 @@ void GLCompressedCubemap::upload(GPUTextureCubemapSide side, int x, int y, int w
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_OPERATION:
-            GPULogger::error("failed uploading pixels for Cubemap %p", this);
+            GPUReport::error("failed uploading pixels for Cubemap %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("invalid upload parameters for Cubemap %p", this);
+            GPUReport::error("invalid upload parameters for Cubemap %p", this);
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel format/type for Cubemap %p", this);
+            GPUReport::error("invalid pixel format/type for Cubemap %p", this);
     }
 }
 

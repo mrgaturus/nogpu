@@ -58,11 +58,11 @@ void GLCompressed3D::allocate(GPUTexture3DMode mode, int w, int h, int depth, in
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel type for 3D %p", this);
+            GPUReport::error("invalid pixel type for 3D %p", this);
         case GL_INVALID_OPERATION:
-            GPULogger::error("invalid levels count for 3D %p", this);
+            GPUReport::error("invalid levels count for 3D %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("invalid size for 3D %p", this);
+            GPUReport::error("invalid size for 3D %p", this);
     }
 
     // Check Texture Errors
@@ -88,11 +88,11 @@ void GLCompressed3D::upload(int x, int y, int z, int w, int h, int depth, int le
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_OPERATION:
-            GPULogger::error("failed uploading pixels for 3D %p", this);
+            GPUReport::error("failed uploading pixels for 3D %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("invalid upload parameters for 3D %p", this);
+            GPUReport::error("invalid upload parameters for 3D %p", this);
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel format/type for 3D %p", this);
+            GPUReport::error("invalid pixel format/type for 3D %p", this);
     }
 }
 

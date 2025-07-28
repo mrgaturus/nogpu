@@ -23,12 +23,12 @@ GLTextureBuffer::GLTextureBuffer(GLContext* ctx, GLBuffer* buffer, GPUTexturePix
 
     // Check if driver has Texture Buffer
     if (!GLAD_GL_ARB_texture_buffer_range) {
-        GPULogger::error("texture buffer is not supported");
+        GPUReport::error("texture buffer is not supported");
         delete this;
         return;
     // Check Texture Pixel Format
     } else if (!canTextureBuffer(type)) {
-        GPULogger::error("invalid pixel format for texture buffer %p", this);
+        GPUReport::error("invalid pixel format for texture buffer %p", this);
         delete this;
         return;
     }
@@ -61,7 +61,7 @@ void GLTextureBuffer::setType(GPUTexturePixelType type) {
     m_ctx->gl__makeCurrent();
     // Check Valid Texture Pixel Type
     if (!canTextureBuffer(type)) {
-        GPULogger::error("invalid pixel format for texture buffer %p", this);
+        GPUReport::error("invalid pixel format for texture buffer %p", this);
         return;
     }
 

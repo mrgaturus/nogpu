@@ -35,11 +35,11 @@ void GLTexture1D::allocate(int size, int levels) {
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel type for 1D %p", this);
+            GPUReport::error("invalid pixel type for 1D %p", this);
         case GL_INVALID_OPERATION:
-            GPULogger::error("invalid levels count for 1D %p", this);
+            GPUReport::error("invalid levels count for 1D %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("invalid size for 1D %p", this);
+            GPUReport::error("invalid size for 1D %p", this);
     }
 
     // Check Texture Errors
@@ -66,11 +66,11 @@ void GLTexture1D::upload(int x, int size, int level, void* data) {
     GLenum error = glGetError();
     switch (error) {
         case GL_INVALID_OPERATION:
-            GPULogger::error("failed uploading pixels for 1D %p", this);
+            GPUReport::error("failed uploading pixels for 1D %p", this);
         case GL_INVALID_VALUE:
-            GPULogger::error("invalid upload parameters for 1D %p", this);
+            GPUReport::error("invalid upload parameters for 1D %p", this);
         case GL_INVALID_ENUM:
-            GPULogger::error("invalid pixel format/type for 1D %p", this);
+            GPUReport::error("invalid pixel format/type for 1D %p", this);
     }
 }
 
@@ -103,7 +103,7 @@ void GLTexture1D::download(int x, int size, int level, void* data) {
 
     // Check Succesfull
     if (error != GL_NO_ERROR)
-        GPULogger::error("failed downloading pixels from 1D %p", this);
+        GPUReport::error("failed downloading pixels from 1D %p", this);
 }
 
 // -----------------------------------------

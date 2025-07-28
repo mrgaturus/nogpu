@@ -8,7 +8,7 @@
 GPUDevice* GPUDevice::m_device = nullptr;
 bool GPUDevice::initialize(GPUDeviceDriver driver, int msaa_samples, bool rgba) {
     if (m_device) {
-        GPULogger::error("driver already initialized");
+        GPUReport::error("driver already initialized");
         return false;
     }
 
@@ -118,7 +118,7 @@ void GPUDevice::cached__remove(GPUContext* ctx) {
 
 GPUContext* GPUDevice::createContext(GLFWwindow *win) {
     if (!GPUDevice::checkInitialized()) {
-        GPULogger::error("driver is not initialized");
+        GPUReport::error("driver is not initialized");
         return nullptr;
     }
 
@@ -144,7 +144,7 @@ GPUContext* GPUDevice::createContext(GLFWwindow *win) {
 
 GPUContext* GPUDevice::createContext(SDL_Window *win) {
     if (!GPUDevice::checkInitialized()) {
-        GPULogger::error("driver is not initialized");
+        GPUReport::error("driver is not initialized");
         return nullptr;
     }
 
@@ -170,7 +170,7 @@ GPUContext* GPUDevice::createContext(SDL_Window *win) {
 
 GPUContext* GPUDevice::createContext(GPUWindowX11 win) {
     if (!GPUDevice::checkInitialized()) {
-        GPULogger::error("driver is not initialized");
+        GPUReport::error("driver is not initialized");
         return nullptr;
     }
 
@@ -189,7 +189,7 @@ GPUContext* GPUDevice::createContext(GPUWindowX11 win) {
 
 GPUContext* GPUDevice::createContext(GPUWindowWayland win) {
     if (!GPUDevice::checkInitialized()) {
-        GPULogger::error("driver is not initialized");
+        GPUReport::error("driver is not initialized");
         return nullptr;
     }
 
