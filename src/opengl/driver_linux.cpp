@@ -106,39 +106,39 @@ GLDriver::GLDriver(int msaa_samples, bool rgba) {
         }
 
         unsigned int features =
-            feature_flag(GPUDriverFeature::DRIVER_FEATURE_RASTERIZE) |
-            feature_flag(GPUDriverFeature::DRIVER_TEXTURE_1D) |
-            feature_flag(GPUDriverFeature::DRIVER_TEXTURE_RGBA16) |
-            feature_flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_RGTC) |
-            feature_flag(GPUDriverFeature::DRIVER_SHADER_GLSL) |
-            feature_flag(GPUDriverFeature::DRIVER_SHADER_LOW_GLSL);
+            device_feature_flag(GPUDeviceFeature::DRIVER_FEATURE_RASTERIZE) |
+            device_feature_flag(GPUDeviceFeature::DRIVER_TEXTURE_1D) |
+            device_feature_flag(GPUDeviceFeature::DRIVER_TEXTURE_RGBA16) |
+            device_feature_flag(GPUDeviceFeature::DRIVER_TEXTURE_COMPRESSED_RGTC) |
+            device_feature_flag(GPUDeviceFeature::DRIVER_SHADER_GLSL) |
+            device_feature_flag(GPUDeviceFeature::DRIVER_SHADER_LOW_GLSL);
 
         // Check Extra Extensions
         if (GLAD_GL_ARB_compute_shader && GLAD_GL_ARB_shader_image_load_store)
-            features |= feature_flag(GPUDriverFeature::DRIVER_FEATURE_COMPUTE);
+            features |= device_feature_flag(GPUDeviceFeature::DRIVER_FEATURE_COMPUTE);
         if (GLAD_GL_ARB_debug_output) // Debug Feature
-            features |= feature_flag(GPUDriverFeature::DRIVER_FEATURE_DEBUG);
+            features |= device_feature_flag(GPUDeviceFeature::DRIVER_FEATURE_DEBUG);
         if (GLAD_GL_ARB_texture_buffer_range) // Texture Buffer Feature
-            features |= feature_flag(GPUDriverFeature::DRIVER_TEXTURE_BUFFER);
+            features |= device_feature_flag(GPUDeviceFeature::DRIVER_TEXTURE_BUFFER);
         if (GLAD_GL_ARB_texture_cube_map_array) // Texture Cubemap Array Feature
-            features |= feature_flag(GPUDriverFeature::DRIVER_TEXTURE_CUBEMAP_ARRAY);
+            features |= device_feature_flag(GPUDeviceFeature::DRIVER_TEXTURE_CUBEMAP_ARRAY);
         if (GLAD_GL_ARB_texture_storage_multisample) // Texture Multisample Feature
-            features |= feature_flag(GPUDriverFeature::DRIVER_TEXTURE_MULTISAMPLE);
+            features |= device_feature_flag(GPUDeviceFeature::DRIVER_TEXTURE_MULTISAMPLE);
 
         // Check Extra Extensions: Compressed Textures
         if (GLAD_GL_EXT_texture_compression_s3tc)
-            features |= feature_flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_DXTC);
+            features |= device_feature_flag(GPUDeviceFeature::DRIVER_TEXTURE_COMPRESSED_DXTC);
         if (GLAD_GL_ARB_texture_compression_bptc)
-            features |= feature_flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_BC7);
+            features |= device_feature_flag(GPUDeviceFeature::DRIVER_TEXTURE_COMPRESSED_BC7);
         if (GLAD_GL_ARB_ES3_compatibility)
-            features |= feature_flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_ETC2);
+            features |= device_feature_flag(GPUDeviceFeature::DRIVER_TEXTURE_COMPRESSED_ETC2);
         if (GLAD_GL_KHR_texture_compression_astc_ldr || GLAD_GL_KHR_texture_compression_astc_ldr)
-            features |= feature_flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_ASTC);
+            features |= device_feature_flag(GPUDeviceFeature::DRIVER_TEXTURE_COMPRESSED_ASTC);
 
         // Check Extra Extensions: SPIR-V
         if (GLAD_GL_ARB_gl_spirv) {
-            features |= feature_flag(GPUDriverFeature::DRIVER_SHADER_SPIRV);
-            features |= feature_flag(GPUDriverFeature::DRIVER_SHADER_LOW_SPIRV);
+            features |= device_feature_flag(GPUDeviceFeature::DRIVER_SHADER_SPIRV);
+            features |= device_feature_flag(GPUDeviceFeature::DRIVER_SHADER_LOW_SPIRV);
         }
 
         // Define Features
@@ -207,16 +207,20 @@ bool GLDriver::impl__checkVerticalSync() {
     return m_vsync;
 }
 
-bool GLDriver::impl__checkFeature(GPUDriverFeature feature) {
-    return m_features & feature_flag(feature);
+bool GLDriver::impl__checkFeature(GPUDeviceFeature feature) {
+    return m_features & device_feature_flag(feature);
+}
+
+GPUDeviceDriver GLDriver::impl__getDeviceDriver() {
+    return GPUDeviceDriver::DRIVER_OPENGL;
 }
 
 int GLDriver::impl__getMultisamplesCount() {
     return m_msaa_samples;
 }
 
-GPUDriverOption GLDriver::impl__getDriverOption() {
-    return GPUDriverOption::DRIVER_OPENGL;
+bool GLDriver::impl__getVerticalSync() {
+    return m_vsync;
 }
 
 void GLDriver::impl__setVerticalSync(bool value) {
@@ -349,7 +353,7 @@ GPUContext* GLDriver::makeLinuxContext(LinuxEGLContext gtx) {
     // Create GLContext
     if (gtx.egl && gtx.surface) {
         GLContext* ctx0 = new GLContext();
-        ctx0->m_driver = this;
+        ctx0->m_device = this;
         ctx0->m_gtx = gtx;
         ctx = (GPUContext*) ctx0;
         impl__setVerticalSync(m_vsync);

@@ -12,7 +12,7 @@
 
 class GPUContext {
     protected:
-        friend GPUDriver;
+        friend GPUDevice;
         GPUContext* m_next;
         GPUContext* m_prev;
         void* m_window;

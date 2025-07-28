@@ -45,7 +45,7 @@ typedef struct LinuxEGLContext {
 #endif // defined(__unix__)
 
 class GLContext;
-class GLDriver : GPUDriver {
+class GLDriver : GPUDevice {
     GLContext* m_context_list = nullptr;
     unsigned int m_features = 0;
     int m_msaa_samples = 0;
@@ -62,9 +62,10 @@ class GLDriver : GPUDriver {
     bool impl__checkInitialized() override;
     bool impl__checkRGBASurface() override;
     bool impl__checkVerticalSync() override;
-    bool impl__checkFeature(GPUDriverFeature feature) override;
+    bool impl__checkFeature(GPUDeviceFeature feature) override;
+    GPUDeviceDriver impl__getDeviceDriver() override;
     int impl__getMultisamplesCount() override;
-    GPUDriverOption impl__getDriverOption() override;
+    bool impl__getVerticalSync() override;
     void impl__setVerticalSync(bool value) override;
 
     // Context Creation: GLFW
@@ -88,7 +89,7 @@ class GLDriver : GPUDriver {
         void makeDestroyed(GLContext* ctx);
     protected: // GL Driver Initialize
         GLDriver(int msaa_samples, bool rgba);
-        friend GPUDriver;
+        friend GPUDevice;
 };
 
 #endif // OPENGL_DRIVER_H

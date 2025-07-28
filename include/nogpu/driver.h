@@ -40,7 +40,7 @@ typedef struct {
 // GPU Objects: Driver
 // -------------------
 
-enum class GPUDriverOption : int {
+enum class GPUDeviceDriver : int {
     DRIVER_NONE,
     DRIVER_AUTO,
     // Driver Options
@@ -51,7 +51,7 @@ enum class GPUDriverOption : int {
     DRIVER_METAL
 };
 
-enum class GPUDriverFeature : int {
+enum class GPUDeviceFeature : int {
     DRIVER_FEATURE_RASTERIZE,
     DRIVER_FEATURE_COMPUTE,
     DRIVER_FEATURE_DEBUG,
@@ -82,37 +82,37 @@ enum class GPUDriverFeature : int {
 };
 
 class GPUContext;
-class GPUDriver {
+class GPUDevice {
     protected:
+        static GPUDevice *m_device;
         GPUContext* m_ctx_cache = nullptr;
         GPUContext* cached__find(void* window);
         void cached__add(GPUContext* ctx);
         void cached__remove(GPUContext* ctx);
-        // Driver Abstrack Lock
-        static GPUDriver *m_driver;
-        static thread_local GPUDriver *m_driver_lock;
 
         // Driver Abstract Implementation
         virtual bool impl__shutdown() = 0;
         virtual bool impl__checkInitialized() = 0;
         virtual bool impl__checkRGBASurface() = 0;
         virtual bool impl__checkVerticalSync() = 0;
-        virtual bool impl__checkFeature(GPUDriverFeature feature) = 0;
+        virtual bool impl__checkFeature(GPUDeviceFeature feature) = 0;
+        virtual GPUDeviceDriver impl__getDeviceDriver() = 0;
         virtual int impl__getMultisamplesCount() = 0;
-        virtual GPUDriverOption impl__getDriverOption() = 0;
+        virtual bool impl__getVerticalSync() = 0;
         virtual void impl__setVerticalSync(bool value) = 0;
 
     public: // Driver Initialize
-        static bool initialize(GPUDriverOption option,
+        static bool initialize(GPUDeviceDriver driver,
             int msaa_samples = 0, bool rgba = false);
         static bool shutdown();
         // Driver Information
         static bool checkInitialized();
         static bool checkRGBASurface();
         static bool checkVerticalSync();
-        static bool checkFeature(GPUDriverFeature feature);
+        static bool checkFeature(GPUDeviceFeature feature);
+        static GPUDeviceDriver getDeviceDriver();
         static int getMultisamplesCount();
-        static GPUDriverOption getDriverOption();
+        static bool getVerticalSync();
         static void setVerticalSync(bool value);
 
     // -- GPU Driver: Context Creation --

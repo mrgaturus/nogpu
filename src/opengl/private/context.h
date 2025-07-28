@@ -12,7 +12,7 @@
 class GLContext : GPUContext {
     #if defined(__unix__)
         LinuxEGLContext m_gtx;
-        GLDriver* m_driver;
+        GLDriver* m_device;
     #endif
 
     // GPU Object Creation

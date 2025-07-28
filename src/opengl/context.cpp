@@ -105,7 +105,7 @@ GPUPipeline* GLContext::createPipeline(GPUProgram* program) {
 // -------------------
 
 void GLContext::gl__makeCurrent() {
-    m_driver->makeCurrent(this);
+    m_device->makeCurrent(this);
 }
 
 GPUCommands* GLContext::createCommands() {

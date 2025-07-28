@@ -5,10 +5,6 @@
 #include <nogpu/commands.h>
 #include <cmath>
 
-unsigned int feature_flag(GPUDriverFeature feature) {
-    return 1 << static_cast<unsigned int>(feature);
-}
-
 // -----------------------
 // Power of Two Operations
 // -----------------------
@@ -40,6 +36,18 @@ unsigned int levels_power_of_two(int w, int h, int limit) {
 
     // Return Calculated Levels
     return levels;
+}
+
+// --------------------
+// Device Feature Flags
+// --------------------
+
+unsigned int device_driver_flag(GPUDeviceDriver driver) {
+    return 1 << static_cast<unsigned int>(driver);
+}
+
+unsigned int device_feature_flag(GPUDeviceFeature feature) {
+    return 1 << static_cast<unsigned int>(feature);
 }
 
 // -----------------------
