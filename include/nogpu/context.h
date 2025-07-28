@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #ifndef NOGPU_CONTEXT_H
 #define NOGPU_CONTEXT_H
-#include "driver.h"
+#include "device.h"
 #include "compressed.h"
 #include "commands.h"
 

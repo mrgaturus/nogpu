@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #ifndef OPENGL_DRIVER_H
 #define OPENGL_DRIVER_H
-#include <nogpu/driver.h>
+#include <nogpu/device.h>
 
 #if defined(__unix__)
 #include <EGL/egl.h>

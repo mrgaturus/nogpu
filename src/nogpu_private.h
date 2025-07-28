@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #ifndef NOGPU_PRIVATE_H
 #define NOGPU_PRIVATE_H
-#include <nogpu/driver.h>
+#include <nogpu/device.h>
 #include <nogpu/texture.h>
 
 unsigned int next_power_of_two(unsigned int v);

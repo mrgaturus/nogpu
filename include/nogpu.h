@@ -3,7 +3,7 @@
 #ifndef NOGPU_H
 #define NOGPU_H
 
-#include "nogpu/driver.h"
+#include "nogpu/device.h"
 #include "nogpu/buffer.h"
 #include "nogpu/texture.h"
 #include "nogpu/framebuffer.h"

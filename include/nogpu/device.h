@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
-#ifndef NOGPU_DRIVER_H
-#define NOGPU_DRIVER_H
+#ifndef NOGPU_DEVICE_H
+#define NOGPU_DEVICE_H
 
 // Include GLFW Window
 #if defined(NOGPU_GLFW)
@@ -138,4 +138,4 @@ class GPUDevice {
     #endif
 };
 
-#endif // NOGPU_DRIVER_H
+#endif // NOGPU_DEVICE_H
