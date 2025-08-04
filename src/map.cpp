@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
-#include "nogpu_private.h"
+#include "nogpu_map.h"
 #include <cstdlib>
 #include <cstring>
 
@@ -8,77 +8,196 @@
 // Hashmap Constructor
 // -------------------
 
-template <typename T>
-GPUHashmap<T>::GPUHashmap() noexcept {
+GPUHashmapOpaque::GPUHashmapOpaque(int size, void* fast) noexcept {
+    m_buffer = (GPUHashmapItem*) fast;
+    m_item = size;
+    m_capacity = 1;
     m_len = 0;
-    m_capacity = 0;
-    m_data = (GPUHashmapData) {};
 }
 
-template <typename T>
-GPUHashmap<T>::~GPUHashmap() noexcept {
+GPUHashmapOpaque::~GPUHashmapOpaque() noexcept {
     if (m_capacity > 1)
-        free(m_data.data_list);
+        free(m_buffer);
 }
 
-// ------------------
-// Hashmap Attributes
-// ------------------
+// ---------------------
+// Hashmap Data: Finding
+// ---------------------
 
-template <typename T>
-unsigned int GPUHashmap<T>::find(unsigned int hash) {
+unsigned int GPUHashmapOpaque::find(unsigned int key) {
+    unsigned char* buffer = (unsigned char*) m_buffer;
+    const unsigned int head = sizeof(GPUHashmapItem);
+    const unsigned int item = m_item;
+    int stride = head + item;
 
+    unsigned int idx = 0;
+    unsigned int end = m_len;
+    unsigned int mid;
+    // Find Upper Bound
+    while (idx < end) {
+        mid = idx + ((end - idx) >> 1);
+        GPUHashmapItem* item = (GPUHashmapItem*) (buffer + mid * stride);
+        // Check Item Upper Bound
+        if (item->key < key)
+            idx = mid + 1;
+        else end = mid;
+    }
+
+    // Return Found
+    return idx;
 }
 
-template <typename T>
-unsigned int GPUHashmap<T>::crc32(char* name) {
+unsigned int GPUHashmapOpaque::crc32(const char* name) {
+    unsigned int seed = reinterpret_cast<unsigned long long>(this);
+    return crc32c(seed, (unsigned char*) name);
+}
 
+// --------------------
+// Hashmap Data: Buffer
+// --------------------
+
+GPUHashmapOpaque::GPUHashmapItem* GPUHashmapOpaque::lookup(int idx) {
+    unsigned char* buffer = (unsigned char*) m_buffer;
+    const unsigned int head = sizeof(GPUHashmapItem);
+    const unsigned int item = m_item;
+
+    // Lookup Hashmap Item
+    idx *= head + item;
+    return (GPUHashmapItem*) (buffer + idx);
+}
+
+void GPUHashmapOpaque::insert(int idx, unsigned int key, void* data) {
+    unsigned char* buffer = (unsigned char*) m_buffer;
+    const unsigned int head = sizeof(GPUHashmapItem);
+    const unsigned int item = m_item;
+    // Scale Index to Stride Bytes
+    int stride = head + item;
+    int len = m_len * stride;
+    idx *= stride;
+
+    // Shift Elements to Right
+    if (m_capacity > 1)
+        memmove(buffer + idx + stride, buffer + idx, len - idx);
+    // Put Element at Position
+    memcpy(buffer + idx, &key, sizeof(unsigned int));
+    memcpy(buffer + idx + head, data, item);
+    m_len++;
+}
+
+void GPUHashmapOpaque::expand(int idx, unsigned int key, void* data) {
+    const unsigned int head = sizeof(GPUHashmapItem);
+    const unsigned int item = m_item;
+    // Scale Index to Stride Bytes
+    int capacity = m_capacity * 2;
+    int stride = head + item;
+    int len = m_len * stride;
+    idx *= stride;
+
+    // Create Buffer With Twice Capacity
+    unsigned char* buffer0 = (unsigned char*) m_buffer;
+    unsigned char* buffer = (unsigned char*) malloc(stride * capacity);    
+    // Copy Buffer Data to New Buffer
+    memcpy(buffer, buffer0, idx);
+    memcpy(buffer + idx + stride, buffer0 + idx, len - idx);
+    memcpy(buffer + idx, &key, sizeof(unsigned int));
+    memcpy(buffer + idx + head, data, item);
+
+    // Change Current Buffer
+    if (capacity > 2)
+        free(buffer0);
+    m_buffer = (GPUHashmapItem*) buffer;
+    m_capacity = capacity;
+    m_len++;
+}
+
+void GPUHashmapOpaque::takeoff(int idx) {
+    unsigned char* buffer = (unsigned char*) m_buffer;
+    const unsigned int head = sizeof(GPUHashmapItem);
+    const unsigned int item = m_item;
+    // Scale Index to Stride Bytes
+    int stride = head + item;
+    int len = m_len * stride;
+    idx *= stride;
+
+    // Shift Elements to Right
+    memcpy(buffer + idx, buffer + idx + stride,
+        len - idx - stride);
+    // Remove Item
+    m_len--;
 }
 
 // ------------------------
 // Hashmap Manipulation: ID
 // ------------------------
 
-template <typename T>
-bool GPUHashmap<T>::add(unsigned int hash, T &data) {
+bool GPUHashmapOpaque::add_0(unsigned int key, void* data) {
+    int idx = this->find(key);
+    bool check = idx >= m_len || this->lookup(idx)->key != key;
+    // Check and Add to Hashmap
+    if (check) {
+        if (m_len < m_capacity)
+            this->insert(idx, key, data);
+        else this->expand(idx, key, data);
+    }
 
+    // Return Success
+    return check;
 }
 
-template <typename T>
-bool GPUHashmap<T>::check(unsigned int hash) {
+bool GPUHashmapOpaque::remove_0(unsigned int key) {
+    int idx = this->find(key);
+    // Check and Remove from Hashmap
+    bool check = idx < m_len && this->lookup(idx)->key == key;
+    if (check) this->takeoff(idx);
 
+    // Return Success
+    return check;
 }
 
-template <typename T>
-bool GPUHashmap<T>::remove(unsigned int hash) {
+bool GPUHashmapOpaque::check_0(unsigned int key) {
+    int idx = this->find(key);
+    bool check = idx < m_len;
+    if (!check) return check;
 
+    // Check if Item is Found
+    GPUHashmapItem* item = this->lookup(idx);
+    return item->key == key;
 }
 
-template <typename T>
-T* GPUHashmap<T>::get(unsigned int hash) {
+void* GPUHashmapOpaque::get_0(unsigned int key) {
+    int idx = this->find(key);
+    bool check = idx < m_len;
 
+    void* data = nullptr;
+    if (!check) return data;
+    // Check if Item is Found
+    GPUHashmapItem* item = this->lookup(idx);
+    if (item->key == key)
+        data = &item->data;
+    // Return Found Item
+    return data;
 }
 
 // --------------------------
 // Hashmap Manipulation: Name
 // --------------------------
 
-template <typename T>
-bool GPUHashmap<T>::add(char* hash, T &data) {
-
+bool GPUHashmapOpaque::add_0(const char* hash, void* data) {
+    unsigned int crc32 = this->crc32(hash);
+    return this->add_0(crc32, data);
 }
 
-template <typename T>
-bool GPUHashmap<T>::check(char* hash) {
-
+bool GPUHashmapOpaque::remove_0(const char* hash) {
+    unsigned int crc32 = this->crc32(hash);
+    return this->remove_0(crc32);
 }
 
-template <typename T>
-bool GPUHashmap<T>::remove(char* hash) {
-
+bool GPUHashmapOpaque::check_0(const char* hash) {
+    unsigned int crc32 = this->crc32(hash);
+    return this->check_0(crc32);
 }
 
-template <typename T>
-T* GPUHashmap<T>::get(char* hash) {
-
+void* GPUHashmapOpaque::get_0(const char* hash) {
+    unsigned int crc32 = this->crc32(hash);
+    return this->get_0(crc32);
 }
