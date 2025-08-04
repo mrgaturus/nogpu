@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
+#ifndef NOGPU_MAP_H
+#define NOGPU_MAP_H
+
 unsigned int crc32c(
     unsigned int crc,
     const unsigned char *str);
@@ -80,3 +83,5 @@ class GPUHashmap : GPUHashmapOpaque {
         bool check_name(const char* name) { return check_0(name); }
         T* get_name(const char* name) { return (T*) get_0(name); }
 };
+
+#endif // NOGPU_MAP_H
