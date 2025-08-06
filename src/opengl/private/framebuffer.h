@@ -44,19 +44,28 @@ class GLFrameBuffer : GPUFrameBuffer {
     GLContext* m_ctx;
 
     // Framebuffer Attachment
+    GPUFrameBufferStatus checkAttachments() override;
     void attachColor(GPURenderBuffer *target, int index) override;
-    void attachStencil(GPURenderBuffer *target) override;
     void attachDepth(GPURenderBuffer *target) override;
-    // Framebuffer Detachment
-    void detachColor() override;
-    void detachStencil() override;
+    void attachStencil(GPURenderBuffer *target) override;
+    void detachColor(int index) override;
     void detachDepth() override;
+    void detachStencil() override;
+
+    // Framebuffer Usage
+    void setColorNone() override;
+    void setColorCurrent(int index) override;
+    void setColorSlice(int layer, int level) override;
+    void setDepthSlice(int layer, int level) override;
+    void setStencilSlice(int layer, int level) override;
 
     // Framebuffer Attributes
-    GPUFrameBufferStatus checkStatus() override;
+    int getColorCurrentIndex() override;
+    bool getColorCurrentCheck() override;
+    GPURenderBuffer* getColorCurrent() override;
     GPURenderBuffer* getColor(int index) override;
-    GPURenderBuffer* getStencil() override;
     GPURenderBuffer* getDepth() override;
+    GPURenderBuffer* getStencil() override;
 
     protected: // Framebuffer Constructor
         GLFrameBuffer(GLContext* ctx);

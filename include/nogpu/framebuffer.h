@@ -71,21 +71,20 @@ class GPUFrameBuffer {
         virtual void attachColor(GPURenderBuffer *target, int index) = 0;
         virtual void attachDepth(GPURenderBuffer *target) = 0;
         virtual void attachStencil(GPURenderBuffer *target) = 0;
-    public: // Framebuffer Detachment
         virtual void detachColor(int index) = 0;
         virtual void detachDepth() = 0;
         virtual void detachStencil() = 0;
 
     public: // Framebuffer Usage
         virtual void setColorNone() = 0;
-        virtual void setColorIndex(int index) = 0;
+        virtual void setColorCurrent(int index) = 0;
         virtual void setColorSlice(int layer, int level);
         virtual void setDepthSlice(int layer, int level);
         virtual void setStencilSlice(int layer, int level);
 
     public: // Framebuffer Attributes
-        virtual int getColorIndex();
-        virtual bool checkColorIndex();
+        virtual int getColorCurrentIndex();
+        virtual bool getColorCurrentCheck();
         virtual GPURenderBuffer* getColorCurrent();
         virtual GPURenderBuffer* getColor(int index) = 0;
         virtual GPURenderBuffer* getDepth() = 0;
