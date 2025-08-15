@@ -31,11 +31,13 @@ class GPUHashmapOpaque {
 
     protected: // Hashmap Manipulation: ID
         bool add_0(unsigned int key, void* data);
+        bool replace_0(unsigned int key, void* data);
         bool remove_0(unsigned int key);
         bool check_0(unsigned int key);
         void* get_0(unsigned int key);
     protected: // Hashmap Manipulation: Name
         bool add_0(const char* name, void* data);
+        bool replace_0(const char* name, void* data);
         bool remove_0(const char* name);
         bool check_0(const char* name);
         void* get_0(const char* name);
@@ -74,11 +76,13 @@ class GPUHashmap : GPUHashmapOpaque {
         GPUHashmapIterator end() { return GPUHashmapIterator::create((unsigned char*) m_buffer, m_len); }
     public: // Hashmap Manipulation: ID
         bool add_key(unsigned int key, T data) { return add_0(key, &data); }
+        bool replace_key(unsigned int key, T data) { return replace_0(key, &data); }
         bool remove_key(unsigned int key) { return remove_0(key); }
         bool check_key(unsigned int key) { return check_0(key); }
         T* get_key(unsigned int key) { return (T*) get_0(key);  }
     public: // Hashmap Manipulation: Name
         bool add_name(const char* name, T data) { return add_0(name, &data); }
+        bool replace_name(const char* name, T data) { return replace_0(name, &data); }
         bool remove_name(const char* name) { return remove_0(name); }
         bool check_name(const char* name) { return check_0(name); }
         T* get_name(const char* name) { return (T*) get_0(name); }

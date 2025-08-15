@@ -144,6 +144,24 @@ bool GPUHashmapOpaque::add_0(unsigned int key, void* data) {
     return check;
 }
 
+bool GPUHashmapOpaque::replace_0(unsigned int key, void* data) {
+    int idx = this->find(key);
+    bool check = idx >= m_len || this->lookup(idx)->key != key;
+
+    // Add or Replace to Hashmap
+    if (check) {
+        if (m_len < m_capacity)
+            this->insert(idx, key, data);
+        else this->expand(idx, key, data);
+    } else {
+        void* target = this->lookup(idx)->data;
+        memcpy(target, data, m_item);
+    }
+
+    // Return Was Replaced
+    return !check;
+}
+
 bool GPUHashmapOpaque::remove_0(unsigned int key) {
     int idx = this->find(key);
     // Check and Remove from Hashmap
@@ -185,6 +203,11 @@ void* GPUHashmapOpaque::get_0(unsigned int key) {
 bool GPUHashmapOpaque::add_0(const char* hash, void* data) {
     unsigned int crc32 = this->crc32(hash);
     return this->add_0(crc32, data);
+}
+
+bool GPUHashmapOpaque::replace_0(const char* hash, void* data) {
+    unsigned int crc32 = this->crc32(hash);
+    return this->replace_0(crc32, data);
 }
 
 bool GPUHashmapOpaque::remove_0(const char* hash) {
