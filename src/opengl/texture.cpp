@@ -22,7 +22,7 @@ void GLTexture::destroy() {
     // Destroy OpenGL Texture
     if (m_sync) glDeleteSync(m_sync);
     if (m_tex_fbo) glDeleteFramebuffers(1, &m_tex_fbo);
-    glDeleteTextures(1, &m_tex);
+    if (m_tex) glDeleteTextures(1, &m_tex);
     m_sync = nullptr;
     m_ctx = nullptr;
 

@@ -10,30 +10,40 @@
 // ------------------------------
 
 class GLContext;
+class GLFrameBuffer;
 class GLRenderBuffer : GPURenderBuffer {
     // Renderbuffer Manipulation
     void useTexture(GPUTexture* texture) override;
-    void createTexture(int w, int h, int samples) override;
-    void createTextureArray(int w, int h, int samples, int layers) override;
+    void createTexture(int w, int h, int levels, int samples) override;
+    void createTextureArray(int w, int h, int layers, int levels, int samples) override;
     void createOffscreen(int w, int h, int samples) override;
     // Renderbuffer Attributes
     GPUTexture* getTexture() override;
     GPUTextureSize getSize() override;
-    int getSamples() override;
     int getWidth() override;
     int getHeight() override;
     int getLayers() override;
+    int getDepth() override;
+    int getSamples() override;
 
     public:
         GLContext* m_ctx;
-        GLTexture* m_texture;
+        GLTexture* m_target;
         GLuint* m_object;
+        GLuint m_tex;
+        // Offscreen
+        GLint m_samples;
+        GLint m_width;
+        GLint m_height;
 
     protected: // Renderbuffer Constructor
         GLRenderBuffer(GLContext* ctx, GPUTexturePixelType type);
         void destroyInternal();
         void destroy() override;
+        bool prepareExternal();
+        bool prepareInternal();
         friend GLContext;
+        friend GLFrameBuffer;
 };
 
 // -----------------------
