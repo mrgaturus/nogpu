@@ -3,6 +3,7 @@
 #ifndef OPENGL_FRAMEBUFFER_H
 #define OPENGL_FRAMEBUFFER_H
 #include <nogpu/framebuffer.h>
+#include <nogpu_map.h>
 #include "texture.h"
 
 // ------------------------------
@@ -52,6 +53,26 @@ class GLRenderBuffer : GPURenderBuffer {
 
 class GLFrameBuffer : GPUFrameBuffer {
     GLContext* m_ctx;
+    typedef struct {
+        GLRenderBuffer* target;
+        GLuint tex_index;
+        GLuint tex_cache;
+    } GLRenderLink;
+
+    typedef struct {
+        int count, capacity;
+        GLRenderLink **list_link;
+        GLuint *list_index;
+    } GLRenderIndex;
+
+    private: // Framebuffer Internals
+        GPUHashmap<GLRenderLink> m_colors;
+        GLRenderIndex m_colors_index;
+        GLRenderLink m_depth;
+        GLRenderLink m_stencil;
+        GLRenderLink *m_color;
+        GLuint m_color_index;
+        GLuint m_fbo;
 
     // Framebuffer Attachment
     GPUFrameBufferStatus checkAttachments() override;
@@ -63,15 +84,15 @@ class GLFrameBuffer : GPUFrameBuffer {
     void detachStencil() override;
 
     // Framebuffer Usage
-    void setColorNone() override;
-    void setColorCurrent(int index) override;
+    void setColorIndex(int index) override;
+    void setColorIndexes(int *list, int count) override;
     void setColorSlice(int layer, int level) override;
     void setDepthSlice(int layer, int level) override;
     void setStencilSlice(int layer, int level) override;
 
     // Framebuffer Attributes
-    int getColorCurrentIndex() override;
-    bool getColorCurrentCheck() override;
+    int getColorIndex() override;
+    int getColorIndexes(int *list) override;
     GPURenderBuffer* getColorCurrent() override;
     GPURenderBuffer* getColor(int index) override;
     GPURenderBuffer* getDepth() override;
