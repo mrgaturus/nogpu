@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
+#include <nogpu_private.h>
 #include "private/framebuffer.h"
 #include "private/context.h"
 #include "private/glad.h"
@@ -10,8 +11,8 @@ GLFrameBuffer::GLFrameBuffer(GLContext* ctx) {
     ctx->gl__makeCurrent();
     glGenFramebuffers(1, &m_fbo);
     // Initialize Current List
-    m_colors_index.list_index = &m_color_index;
-    m_colors_index.list_link = &m_color;
+    m_colors_index.indexes = &m_color_index;
+    m_colors_index.links = &m_color;
     m_colors_index.capacity = 1;
     m_colors_index.count = 0;
 }
@@ -22,8 +23,8 @@ void GLFrameBuffer::destroy() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDeleteFramebuffers(1, &m_fbo);
     // Destroy Color Indexes
-    if (m_colors_index.capacity > 0)
-        free(m_colors_index.list_link);
+    if (m_colors_index.capacity > 1)
+        free(m_colors_index.links);
 
     // Destroy Object
     delete this;
@@ -41,13 +42,57 @@ GPUFrameBufferStatus GLFrameBuffer::checkAttachments() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+// -------------------------------
+// Framebuffer Attachment: Indexes
+// -------------------------------
+
+void GLFrameBuffer::reserveIndexes(int count) {
+    GLRenderIndexes* list = &m_colors_index;
+    // Reserve New Buffer when Exceeded
+    list->count = count;
+    if (count > list->capacity) {
+        free(list->links);
+        // Allocate New Indexes Buffer
+        int bytes_index = count * sizeof(GLuint);
+        int bytes_list = count * sizeof(GLRenderLink*);
+        char* buffer = (char*) malloc(bytes_list + bytes_index);
+        list->links = reinterpret_cast<GLRenderLink**>(buffer);
+        list->indexes = reinterpret_cast<GLuint*>(buffer + bytes_list);
+    }
+}
+
+void GLFrameBuffer::updateIndexes() {
+    GLRenderIndexes* list = &m_colors_index;
+    // Update Color Links
+    const int count = list->count;
+    for (int i = 0; i < count; i++) {
+        int idx = list->indexes[i];
+        GLRenderLink* link = m_colors.get_key(idx);
+        // Update Link Pointer and Invalidate
+        list->links[idx] = link;
+        if (link != nullptr)
+            link->tex_cache = 0;
+    }
+
+    // Update Current Color
+    if (count > 0) {
+        m_color = list->links[0];
+        m_color_index = list->indexes[0];
+    } else {
+        m_color = nullptr;
+        m_color_index = 0;
+    }
+}
+
 // ----------------------
 // Framebuffer Attachment
 // ----------------------
 
 void GLFrameBuffer::attachColor(GPURenderBuffer *target, int index) {
-    auto buffer = dynamic_cast<GLRenderBuffer*>(target);
     m_ctx->gl__makeCurrent();
+    // Check if buffer is not null
+    auto buffer = dynamic_cast<GLRenderBuffer*>(target);
+    if (buffer == nullptr) return;
     if (index < 0) index = 0;
 
     // Create Link Attachment
@@ -57,7 +102,7 @@ void GLFrameBuffer::attachColor(GPURenderBuffer *target, int index) {
     link.tex_cache = 0;
     // Update Render Link Pointer
     if (!m_colors.replace_key(index, link))
-        m_color = m_colors.get_key(m_color_index);
+        this->updateIndexes();
 }
 
 void GLFrameBuffer::attachDepth(GPURenderBuffer *target) {
@@ -65,6 +110,8 @@ void GLFrameBuffer::attachDepth(GPURenderBuffer *target) {
     m_ctx->gl__makeCurrent();
     // Change Depth Attachment
     m_depth.target = buffer;
+    m_depth.slice.layer = 0;
+    m_depth.slice.level = 0;
     m_depth.tex_index = 0;
     m_depth.tex_cache = 0;
 }
@@ -72,8 +119,10 @@ void GLFrameBuffer::attachDepth(GPURenderBuffer *target) {
 void GLFrameBuffer::attachStencil(GPURenderBuffer *target) {
     auto buffer = dynamic_cast<GLRenderBuffer*>(target);
     m_ctx->gl__makeCurrent();
-    // Change Depth Attachment
+    // Change Stencil Attachment
     m_stencil.target = buffer;
+    m_stencil.slice.layer = 0;
+    m_stencil.slice.level = 0;
     m_stencil.tex_index = 0;
     m_stencil.tex_cache = 0;
 }
@@ -83,7 +132,7 @@ void GLFrameBuffer::detachColor(int index) {
     if (index < 0) index = 0;
     // Update Render Link Pointer
     if (m_colors.remove_key(index))
-        m_color = m_colors.get_key(m_color_index);
+        this->updateIndexes();
 }
 
 void GLFrameBuffer::detachDepth() {
@@ -100,51 +149,61 @@ void GLFrameBuffer::detachStencil() {
 
 void GLFrameBuffer::setColorIndex(int index) {
     m_ctx->gl__makeCurrent();
-    if (m_colors_index.capacity > 1)
-        free(m_colors_index.list_link);
-    // Change Current List
-    m_colors_index.list_index = &m_color_index;
-    m_colors_index.list_link = &m_color;
-    m_colors_index.capacity = 1;
-    m_colors_index.count = 1;
-
-    // Change Current Color
-    m_color_index = index;
-    m_color = m_colors.get_key(index);
-    if (m_color != nullptr)
-        m_color->tex_cache = 0;
+    // Set One Color Index
+    this->reserveIndexes(1);
+    this->m_colors_index.indexes[0] = index;
+    this->updateIndexes();
 }
 
 void GLFrameBuffer::setColorIndexes(int *list, int count) {
     m_ctx->gl__makeCurrent();
+    // Set Multiple Color Index
+    this->reserveIndexes(count);
+    void* indexes = m_colors_index.indexes;
+    memcpy(indexes, list, count * sizeof(GLuint));
+    this->updateIndexes();
 }
 
 // --------------------------------
 // Framebuffer Usage: Buffer Slices
 // --------------------------------
 
-void GLFrameBuffer::setColorSlice(int layer, int level) {
+void GLFrameBuffer::setColorSlice(int index, int layer, int level) {
     m_ctx->gl__makeCurrent();
-    m_color_slice.layer = layer;
-    m_color_slice.level = level;
-    // Clear Color Cache
-    if (m_color != nullptr)
-        m_color->tex_cache = 0;
+    // Update Color Indexes
+    GLRenderLink* result = m_colors.get_key(index);
+    if (result != nullptr) {
+        result->slice.layer = layer;
+        result->slice.level = level;
+        this->updateIndexes();
+    } else {
+        GPUReport::warning("color attachment %d not found", index);
+    }
 }
 
 void GLFrameBuffer::setDepthSlice(int layer, int level) {
     m_ctx->gl__makeCurrent();
+    if (m_depth.target == nullptr) {
+        GPUReport::warning("depth attachment not found");
+        return;
+    }
+
     // Change Slice and Clear Cache
-    m_depth_slice.layer = layer;
-    m_depth_slice.level = level;
+    m_depth.slice.layer = layer;
+    m_depth.slice.level = level;
     m_depth.tex_cache = 0;
 }
 
 void GLFrameBuffer::setStencilSlice(int layer, int level) {
     m_ctx->gl__makeCurrent();
+    if (m_stencil.target == nullptr) {
+        GPUReport::warning("stencil attachment not found");
+        return;
+    }
+
     // Change Slice and Clear Cache
-    m_stencil_slice.layer = layer;
-    m_stencil_slice.level = level;
+    m_stencil.slice.layer = layer;
+    m_stencil.slice.level = level;
     m_stencil.tex_cache = 0;
 }
 
@@ -154,12 +213,31 @@ void GLFrameBuffer::setStencilSlice(int layer, int level) {
 
 int GLFrameBuffer::getColorIndex() {
     m_ctx->gl__makeCurrent();
+
+    // Return Current Color Index
+    if (m_color == nullptr)
+        GPUReport::warning("color attachment not found");
     return m_color_index;
 }
 
-int GLFrameBuffer::getColorIndexes(int *list) {
+int GLFrameBuffer::getColorIndexes(int *list, int capacity) {
     m_ctx->gl__makeCurrent();
-    return m_color_index;
+    GLRenderIndexes* list0 = &m_colors_index;
+
+    // Clamp Count to Capacity
+    int count = list0->count;
+    if (capacity > 0)
+        count = (count <= capacity) ?
+            count : capacity;
+
+    // Output List to Pointer
+    if (count > 0) {
+        int* indexes = (int*) list0->indexes;
+        memcpy(list, indexes, count * sizeof(int));
+    }
+
+    // Return Written Count
+    return count;
 }
 
 GPURenderBuffer* GLFrameBuffer::getColorCurrent() {
@@ -192,4 +270,36 @@ GPURenderBuffer* GLFrameBuffer::getDepth() {
 GPURenderBuffer* GLFrameBuffer::getStencil() {
     m_ctx->gl__makeCurrent();
     return m_stencil.target;
+}
+
+// -----------------------------
+// Framebuffer Attributes: Slice
+// -----------------------------
+
+GPUFrameBufferSlice GLFrameBuffer::getColorSlice(int index) {
+    m_ctx->gl__makeCurrent();
+    GPURenderBuffer* result = nullptr;
+    GLRenderLink* color = m_colors.get_key(index);
+
+    // Return Color Slice
+    if (color != nullptr)
+        return color->slice;
+    GPUReport::warning("color attachment %d not found", index);
+    return GPUFrameBufferSlice{};
+}
+
+GPUFrameBufferSlice GLFrameBuffer::getDepthSlice() {
+    m_ctx->gl__makeCurrent();
+    // Return Depth Slice
+    if (m_depth.target == nullptr)
+        GPUReport::warning("depth attachment not found");
+    return m_depth.slice;
+}
+
+GPUFrameBufferSlice GLFrameBuffer::getStencilSlice() {
+    m_ctx->gl__makeCurrent();
+    // Return Stencil Slice
+    if (m_stencil.target == nullptr)
+        GPUReport::warning("stencil attachment not found");
+    return m_stencil.slice;
 }

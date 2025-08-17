@@ -55,19 +55,21 @@ class GLFrameBuffer : GPUFrameBuffer {
     GLContext* m_ctx;
     typedef struct {
         GLRenderBuffer* target;
+        GPUFrameBufferSlice slice;
         GLuint tex_index;
         GLuint tex_cache;
     } GLRenderLink;
 
     typedef struct {
         int count, capacity;
-        GLRenderLink **list_link;
-        GLuint *list_index;
-    } GLRenderIndex;
+        // List Pointers
+        GLRenderLink **links;
+        GLuint *indexes;
+    } GLRenderIndexes;
 
     private: // Framebuffer Internals
         GPUHashmap<GLRenderLink> m_colors;
-        GLRenderIndex m_colors_index;
+        GLRenderIndexes m_colors_index;
         GLRenderLink m_depth;
         GLRenderLink m_stencil;
         GLRenderLink *m_color;
@@ -86,21 +88,27 @@ class GLFrameBuffer : GPUFrameBuffer {
     // Framebuffer Usage
     void setColorIndex(int index) override;
     void setColorIndexes(int *list, int count) override;
-    void setColorSlice(int layer, int level) override;
+    void setColorSlice(int index, int layer, int level) override;
     void setDepthSlice(int layer, int level) override;
     void setStencilSlice(int layer, int level) override;
 
     // Framebuffer Attributes
     int getColorIndex() override;
-    int getColorIndexes(int *list) override;
+    int getColorIndexes(int *list, int capacity) override;
     GPURenderBuffer* getColorCurrent() override;
     GPURenderBuffer* getColor(int index) override;
     GPURenderBuffer* getDepth() override;
     GPURenderBuffer* getStencil() override;
+    // Framebuffer Attributes: Slice
+    GPUFrameBufferSlice getColorSlice(int index) override;
+    GPUFrameBufferSlice getDepthSlice() override;
+    GPUFrameBufferSlice getStencilSlice() override;
 
     protected: // Framebuffer Constructor
         GLFrameBuffer(GLContext* ctx);
         void destroy() override;
+        void reserveIndexes(int count);
+        void updateIndexes();
         friend GLContext;
 };
 
