@@ -19,6 +19,8 @@ class GLRenderBuffer : GPURenderBuffer {
     void createTextureArray(int w, int h, int layers, int levels, int samples) override;
     void createOffscreen(int w, int h, int samples) override;
     // Renderbuffer Attributes
+    GPUTexturePixelType getPixelType() override;
+    GPURenderBufferMode getMode() override;
     GPUTexture* getTexture() override;
     GPUTextureSize getSize() override;
     int getWidth() override;
@@ -41,8 +43,8 @@ class GLRenderBuffer : GPURenderBuffer {
         GLRenderBuffer(GLContext* ctx, GPUTexturePixelType type);
         void destroyInternal();
         void destroy() override;
-        bool prepareExternal();
-        bool prepareInternal();
+        void updateExternal();
+        void prepareInternal();
         friend GLContext;
         friend GLFrameBuffer;
 };
@@ -77,6 +79,7 @@ class GLFrameBuffer : GPUFrameBuffer {
         GLuint m_fbo;
 
     // Framebuffer Attachment
+    static void updateAttachment(GLenum attachment, GLRenderLink* link);
     GPUFrameBufferStatus checkAttachments() override;
     void attachColor(GPURenderBuffer *target, int index) override;
     void attachDepth(GPURenderBuffer *target) override;

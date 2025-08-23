@@ -15,6 +15,7 @@ GLFrameBuffer::GLFrameBuffer(GLContext* ctx) {
     m_colors_index.links = &m_color;
     m_colors_index.capacity = 1;
     m_colors_index.count = 0;
+    m_ctx = ctx;
 }
 
 void GLFrameBuffer::destroy() {
@@ -34,12 +35,92 @@ void GLFrameBuffer::destroy() {
 // Framebuffer Attachment: Check Attachments
 // -----------------------------------------
 
+static GPUFrameBufferStatus toValue(GLenum status) {
+    switch (status) {
+        default:
+            return GPUFrameBufferStatus::FRAMEBUFFER_UNSUPPORTED;
+        case GL_FRAMEBUFFER_UNDEFINED:
+            return GPUFrameBufferStatus::FRAMEBUFFER_UNDEFINED;
+
+        // Incomplete Framebuffer Errors
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+            return GPUFrameBufferStatus::FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+        case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+            return GPUFrameBufferStatus::FRAMEBUFFER_INCOMPLETE_MULTISAMPLE;
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+            return GPUFrameBufferStatus::FRAMEBUFFER_INCOMPLETE_MISSING;
+    }
+}
+
+void GLFrameBuffer::updateAttachment(GLenum attachment, GLRenderLink* link) {
+    GLRenderBuffer* target = link->target;
+    GLint layer = link->slice.layer;
+    GLint level = link->slice.level;
+
+    // Check Attachment Existence
+    if (target == nullptr) {
+        if (link->tex_cache != 0) {
+            glFramebufferTexture(GL_FRAMEBUFFER, attachment, 0, 0);
+            link->tex_cache = 0;
+            return;
+        }
+    } else if (link->tex_cache == target->m_tex)
+        return; // Skip Cached Attachments
+
+    target->updateExternal();
+    GLuint tex = target->m_tex;
+    link->tex_cache = tex;
+    // Update OpenGL Object
+    switch (target->m_mode) {
+        case GPURenderBufferMode::RENDERBUFFER_UNDEFINED:
+            glFramebufferTexture(GL_FRAMEBUFFER, attachment, 0, 0);
+            break;
+
+        // Offscreen Rendering
+        case GPURenderBufferMode::RENDERBUFFER_OFFSCREEN:
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, 
+                attachment, GL_RENDERBUFFER, tex);
+            break;
+        
+        // 1D & 2D Textures
+        case GPURenderBufferMode::RENDERBUFFER_TEXTURE:
+        case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE:
+        case GPURenderBufferMode::RENDERBUFFER_TARGET:
+            glFramebufferTexture(GL_FRAMEBUFFER,
+                attachment, tex, level);
+            break;
+
+        // 2D Array, 3D Textures
+        case GPURenderBufferMode::RENDERBUFFER_TEXTURE_ARRAY:
+        case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE_ARRAY:
+        case GPURenderBufferMode::RENDERBUFFER_TARGET_ARRAY:
+        case GPURenderBufferMode::RENDERBUFFER_TARGET_CUBEMAP:
+        case GPURenderBufferMode::RENDERBUFFER_TARGET_CUBEMAP_ARRAY:
+            glFramebufferTextureLayer(GL_FRAMEBUFFER,
+                attachment, tex, level, layer);
+            break;
+    }
+}
+
 GPUFrameBufferStatus GLFrameBuffer::checkAttachments() {
     m_ctx->gl__makeCurrent();
-    return GPUFrameBufferStatus::FRAMEBUFFER_UNSUPPORTED;
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
-    
+
+    // Check Color Attachments
+    GLRenderIndexes* list = &m_colors_index;
+    for (int i = 0; i < list->count; i++) {
+        GLRenderLink* link = m_colors_index.links[i];
+        GLuint index = m_colors_index.indexes[i];
+        this->updateAttachment(GL_COLOR_ATTACHMENT0 + index, link);
+    }
+
+    // Update Stencil and Depth Attachment
+    this->updateAttachment(GL_DEPTH_ATTACHMENT, &m_depth);
+    this->updateAttachment(GL_STENCIL_ATTACHMENT, &m_stencil);
+    // Check Framebuffer and Return
+    GLenum check = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    return toValue(check);
 }
 
 // -------------------------------
@@ -84,9 +165,9 @@ void GLFrameBuffer::updateIndexes() {
     }
 }
 
-// ----------------------
-// Framebuffer Attachment
-// ----------------------
+// ------------------------------
+// Framebuffer Attachment: Attach
+// ------------------------------
 
 void GLFrameBuffer::attachColor(GPURenderBuffer *target, int index) {
     m_ctx->gl__makeCurrent();
@@ -113,7 +194,6 @@ void GLFrameBuffer::attachDepth(GPURenderBuffer *target) {
     m_depth.slice.layer = 0;
     m_depth.slice.level = 0;
     m_depth.tex_index = 0;
-    m_depth.tex_cache = 0;
 }
 
 void GLFrameBuffer::attachStencil(GPURenderBuffer *target) {
@@ -124,8 +204,11 @@ void GLFrameBuffer::attachStencil(GPURenderBuffer *target) {
     m_stencil.slice.layer = 0;
     m_stencil.slice.level = 0;
     m_stencil.tex_index = 0;
-    m_stencil.tex_cache = 0;
 }
+
+// ------------------------------
+// Framebuffer Attachment: Detach
+// ------------------------------
 
 void GLFrameBuffer::detachColor(int index) {
     m_ctx->gl__makeCurrent();

@@ -34,6 +34,8 @@ class GPURenderBuffer {
         virtual void createOffscreen(int w, int h, int samples) = 0;
 
     public: // Renderbuffer Attributes
+        virtual GPUTexturePixelType getPixelType() = 0;
+        virtual GPURenderBufferMode getMode() = 0;
         virtual GPUTexture* getTexture() = 0;
         virtual GPUTextureSize getSize() = 0;
         virtual int getWidth() = 0;
@@ -41,8 +43,7 @@ class GPURenderBuffer {
         virtual int getLayers() = 0;
         virtual int getDepth() = 0;
         virtual int getSamples() = 0;
-        GPUTexturePixelType getPixelType() { return m_pixel_type; }
-        GPURenderBufferMode getMode() { return m_mode; }
+
 };
 
 // ------------------------

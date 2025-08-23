@@ -65,9 +65,9 @@ void GLRenderBuffer::destroy() {
 // OpenGL Renderbuffer Checking
 // ----------------------------
 
-bool GLRenderBuffer::prepareExternal() {
+void GLRenderBuffer::updateExternal() {
     bool check = *(m_object) != m_tex;
-    if (!check) return check;
+    if (!check) return;
 
     // Check External Mode
     m_tex = *(m_object);
@@ -98,12 +98,9 @@ bool GLRenderBuffer::prepareExternal() {
             m_mode = GPURenderBufferMode::RENDERBUFFER_UNDEFINED;
             break;
     }
-
-    // Internal Changed
-    return check;
 }
 
-bool GLRenderBuffer::prepareInternal() {
+void GLRenderBuffer::prepareInternal() {
     // Check Needs Re-create
     switch (m_mode) {
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE:
@@ -111,7 +108,7 @@ bool GLRenderBuffer::prepareInternal() {
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE_ARRAY:
             glDeleteTextures(1, m_object);
-            return false;
+            break;
         
         default: // Create Texture
             this->destroyInternal();
@@ -120,7 +117,7 @@ bool GLRenderBuffer::prepareInternal() {
             // Use Internal Texture
             m_target = tex0;
             m_object = &tex0->m_tex;
-            return true;
+            break;
     }
 }
 
@@ -141,7 +138,7 @@ void GLRenderBuffer::useTexture(GPUTexture* texture) {
     // Use External Texture
     m_target = tex0;
     m_object = &tex0->m_tex;
-    this->prepareExternal();
+    this->updateExternal();
 }
 
 // -------------------------------------
@@ -258,6 +255,22 @@ void GLRenderBuffer::createOffscreen(int w, int h, int samples) {
     m_height = h;
     m_samples = samples;
     m_mode = GPURenderBufferMode::RENDERBUFFER_OFFSCREEN;
+}
+
+// -------------------------------------
+// OpenGL Renderbuffer Attributes: Basic
+// -------------------------------------
+
+GPUTexturePixelType GLRenderBuffer::getPixelType() {
+    m_ctx->gl__makeCurrent();
+    this->updateExternal();
+    return m_pixel_type;
+}
+
+GPURenderBufferMode GLRenderBuffer::getMode() {
+    m_ctx->gl__makeCurrent();
+    this->updateExternal();
+    return m_mode;
 }
 
 // ------------------------------
