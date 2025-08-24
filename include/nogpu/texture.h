@@ -213,11 +213,11 @@ class GPUTexture {
         virtual void syncDisable() = 0;
 
     public: // GPU Texture Attributes: Size
-        int getLevels() { return m_levels; }
         int getWidth() { return m_width; }
         int getHeight() { return m_height; }
         int getDepth() { return m_depth; }
         int getLayers() { return m_depth; }
+        int getLevels() { return m_levels; }
 
     public: // GPU Texture Attributes
         int getTransferBytesPerPixel();

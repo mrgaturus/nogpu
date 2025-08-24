@@ -15,9 +15,10 @@ class GLFrameBuffer;
 class GLRenderBuffer : GPURenderBuffer {
     // Renderbuffer Manipulation
     void useTexture(GPUTexture* texture) override;
+    void createOffscreen(int w, int h, int samples) override;
     void createTexture(int w, int h, int levels, int samples) override;
     void createTextureArray(int w, int h, int layers, int levels, int samples) override;
-    void createOffscreen(int w, int h, int samples) override;
+    void createTexture3D(int w, int h, int layers, int levels) override;
     // Renderbuffer Attributes
     GPUTexturePixelType getPixelType() override;
     GPURenderBufferMode getMode() override;
@@ -25,8 +26,9 @@ class GLRenderBuffer : GPURenderBuffer {
     GPUTextureSize getSize() override;
     int getWidth() override;
     int getHeight() override;
-    int getLayers() override;
     int getDepth() override;
+    int getLayers() override;
+    int getLevels() override;
     int getSamples() override;
 
     public:
@@ -41,10 +43,10 @@ class GLRenderBuffer : GPURenderBuffer {
 
     protected: // Renderbuffer Constructor
         GLRenderBuffer(GLContext* ctx, GPUTexturePixelType type);
-        void destroyInternal();
         void destroy() override;
-        void updateExternal();
+        void destroyInternal();
         void prepareInternal();
+        void updateExternal();
         friend GLContext;
         friend GLFrameBuffer;
 };

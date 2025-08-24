@@ -8,6 +8,7 @@ add_library(nogpu_opengl OBJECT
     commands.cpp
     context.cpp
     framebuffer_target.cpp
+    framebuffer_texture.cpp
     framebuffer.cpp
     pipeline.cpp
     shader.cpp

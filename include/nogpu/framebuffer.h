@@ -12,10 +12,12 @@ enum class GPURenderBufferMode : int {
     RENDERBUFFER_UNDEFINED,
     RENDERBUFFER_OFFSCREEN,
     RENDERBUFFER_TEXTURE,
+    RENDERBUFFER_TEXTURE_3D,
     RENDERBUFFER_TEXTURE_ARRAY,
     RENDERBUFFER_TEXTURE_MULTISAMPLE,
     RENDERBUFFER_TEXTURE_MULTISAMPLE_ARRAY,
     RENDERBUFFER_TARGET,
+    RENDERBUFFER_TARGET_3D,
     RENDERBUFFER_TARGET_ARRAY,
     RENDERBUFFER_TARGET_CUBEMAP,
     RENDERBUFFER_TARGET_CUBEMAP_ARRAY
@@ -29,9 +31,10 @@ class GPURenderBuffer {
     public: // Renderbuffer Manipulation
         virtual void destroy() = 0;
         virtual void useTexture(GPUTexture* texture) = 0;
+        virtual void createOffscreen(int w, int h, int samples) = 0;
         virtual void createTexture(int w, int h, int levels, int samples) = 0;
         virtual void createTextureArray(int w, int h, int layers, int levels, int samples) = 0;
-        virtual void createOffscreen(int w, int h, int samples) = 0;
+        virtual void createTexture3D(int w, int h, int layers, int levels) = 0;
 
     public: // Renderbuffer Attributes
         virtual GPUTexturePixelType getPixelType() = 0;
@@ -40,10 +43,10 @@ class GPURenderBuffer {
         virtual GPUTextureSize getSize() = 0;
         virtual int getWidth() = 0;
         virtual int getHeight() = 0;
-        virtual int getLayers() = 0;
         virtual int getDepth() = 0;
+        virtual int getLayers() = 0;
+        virtual int getLevels() = 0;
         virtual int getSamples() = 0;
-
 };
 
 // ------------------------

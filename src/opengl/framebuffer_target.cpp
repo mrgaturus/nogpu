@@ -19,6 +19,18 @@ GLRenderBuffer::GLRenderBuffer(GLContext* ctx, GPUTexturePixelType type) {
     m_ctx = ctx;
 }
 
+void GLRenderBuffer::destroy() {
+    m_ctx->gl__makeCurrent();
+
+    // Destroy Object
+    this->destroyInternal();
+    delete this;
+}
+
+// -------------------------------------
+// OpenGL Renderbuffer: Internal Texture
+// -------------------------------------
+
 void GLRenderBuffer::destroyInternal() {
     switch (m_mode) {
         // Destroy Offscreen Render Buffer
@@ -29,6 +41,7 @@ void GLRenderBuffer::destroyInternal() {
 
         // Destroy Texture Render Buffer
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE:
+        case GPURenderBufferMode::RENDERBUFFER_TEXTURE_3D:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_ARRAY:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE_ARRAY:
@@ -37,6 +50,7 @@ void GLRenderBuffer::destroyInternal() {
         
         // Target Cannot be Destroyed
         case GPURenderBufferMode::RENDERBUFFER_TARGET:
+        case GPURenderBufferMode::RENDERBUFFER_TARGET_3D:
         case GPURenderBufferMode::RENDERBUFFER_TARGET_ARRAY:
         case GPURenderBufferMode::RENDERBUFFER_TARGET_CUBEMAP:
         case GPURenderBufferMode::RENDERBUFFER_TARGET_CUBEMAP_ARRAY:
@@ -53,57 +67,11 @@ void GLRenderBuffer::destroyInternal() {
     m_height = 0;
 }
 
-void GLRenderBuffer::destroy() {
-    m_ctx->gl__makeCurrent();
-
-    // Destroy Object
-    this->destroyInternal();
-    delete this;
-}
-
-// ----------------------------
-// OpenGL Renderbuffer Checking
-// ----------------------------
-
-void GLRenderBuffer::updateExternal() {
-    bool check = *(m_object) != m_tex;
-    if (!check) return;
-
-    // Check External Mode
-    m_tex = *(m_object);
-    m_samples = 1;
-    switch (m_target->m_tex_target) {
-        case GL_TEXTURE_1D:
-        case GL_TEXTURE_2D:
-        case GL_TEXTURE_RECTANGLE:
-            m_mode = GPURenderBufferMode::RENDERBUFFER_TARGET;
-            break;
-
-        // Array Textures
-        case GL_TEXTURE_3D:
-        case GL_TEXTURE_1D_ARRAY:
-        case GL_TEXTURE_2D_ARRAY:
-            m_mode = GPURenderBufferMode::RENDERBUFFER_TARGET_ARRAY;
-            break;
-
-        // Cubemap Textures
-        case GL_TEXTURE_CUBE_MAP:
-            m_mode = GPURenderBufferMode::RENDERBUFFER_TARGET_CUBEMAP;
-            break;
-        case GL_TEXTURE_CUBE_MAP_ARRAY_ARB:
-            m_mode = GPURenderBufferMode::RENDERBUFFER_TARGET_CUBEMAP_ARRAY;
-            break;
-
-        default: // Texture Not Supported
-            m_mode = GPURenderBufferMode::RENDERBUFFER_UNDEFINED;
-            break;
-    }
-}
-
 void GLRenderBuffer::prepareInternal() {
     // Check Needs Re-create
     switch (m_mode) {
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE:
+        case GPURenderBufferMode::RENDERBUFFER_TEXTURE_3D:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_ARRAY:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE_ARRAY:
@@ -125,136 +93,58 @@ void GLRenderBuffer::prepareInternal() {
 // OpenGL Renderbuffer: External Texture
 // -------------------------------------
 
+void GLRenderBuffer::updateExternal() {
+    bool check = *(m_object) != m_tex;
+    if (!check) return;
+
+    // Check External Mode
+    m_tex = *(m_object);
+    m_samples = 1;
+    switch (m_target->m_tex_target) {
+        case GL_TEXTURE_1D:
+        case GL_TEXTURE_2D:
+        case GL_TEXTURE_RECTANGLE:
+            m_mode = GPURenderBufferMode::RENDERBUFFER_TARGET;
+            break;
+
+        // Array Textures
+        case GL_TEXTURE_3D:
+            m_mode = GPURenderBufferMode::RENDERBUFFER_TARGET_3D;
+            break;
+        case GL_TEXTURE_1D_ARRAY:
+        case GL_TEXTURE_2D_ARRAY:
+            m_mode = GPURenderBufferMode::RENDERBUFFER_TARGET_ARRAY;
+            break;
+
+        // Cubemap Textures
+        case GL_TEXTURE_CUBE_MAP:
+            m_mode = GPURenderBufferMode::RENDERBUFFER_TARGET_CUBEMAP;
+            break;
+        case GL_TEXTURE_CUBE_MAP_ARRAY_ARB:
+            m_mode = GPURenderBufferMode::RENDERBUFFER_TARGET_CUBEMAP_ARRAY;
+            break;
+
+        default: // Texture Not Supported
+            m_mode = GPURenderBufferMode::RENDERBUFFER_UNDEFINED;
+            GPUReport::error("unsupported external renderbuffer");
+            break;
+    }
+}
+
 void GLRenderBuffer::useTexture(GPUTexture* texture) {
     m_ctx->gl__makeCurrent();
-    this->destroyInternal();
-
     GLTexture* tex0 = dynamic_cast<GLTexture*>(texture);
     if (tex0->m_pixel_type != m_pixel_type) {
         GPUReport::error("mismatch texture pixel type for framebuffer");
         return;
     }
 
+    // Destroy Previous
+    this->destroyInternal();
     // Use External Texture
     m_target = tex0;
     m_object = &tex0->m_tex;
     this->updateExternal();
-}
-
-// -------------------------------------
-// OpenGL Renderbuffer: Internal Texture
-// -------------------------------------
-
-void GLRenderBuffer::createTexture(int w, int h, int levels, int samples) {
-    m_ctx->gl__makeCurrent();
-    levels = levels_power_of_two(w, h, levels);
-    samples = (samples > 0) ? next_power_of_two(samples) : 1;
-    // Check Needs Re-create
-    this->prepareInternal();
-
-    // Generate New Texture
-    glGenTextures(1, m_object);
-    if (samples <= 1) {
-        glBindTexture(GL_TEXTURE_2D, *(m_object));
-        glTexStorage2D(GL_TEXTURE_2D, levels, toValue(m_pixel_type), w, h);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        // Set RenderBuffer Modes
-        m_target->m_tex_target = GL_TEXTURE_2D;
-        m_mode = GPURenderBufferMode::RENDERBUFFER_TEXTURE;
-    } else {
-        // Check if Multisamples are supported
-        if (!GLAD_GL_ARB_texture_storage_multisample) {
-            GPUReport::error("multisample textures are not supported");
-            destroyInternal();
-            return;
-        }
-
-        // Create Multisample Texture
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, *(m_object));
-        glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE,
-            samples, toValue(m_pixel_type), w, h, 0);
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
-
-        // Set RenderBuffer Modes
-        m_target->m_tex_target = GL_TEXTURE_2D_MULTISAMPLE;
-        m_mode = GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE;
-        levels = 1;
-    }
-
-    // Describe RenderBuffer Texture
-    m_target->m_levels = levels;
-    m_target->m_width = w;
-    m_target->m_height = h;
-    m_target->m_depth = 1;
-    m_samples = samples;
-}
-
-void GLRenderBuffer::createTextureArray(int w, int h, int layers, int levels, int samples) {
-    m_ctx->gl__makeCurrent();
-    levels = levels_power_of_two(w, h, levels);
-    samples = (samples > 0) ? next_power_of_two(samples) : 1;
-    // Check Texture Recreate
-    this->prepareInternal();
-
-    // Generate New Texture
-    glGenTextures(1, m_object);
-    if (samples <= 1) {
-        glBindTexture(GL_TEXTURE_2D_ARRAY, *(m_object));
-        glTexStorage3D(GL_TEXTURE_2D_ARRAY,
-            levels, toValue(m_pixel_type), w, h, layers);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-
-        // Set RenderBuffer Modes
-        m_target->m_tex_target = GL_TEXTURE_2D_ARRAY;
-        m_mode = GPURenderBufferMode::RENDERBUFFER_TEXTURE;
-    } else {
-        // Check if Multisamples are supported
-        if (!GLAD_GL_ARB_texture_storage_multisample) {
-            GPUReport::error("multisample textures are not supported");
-            destroyInternal();
-            return;
-        }
-
-        // Create Multisample Texture
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, *(m_object));
-        glTexStorage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
-            samples, toValue(m_pixel_type), w, h, layers, 0);
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 0);
-
-        // Set RenderBuffer Modes
-        m_target->m_tex_target = GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
-        m_mode = GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE;
-        levels = 1;
-    }
-
-    // Describe RenderBuffer Texture
-    m_target->m_levels = levels;
-    m_target->m_width = w;
-    m_target->m_height = h;
-    m_target->m_depth = layers;
-    m_samples = samples;
-}
-
-// ------------------------------
-// OpenGL Renderbuffer: Offscreen
-// ------------------------------
-
-void GLRenderBuffer::createOffscreen(int w, int h, int samples) {
-    m_ctx->gl__makeCurrent();
-    this->destroyInternal();
-
-    m_object = &m_tex;
-    glGenRenderbuffers(1, m_object);
-    glBindRenderbuffer(GL_RENDERBUFFER, *(m_object));
-    if (samples <= 1) glRenderbufferStorage(GL_RENDERBUFFER, toValue(m_pixel_type), w, h);
-    else glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, toValue(m_pixel_type), w, h);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    m_width = w;
-    m_height = h;
-    m_samples = samples;
-    m_mode = GPURenderBufferMode::RENDERBUFFER_OFFSCREEN;
 }
 
 // -------------------------------------
@@ -325,7 +215,7 @@ int GLRenderBuffer::getHeight() {
     return this->getSize().height;
 }
 
-int GLRenderBuffer::getLayers() {
+int GLRenderBuffer::getDepth() {
     m_ctx->gl__makeCurrent();
 
     switch (m_mode) {
@@ -340,8 +230,24 @@ int GLRenderBuffer::getLayers() {
     }
 }
 
-int GLRenderBuffer::getDepth() {
-    return getLayers();
+int GLRenderBuffer::getLayers() {
+    return getDepth();
+}
+
+int GLRenderBuffer::getLevels() {
+    m_ctx->gl__makeCurrent();
+
+    // Return Texture Levels
+    switch (m_mode) {
+        case GPURenderBufferMode::RENDERBUFFER_UNDEFINED:
+            GPUReport::warning("cannot get levels of undefined renderbuffer");
+            return 0;
+        case GPURenderBufferMode::RENDERBUFFER_OFFSCREEN:
+            return 1;
+
+        default: // Texture levels
+            return m_target->m_levels;        
+    }
 }
 
 int GLRenderBuffer::getSamples() {

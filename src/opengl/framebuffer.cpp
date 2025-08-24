@@ -91,8 +91,10 @@ void GLFrameBuffer::updateAttachment(GLenum attachment, GLRenderLink* link) {
             break;
 
         // 2D Array, 3D Textures
+        case GPURenderBufferMode::RENDERBUFFER_TEXTURE_3D:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_ARRAY:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE_ARRAY:
+        case GPURenderBufferMode::RENDERBUFFER_TARGET_3D:
         case GPURenderBufferMode::RENDERBUFFER_TARGET_ARRAY:
         case GPURenderBufferMode::RENDERBUFFER_TARGET_CUBEMAP:
         case GPURenderBufferMode::RENDERBUFFER_TARGET_CUBEMAP_ARRAY:
@@ -170,11 +172,18 @@ void GLFrameBuffer::updateIndexes() {
 // ------------------------------
 
 void GLFrameBuffer::attachColor(GPURenderBuffer *target, int index) {
-    m_ctx->gl__makeCurrent();
-    // Check if buffer is not null
     auto buffer = dynamic_cast<GLRenderBuffer*>(target);
-    if (buffer == nullptr) return;
+    m_ctx->gl__makeCurrent();
     if (index < 0) index = 0;
+
+    // Check Attachment Buffer
+    if (buffer == nullptr) {
+        GPUReport::error("invalid renderbuffer");
+        return;
+    } else if (!canTransferChange(buffer->m_pixel_type)) {
+        GPUReport::error("renderbuffer is not color pixel type");
+        return;
+    }
 
     // Create Link Attachment
     GLRenderLink link{};
@@ -189,6 +198,16 @@ void GLFrameBuffer::attachColor(GPURenderBuffer *target, int index) {
 void GLFrameBuffer::attachDepth(GPURenderBuffer *target) {
     auto buffer = dynamic_cast<GLRenderBuffer*>(target);
     m_ctx->gl__makeCurrent();
+
+    // Check Attachment Buffer
+    if (buffer == nullptr) {
+        GPUReport::error("invalid renderbuffer");
+        return;
+    } else if (canTransferChange(buffer->m_pixel_type)) {
+        GPUReport::error("renderbuffer is not depth pixel type");
+        return;
+    }
+
     // Change Depth Attachment
     m_depth.target = buffer;
     m_depth.slice.layer = 0;
@@ -199,6 +218,16 @@ void GLFrameBuffer::attachDepth(GPURenderBuffer *target) {
 void GLFrameBuffer::attachStencil(GPURenderBuffer *target) {
     auto buffer = dynamic_cast<GLRenderBuffer*>(target);
     m_ctx->gl__makeCurrent();
+
+    // Check Attachment Buffer
+    if (buffer == nullptr) {
+        GPUReport::error("invalid render buffer");
+        return;
+    } else if (buffer->m_pixel_type != GPUTexturePixelType::TEXTURE_PIXEL_DEPTH24_STENCIL8) {
+        GPUReport::error("renderbuffer is not stencil pixel type");
+        return;
+    }
+
     // Change Stencil Attachment
     m_stencil.target = buffer;
     m_stencil.slice.layer = 0;
