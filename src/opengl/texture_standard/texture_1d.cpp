@@ -24,27 +24,11 @@ GLTexture1D::GLTexture1D(
 
 void GLTexture1D::allocate(int size, int levels) {
     m_ctx->gl__makeCurrent();
-
     this->generateTexture();
     GLenum target = m_tex_target;
     // Allocate Texture Storage
     levels = levels_power_of_two(size, size, levels);
     glTexStorage1D(target, levels, toValue(m_pixel_type), size);
-
-    // Check Allocation Error
-    GLenum error = glGetError();
-    switch (error) {
-        case GL_INVALID_ENUM:
-            GPUReport::error("invalid pixel type for 1D %p", this);
-        case GL_INVALID_OPERATION:
-            GPUReport::error("invalid levels count for 1D %p", this);
-        case GL_INVALID_VALUE:
-            GPUReport::error("invalid size for 1D %p", this);
-    }
-
-    // Check Texture Errors
-    if (error != GL_NO_ERROR)
-        return;
 
     // Set Texture Dimensions
     m_levels = levels;
@@ -55,29 +39,16 @@ void GLTexture1D::allocate(int size, int levels) {
 
 void GLTexture1D::upload(int x, int size, int level, void* data) {
     m_ctx->gl__makeCurrent();
-
     GLenum target = m_tex_target;
+    // Upload Texture Data
     glBindTexture(target, m_tex);
     glTexSubImage1D(target, level, x, size,
         toValue(m_transfer_format),
         toValue(m_transfer_size), data);
-
-    // Check Uploading Error
-    GLenum error = glGetError();
-    switch (error) {
-        case GL_INVALID_OPERATION:
-            GPUReport::error("failed uploading pixels for 1D %p", this);
-        case GL_INVALID_VALUE:
-            GPUReport::error("invalid upload parameters for 1D %p", this);
-        case GL_INVALID_ENUM:
-            GPUReport::error("invalid pixel format/type for 1D %p", this);
-    }
 }
 
 void GLTexture1D::download(int x, int size, int level, void* data) {
     m_ctx->gl__makeCurrent();
-
-    GLenum error = GL_NO_ERROR;
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
 
@@ -88,22 +59,16 @@ void GLTexture1D::download(int x, int size, int level, void* data) {
             toValue(m_transfer_format),
             toValue(m_transfer_size),
             INT_MAX, data);
-        error = glGetError();
     // Use Optimized glGetTexImage when full image
     } else if (x == 0 && size == m_width) {
         glGetTexImage(target, level,
             toValue(m_transfer_format),
             toValue(m_transfer_size),
             data);
-        error = glGetError();
     // Use Framebuffer Trick for Old Devices
     } else { 
-        error = compatDownload2D(x, 0, size, 1, level, data);
+        compatDownload2D(x, 0, size, 1, level, data);
     }
-
-    // Check Succesfull
-    if (error != GL_NO_ERROR)
-        GPUReport::error("failed downloading pixels from 1D %p", this);
 }
 
 // -----------------------------------------

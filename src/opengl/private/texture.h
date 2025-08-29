@@ -78,8 +78,8 @@ class GLTexture : virtual public GPUTexture {
         void generateTexture();
         void generateSync();
         // Texture Compatible Download
-        GLenum compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data);
-        GLenum compatDownload2D(int x, int y, int w, int h, int level, void* data);
+        void compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data);
+        void compatDownload2D(int x, int y, int w, int h, int level, void* data);
         friend GLContext;
         friend GLRenderBuffer;
 };

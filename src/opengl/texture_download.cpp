@@ -53,15 +53,10 @@ GLenum GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth,
             toValue(m_transfer_format),
             toValue(m_transfer_size),
             dst); dst += layer_bytes;
-
-        // Check Read Error
-        error = glGetError();
-        if (error != GL_NO_ERROR)
-            break;
     }
 
+    // Restore Read Buffer
     glReadBuffer(read);
-    return error;
 }
 
 // -------------------------------------
@@ -93,7 +88,6 @@ GLenum GLTexture::compatDownload2D(int x, int y, int w, int h, int level, void* 
         toValue(m_transfer_size),
         data);
 
-    error = glGetError();
+    // Restore Read Buffer
     glReadBuffer(read);
-    return error;
 }

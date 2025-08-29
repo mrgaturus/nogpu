@@ -54,21 +54,6 @@ void GLCompressed3D::allocate(GPUTexture3DMode mode, int w, int h, int depth, in
     levels = levels_power_of_two(w, h, levels);
     glTexStorage3D(target, levels, toValue(m_pixel_type), w, h, depth);
 
-    // Check Allocation Error
-    GLenum error = glGetError();
-    switch (error) {
-        case GL_INVALID_ENUM:
-            GPUReport::error("invalid pixel type for 3D %p", this);
-        case GL_INVALID_OPERATION:
-            GPUReport::error("invalid levels count for 3D %p", this);
-        case GL_INVALID_VALUE:
-            GPUReport::error("invalid size for 3D %p", this);
-    }
-
-    // Check Texture Errors
-    if (error != GL_NO_ERROR)
-        return;
-
     // Set Texture Dimensions
     m_levels = levels;
     m_width = w;
@@ -78,22 +63,11 @@ void GLCompressed3D::allocate(GPUTexture3DMode mode, int w, int h, int depth, in
 
 void GLCompressed3D::upload(int x, int y, int z, int w, int h, int depth, int level, void* data, int bytes) {
     m_ctx->gl__makeCurrent();
-
     GLenum target = m_tex_target;
+    // Upload Compressed Data
     glBindTexture(target, m_tex);
     glCompressedTexSubImage3D(target, level, x, y, z, w, h, depth,
         toValue(m_compressed_type), bytes, data);
-
-    // Check Uploading Error
-    GLenum error = glGetError();
-    switch (error) {
-        case GL_INVALID_OPERATION:
-            GPUReport::error("failed uploading pixels for 3D %p", this);
-        case GL_INVALID_VALUE:
-            GPUReport::error("invalid upload parameters for 3D %p", this);
-        case GL_INVALID_ENUM:
-            GPUReport::error("invalid pixel format/type for 3D %p", this);
-    }
 }
 
 // -----------------------------------------

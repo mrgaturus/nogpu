@@ -69,9 +69,6 @@ void GLTexture::setSwizzle(GPUTextureSwizzle swizzle) {
     glTexParameteri(target, GL_TEXTURE_SWIZZLE_G, toValue(swizzle.g));
     glTexParameteri(target, GL_TEXTURE_SWIZZLE_B, toValue(swizzle.b));
     glTexParameteri(target, GL_TEXTURE_SWIZZLE_A, toValue(swizzle.a));
-
-    if (glGetError() != GL_NO_ERROR)
-        GPUReport::error("failed set texture swizzle for %p", this);
 }
 
 void GLTexture::setFilter(GPUTextureFilter filter) {
@@ -83,9 +80,6 @@ void GLTexture::setFilter(GPUTextureFilter filter) {
     glBindTexture(target, m_tex);
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER, toValue(filter.minify));
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, toValue(filter.magnify));
-
-    if (glGetError() != GL_NO_ERROR)
-        GPUReport::error("failed set texture filtering for %p", this);
 }
 
 void GLTexture::setWrap(GPUTextureWrap wrap) {
@@ -98,9 +92,6 @@ void GLTexture::setWrap(GPUTextureWrap wrap) {
     glTexParameteri(target, GL_TEXTURE_WRAP_S, toValue(wrap.s));
     glTexParameteri(target, GL_TEXTURE_WRAP_T, toValue(wrap.t));
     glTexParameteri(target, GL_TEXTURE_WRAP_R, toValue(wrap.r));
-
-    if (glGetError() != GL_NO_ERROR)
-        GPUReport::error("failed set texture wrapping for %p", this);
 }
 
 // ---------------------------------
@@ -129,9 +120,6 @@ void GLTexture::generateMipmaps() {
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
     glGenerateMipmap(target);
-
-    if (glGetError() != GL_NO_ERROR)
-        GPUReport::error("failed generate texture mipmaps for %p", this);
 }
 
 // -------------------------

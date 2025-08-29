@@ -74,6 +74,7 @@ void GLFrameBuffer::updateAttachment(GLenum attachment, GLRenderLink* link) {
     switch (target->m_mode) {
         case GPURenderBufferMode::RENDERBUFFER_UNDEFINED:
             glFramebufferTexture(GL_FRAMEBUFFER, attachment, 0, 0);
+            GPUReport::warning("attached undefined renderbuffer");
             break;
 
         // Offscreen Rendering

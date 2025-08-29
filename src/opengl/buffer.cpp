@@ -85,52 +85,40 @@ void GLBuffer::orphan(int bytes, GPUBufferUsage usage) {
     m_ctx->gl__makeCurrent();
     glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     glBufferData(GL_COPY_WRITE_BUFFER, bytes, NULL, toValue(usage));
-
-    if (glGetError() != GL_NO_ERROR)
-        GPUReport::error("failed orphan buffer %p with %d bytes", this, bytes);
-    else m_bytes = bytes;
+    // Set Buffer Bytes
+    m_bytes = bytes;
 };
 
 void GLBuffer::upload(int bytes, void *data, GPUBufferUsage usage) {
     m_ctx->gl__makeCurrent();
     glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     glBufferData(GL_COPY_WRITE_BUFFER, bytes, data, toValue(usage));
-
-    if (glGetError() != GL_NO_ERROR)
-        GPUReport::error("failed upload %d bytes to buffer %p", bytes, this);
-    else m_bytes = bytes;
+    // Set Buffer Bytes
+    m_bytes = bytes;
 };
 
 void GLBuffer::update(int bytes, int offset, void *data) {
     m_ctx->gl__makeCurrent();
+    // Update Buffer Data
     glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     glBufferSubData(GL_COPY_WRITE_BUFFER, offset, bytes, data);
-
-    if (glGetError() != GL_NO_ERROR)
-        GPUReport::error("failed update %d:%d bytes to buffer %p", bytes, offset, this);
 };
 
 void GLBuffer::download(int bytes, int offset, void *data) {
     m_ctx->gl__makeCurrent();
+    // Download Buffer Data
     glBindBuffer(GL_COPY_READ_BUFFER, m_vbo);
     glGetBufferSubData(GL_COPY_READ_BUFFER, offset, bytes, data);
-
-    if (glGetError() != GL_NO_ERROR)
-        GPUReport::error("failed download %d:%d bytes from buffer %p", bytes, offset, this);
 };
 
 void GLBuffer::copy(GPUBuffer *data, int bytes, int offset_read, int offset_write) {
     m_ctx->gl__makeCurrent();
-
     GLBuffer* buf = static_cast<GLBuffer*>(data);
+    // Copy Buffer Data from Other Buffer
     glBindBuffer(GL_COPY_WRITE_BUFFER, buf->m_vbo);
     glBindBuffer(GL_COPY_READ_BUFFER, this->m_vbo);
     glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER,
         offset_read, offset_write, bytes);
-
-    if (glGetError() != GL_NO_ERROR)
-        GPUReport::error("failed copy %d->%d:%d bytes from buffer %p to buffer %p",
-            offset_read, offset_write, bytes, this, data);
 };
 
 // --------------------------
@@ -147,10 +135,6 @@ void* GLBuffer::map(int bytes, int offset, GPUBufferMapping flags) {
     GLenum flags0 = toValue(flags);
     glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     void* map = glMapBufferRange(GL_COPY_WRITE_BUFFER, offset, bytes, flags0);
-    if (glGetError() != GL_NO_ERROR)
-        GPUReport::error("failed mapping %d:%d bytes from buffer %p",
-            offset, bytes, this);
-
     // Create Sync Object when Unsynchronized
     if ((flags0 & GL_MAP_UNSYNCHRONIZED_BIT) && m_sync_check) {
         if (m_sync) glDeleteSync(m_sync);
@@ -169,11 +153,9 @@ void GLBuffer::unmap() {
         return;
     }
 
+    // Remove Buffer Mapping
     glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     glUnmapBuffer(GL_COPY_WRITE_BUFFER);
-    if (glGetError() != GL_NO_ERROR)
-        GPUReport::error("failed unmapping buffer %p", this);
-
     m_mapping = nullptr;
 };
 

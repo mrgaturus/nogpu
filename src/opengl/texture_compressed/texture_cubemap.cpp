@@ -19,27 +19,11 @@ GLCompressedCubemap::GLCompressedCubemap(GLContext* ctx, GPUTextureCompressedTyp
 
 void GLCompressedCubemap::allocate(int w, int h, int levels) {
     m_ctx->gl__makeCurrent();
-
     this->generateTexture();
     GLenum target = m_tex_target;
     // Allocate Texture Storage
     levels = levels_power_of_two(w, h, levels);
     glTexStorage2D(target, levels, toValue(m_pixel_type), w, h);
-
-    // Check Allocation Error
-    GLenum error = glGetError();
-    switch (error) {
-        case GL_INVALID_ENUM:
-            GPUReport::error("invalid pixel type for Cubemap %p", this);
-        case GL_INVALID_OPERATION:
-            GPUReport::error("invalid levels count for Cubemap %p", this);
-        case GL_INVALID_VALUE:
-            GPUReport::error("invalid size for Cubemap %p", this);
-    }
-
-    // Check Texture Errors
-    if (error != GL_NO_ERROR)
-        return;
 
     // Set Texture Dimensions
     m_levels = levels;
@@ -54,22 +38,11 @@ void GLCompressedCubemap::allocate(int w, int h, int levels) {
 
 void GLCompressedCubemap::upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, void* data, int bytes) {
     m_ctx->gl__makeCurrent();
-
     GLenum target = m_tex_target;
+    // Upload Compressed Data
     glBindTexture(target, m_tex);
     glCompressedTexSubImage2D(toValue(side), level, x, y, w, h,
         toValue(m_compressed_type), bytes, data);
-
-    // Check Uploading Error
-    GLenum error = glGetError();
-    switch (error) {
-        case GL_INVALID_OPERATION:
-            GPUReport::error("failed uploading pixels for Cubemap %p", this);
-        case GL_INVALID_VALUE:
-            GPUReport::error("invalid upload parameters for Cubemap %p", this);
-        case GL_INVALID_ENUM:
-            GPUReport::error("invalid pixel format/type for Cubemap %p", this);
-    }
 }
 
 // ----------------------------------------------

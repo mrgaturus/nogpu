@@ -98,12 +98,6 @@ void GLVertexArray::defineAttribute(int index, GPUAttributeSize size, GPUAttribu
     glBindBuffer(GL_ARRAY_BUFFER, buf->m_vbo);
     glVertexAttribPointer(index, toValue(size), toValue(type),
         false, stride, reinterpret_cast<void*>(offset));
-
-    if (glGetError() != GL_NO_ERROR) {
-        GPUReport::error("failed define attribute #%d for %p", index, this);
-        return;
-    }
-
     // Enable Attribute by Default
     glEnableVertexAttribArray(index);
 };
@@ -123,12 +117,6 @@ void GLVertexArray::defineNormalized(int index, GPUAttributeSize size, GPUAttrib
     glBindBuffer(GL_ARRAY_BUFFER, buf->m_vbo);
     glVertexAttribPointer(index, toValue(size), toValue(type),
         true, stride, reinterpret_cast<void*>(offset));
-
-    if (glGetError() != GL_NO_ERROR) {
-        GPUReport::error("failed define normalized attribute: #%d for %p", index, this);
-        return;
-    }
-
     // Enable Attribute by Default
     glEnableVertexAttribArray(index);
 };
@@ -138,9 +126,6 @@ void GLVertexArray::disableAttribute(int index) {
     // Disable Vertex Attribute
     glBindVertexArray(m_vao);
     glDisableVertexAttribArray(index);
-
-    if (glGetError() != GL_NO_ERROR)
-        GPUReport::warning("attribute #%d is not defined for %p", index, this);
 };
 
 void GLVertexArray::enableAttribute(int index) {
@@ -148,7 +133,4 @@ void GLVertexArray::enableAttribute(int index) {
     // Enable Vertex Attribute
     glBindVertexArray(m_vao);
     glEnableVertexAttribArray(index);
-
-    if (glGetError() != GL_NO_ERROR)
-        GPUReport::warning("attribute #%d is not defined for %p", index, this);
 };

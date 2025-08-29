@@ -59,21 +59,6 @@ void GLTexture2D::allocate(GPUTexture2DMode mode, int w, int h, int levels) {
     levels = levels_power_of_two(w, h, levels);
     glTexStorage2D(target, levels, toValue(m_pixel_type), w, h);
 
-    // Check Allocation Error
-    GLenum error = glGetError();
-    switch (error) {
-        case GL_INVALID_ENUM:
-            GPUReport::error("invalid pixel type for 2D %p", this);
-        case GL_INVALID_OPERATION:
-            GPUReport::error("invalid levels count for 2D %p", this);
-        case GL_INVALID_VALUE:
-            GPUReport::error("invalid size for 2D %p", this);
-    }
-
-    // Check Texture Errors
-    if (error != GL_NO_ERROR)
-        return;
-
     // Set Texture Dimensions
     m_levels = levels;
     m_width = w;
@@ -83,29 +68,16 @@ void GLTexture2D::allocate(GPUTexture2DMode mode, int w, int h, int levels) {
 
 void GLTexture2D::upload(int x, int y, int w, int h, int level, void* data) {
     m_ctx->gl__makeCurrent();
-
     GLenum target = m_tex_target;
+    // Upload Texture Data
     glBindTexture(target, m_tex);
     glTexSubImage2D(target, level, x, y, w, h,
         toValue(m_transfer_format),
         toValue(m_transfer_size), data);
-
-    // Check Uploading Error
-    GLenum error = glGetError();
-    switch (error) {
-        case GL_INVALID_OPERATION:
-            GPUReport::error("failed uploading pixels for 2D %p", this);
-        case GL_INVALID_VALUE:
-            GPUReport::error("invalid upload parameters for 2D %p", this);
-        case GL_INVALID_ENUM:
-            GPUReport::error("invalid pixel format/type for 2D %p", this);
-    }
 }
 
 void GLTexture2D::download(int x, int y, int w, int h, int level, void* data) {
     m_ctx->gl__makeCurrent();
-
-    GLenum error = GL_NO_ERROR;
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
 
@@ -116,24 +88,18 @@ void GLTexture2D::download(int x, int y, int w, int h, int level, void* data) {
             toValue(m_transfer_format),
             toValue(m_transfer_size),
             INT_MAX, data);
-        error = glGetError();
     // Use Optimized glGetTexImage when full image
     } else if (x == 0 && y == 0 && w == m_width && h == m_height) {
         glGetTexImage(target, level,
             toValue(m_transfer_format),
             toValue(m_transfer_size),
             data);
-        error = glGetError();
     // Use Framebuffer Trick for Old Devices
     } else if (m_tex_target == GL_TEXTURE_2D) {
-        error = compatDownload2D(x, y, w, h, level, data);
+        compatDownload2D(x, y, w, h, level, data);
     } else if (m_tex_target == GL_TEXTURE_1D_ARRAY) {
-        error = compatDownload3D(x, 0, y, w, 1, h, level, data);
+        compatDownload3D(x, 0, y, w, 1, h, level, data);
     }
-
-    // Check Succesfull
-    if (error != GL_NO_ERROR)
-        GPUReport::error("failed downloading pixels from 2D %p", this);
 }
 
 // -----------------------------------------
