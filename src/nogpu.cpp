@@ -1,86 +1,95 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
-#include <opengl/private/context.h>
+#include <opengl/private/driver.h>
 #include <nogpu_private.h>
 #include <nogpu.h>
 
 // Global Driver Definition
-GPUDevice* GPUDevice::m_device = nullptr;
-bool GPUDevice::initialize(GPUDeviceDriver driver, int msaa_samples, bool rgba) {
-    if (m_device) {
+GPUDriver* GPUDriver::m_driver = nullptr;
+bool GPUDriver::initialize(GPUDriverOption driver) {
+    if (m_driver) {
         GPUReport::error("driver already initialized");
         return false;
     }
 
-    // XXX: for now OpenGL Linux to design the api before whole abstraction
+    // XXX: for now OpenGL to whole api battle test
     #if defined(__unix__)
     OPENGL_DRIVER: {
-        GLDriver* gl = new GLDriver(msaa_samples, rgba);
-        if (gl) m_device = gl;
+        GLDriver* gl = new GLDriver();
+        if (gl) m_driver = gl;
         else delete gl;
     }
     #endif
 
     // Check Driver Initialized
-    return !! m_device;
+    return !! m_driver;
 }
 
-bool GPUDevice::shutdown() {
-    bool result = (m_device) &&
-        m_device->impl__shutdown();
+bool GPUDriver::impl__checkDriver() {
+    bool check = m_driver != nullptr;
+    if (!check) GPUReport::error("driver not initialized");
+    // Return Driver Initialized
+    return check;
+}
+
+bool GPUDriver::shutdown() {
+    bool result = (m_driver) &&
+        m_driver->impl__shutdown();
     // Remove Current Driver
-    m_device = nullptr;
+    m_driver = nullptr;
     return result;
 }
 
-// ----------------------
-// GPU Driver Information
-// ----------------------
+// ------------------
+// GPU Driver Methods
+// ------------------
 
-bool GPUDevice::checkInitialized() {
-    return (m_device) && m_device->impl__checkInitialized();
+GPUDevice* GPUDriver::createDevice(GPUDeviceOption option, int samples, bool rgba) {
+    GPUDevice* device = nullptr;
+    if (impl__checkDriver())
+        device = m_driver->impl__createDevice(option, samples, rgba);
+    // Return Driver Device
+    return device;
 }
 
-bool GPUDevice::checkRGBASurface() {
-    return (m_device) && m_device->impl__checkRGBASurface();
+bool GPUDriver::getDriverFeature(GPUDriverFeature feature) {
+    bool check = false;
+    if (impl__checkDriver())
+        check = m_driver->impl__getDriverFeature(feature);
+    // Return Driver Feature Check
+    return check;
 }
 
-bool GPUDevice::checkVerticalSync() {
-    return (m_device) && m_device->impl__checkVerticalSync();
+GPUDriverOption GPUDriver::getDriverOption() {
+    GPUDriverOption option = GPUDriverOption::DRIVER_NONE;
+    if (impl__checkDriver())
+        option = m_driver->impl__getDriverOption();
+    // Return Driver Option
+    return option;
 }
 
-bool GPUDevice::checkFeature(GPUDeviceFeature feature) {
-    return (m_device) && m_device->impl__checkFeature(feature);
+void GPUDriver::setVerticalSync(bool value) {
+    if (impl__checkDriver())
+        m_driver->impl__setVerticalSync(value);
 }
 
-int GPUDevice::getMultisamplesCount() {
-    if (!m_device) return 0;
-    return m_device->impl__getMultisamplesCount();
-}
-
-GPUDeviceDriver GPUDevice::getDeviceDriver() {
-    if (!m_device) return GPUDeviceDriver::DRIVER_NONE;
-    return m_device->impl__getDeviceDriver();
-}
-
-bool GPUDevice::getVerticalSync() {
-    if (!m_device) return false;
-    return m_device->impl__getVerticalSync();
-}
-
-void GPUDevice::setVerticalSync(bool value) {
-    if (m_device) m_device->impl__setVerticalSync(value);
+bool GPUDriver::getVerticalSync() {
+    bool check = false;
+    if (impl__checkDriver())
+        check = m_driver->impl__getVerticalSync();
+    // Return Check Vertical Sync
+    return check;
 }
 
 // -------------------------------
 // Context Creation: Window Cached
 // -------------------------------
 
-GPUContext* GPUDevice::cached__find(void* window) {
-    GPUContext* ctx = m_ctx_cache;
+GPUContext* GPUDevice::GPUContextCache::find(void* window) {
+    GPUContext* ctx = m_list;
     // Find if there is already a Context
     while (ctx) {
-        if (ctx->m_window == window)
+        if (ctx->m_native == window)
             return ctx;
         ctx = ctx->m_next;
     }
@@ -89,19 +98,17 @@ GPUContext* GPUDevice::cached__find(void* window) {
     return ctx;
 }
 
-void GPUDevice::cached__add(GPUContext* ctx) {
-    if (m_ctx_cache)
-        m_ctx_cache->m_prev = ctx;
-
+void GPUDevice::GPUContextCache::add(GPUContext* ctx) {
+    if (m_list) m_list->m_prev = ctx;
     // Add Context at First
-    ctx->m_next = m_ctx_cache;
+    ctx->m_next = m_list;
     ctx->m_prev = nullptr;
-    m_ctx_cache = ctx;
+    m_list = ctx;
 }
 
-void GPUDevice::cached__remove(GPUContext* ctx) {
-    if (m_ctx_cache == ctx)
-        m_ctx_cache = m_ctx_cache->m_next;
+void GPUDevice::GPUContextCache::remove(GPUContext* ctx) {
+    if (m_list == ctx)
+        m_list = m_list->m_next;
     if (ctx->m_next) ctx->m_next->m_prev = ctx->m_prev;
     if (ctx->m_prev) ctx->m_prev->m_next = ctx->m_next;
 
@@ -110,99 +117,100 @@ void GPUDevice::cached__remove(GPUContext* ctx) {
     ctx->m_prev = nullptr;
 }
 
-// ----------------------
-// Context Creation: GLFW
-// ----------------------
+// -----------------------------------
+// Context Creation: Windowing Library
+// -----------------------------------
 
 #if defined(NOGPU_GLFW)
 
 GPUContext* GPUDevice::createContext(GLFWwindow *win) {
-    if (!GPUDevice::checkInitialized()) {
-        GPUReport::error("driver is not initialized");
-        return nullptr;
-    }
 
-    // Find or Create New Context
-    GPUContext* ctx = m_device->cached__find(win);
-    if (!ctx) {
-        ctx = m_device->impl__createContext(win);
-        m_device->cached__add(ctx);
-        ctx->m_window = win;
-    }
-
-    // Return Context
-    return ctx;
 }
 
 #endif
 
-// -----------------------------
-// Context Creation: SDL2 & SDL3
-// -----------------------------
+// ----------------------
+// Context Creation: SDL2
+// ----------------------
 
-#if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
+#if defined(NOGPU_SDL2)
 
-GPUContext* GPUDevice::createContext(SDL_Window *win) {
-    if (!GPUDevice::checkInitialized()) {
-        GPUReport::error("driver is not initialized");
+GPUContext* GPUDevice::createContextSDL(SDL_Window *win) {
+
+}
+
+#endif
+
+// ----------------------
+// Context Creation: SDL3
+// ----------------------
+
+#if defined(NOGPU_SDL3)
+
+GPUContext* GPUDevice::createContextSDL(SDL_Window *win) {
+    SDL_PropertiesID win_props;
+    // Check Valid SDL3 Window
+    if (!win || (win_props = SDL_GetWindowProperties(win)) == 0) {
+        GPUReport::error("invalid SDL3 window");
         return nullptr;
     }
 
-    // Find or Create New Context
-    GPUContext* ctx = m_device->cached__find(win);
-    if (!ctx) {
-        ctx = m_device->impl__createContext(win);
-        m_device->cached__add(ctx);
-        ctx->m_window = win;
+    // Check SDL3 Window Flags
+    int w, h; SDL_GetWindowSize(win, &w, &h);
+    if (SDL_GetWindowFlags(win) & (SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL)) {
+        GPUReport::error("SDL3 window flags must not have SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL");
+        return nullptr;
+    } else if (SDL_WindowHasSurface(win) || SDL_GetRenderer(win)) {
+        GPUReport::error("SDL3 window must not have a SDL_Surface or SDL_Renderer");
+        return nullptr;
     }
 
-    // Return Context
-    return ctx;
+    // Try Wayland Surface
+    void* display = SDL_GetPointerProperty(win_props,
+        SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr);
+    if (display != nullptr) {
+        if (SDL_HasProperty(win_props, SDL_PROP_WINDOW_WAYLAND_EGL_WINDOW_POINTER)) {
+            GPUReport::error("SDL3 window must not have an egl_window");
+            return nullptr;
+        }
+
+        void* surface = SDL_GetPointerProperty(win_props,
+            SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr);
+        // Create Wayland EGL Context for SDL3 Window
+        if (display != nullptr && surface != nullptr) {
+            GPUWindowWayland window_native;
+            window_native.display = display;
+            window_native.surface = surface;
+            window_native.w = w;
+            window_native.h = h;
+
+            // Return Wayland Native Surface
+            return createContextWayland(window_native);
+        }
+    }
+
+    // Try X11 Surface
+    display = SDL_GetPointerProperty(win_props,
+        SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr);
+    if (display != nullptr) {
+        unsigned long xid = SDL_GetNumberProperty(win_props,
+            SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
+        // Create X11 EGL Context for SDL3 Window
+        if (display != nullptr && xid != 0) {
+            GPUWindowX11 window_native;
+            window_native.display = display;
+            window_native.window = xid;
+            window_native.w = w;
+            window_native.h = h;
+
+            // Return X11 Native Surface
+            return createContextX11(window_native);
+        }
+    }
+
+    // No Valid SDL3 Window Found
+    GPUReport::error("SDL3 window is not Wayland or X11");
+    return nullptr;
 }
 
 #endif // SDL2 & SDL3
-
-// ------------------------------
-// Context Creation: Raw Platform
-// ------------------------------
-
-#if defined(__unix__)
-
-GPUContext* GPUDevice::createContext(GPUWindowX11 win) {
-    if (!GPUDevice::checkInitialized()) {
-        GPUReport::error("driver is not initialized");
-        return nullptr;
-    }
-
-    // Find or Create New Context
-    void* win0 = (void*) win.window;
-    GPUContext* ctx = m_device->cached__find(win0);
-    if (!ctx) {
-        ctx = m_device->impl__createContext(win);
-        m_device->cached__add(ctx);
-        ctx->m_window = win0;
-    }
-
-    // Return Context
-    return ctx;
-}
-
-GPUContext* GPUDevice::createContext(GPUWindowWayland win) {
-    if (!GPUDevice::checkInitialized()) {
-        GPUReport::error("driver is not initialized");
-        return nullptr;
-    }
-
-    // Find or Create New Context
-    GPUContext* ctx = m_device->cached__find(win.surface);
-    if (!ctx) {
-        ctx = m_device->impl__createContext(win);
-        m_device->cached__add(ctx);
-        ctx->m_window = win.surface;
-    }
-
-    // Return Context
-    return ctx;
-}
-
-#endif // Raw Platform

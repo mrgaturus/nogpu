@@ -7,32 +7,40 @@
 #if defined(__unix__)
 #include <EGL/egl.h>
 
-typedef struct LinuxEGL {
-    struct LinuxEGL* next;
-    struct LinuxEGL* prev;
-    // EGL Attributes
-    EGLDisplay display;
-    EGLConfig config;
-    EGLContext context;
-    void* linux_display;
-    bool linux_is_x11;
-} LinuxEGL;
+enum class LinuxEGLOption : EGLenum {
+    LINUX_NONE = 0x0000,
+    LINUX_AUTO = 0xFFFF,
+    LINUX_WAYLAND = 0x31D8,
+    LINUX_X11 = 0x31D5
+};
 
 typedef struct LinuxEGLDriver {
     void* so_wayland;
     void* so_x11;
     // EGL Instance
-    LinuxEGL* list;
-    LinuxEGL* current;
-    EGLSurface surface;
+    struct LinuxEGLDevice* list;
+    struct LinuxEGLDevice* device;
 } LinuxEGLDriver;
+
+typedef struct LinuxEGLDevice {
+    struct LinuxEGLDevice* next;
+    struct LinuxEGLDevice* prev;
+    // EGL Attributes
+    EGLDisplay display;
+    EGLConfig config;
+    EGLContext context;
+    LinuxEGLOption option;
+    void* nogpu_device;
+    void* nogpu_display;
+} LinuxEGLDevice;
 
 typedef struct LinuxEGLContext {
     LinuxEGLDriver* driver;
-    LinuxEGL* egl;
+    LinuxEGLDevice* device;
     // EGL Attributes
     EGLDisplay display;
     EGLSurface surface;
+    EGLContext context;
     void* wl_surface;
     void* wl_resize_proc;
     void* wl_destroy_proc;
@@ -42,54 +50,69 @@ typedef struct LinuxEGLContext {
     bool linux_is_rgba;
 } LinuxEGLContext;
 
-#endif // defined(__unix__)
+#endif // __unix__
 
+// ------------------------------
+// OpenGL Driver & Device Classes
+// ------------------------------
+
+class GLDevice;
 class GLContext;
-class GLDriver : GPUDevice {
-    GLContext* m_context_list = nullptr;
-    unsigned int m_features = 0;
-    int m_msaa_samples = 0;
-    bool m_rgba = false;
-    bool m_vsync = false;
+class GLDriver : public GPUDriver {
+    static unsigned int initializeGL(void* getProcAddress);
+    GLContext* m_ctx_current;
+    unsigned int m_features;
+    bool m_vsync;
 
-    // Linux EGL Context
     #if defined(__unix__)
-        LinuxEGLDriver m_egl = {};
-        GPUContext* makeLinuxContext(LinuxEGLContext ctx);
-    #endif
+        LinuxEGLDriver m_egl_driver;
+        bool prepareDevice(GLDevice* device, GPUDeviceOption option);
+        bool disposeDevice(GLDevice* device);
+    #endif // __unix__
 
-    bool impl__shutdown() override;
-    bool impl__checkInitialized() override;
-    bool impl__checkRGBASurface() override;
-    bool impl__checkVerticalSync() override;
-    bool impl__checkFeature(GPUDeviceFeature feature) override;
-    GPUDeviceDriver impl__getDeviceDriver() override;
-    int impl__getMultisamplesCount() override;
-    bool impl__getVerticalSync() override;
+    GPUDevice* impl__createDevice(GPUDeviceOption option, int samples, bool rgba) override;
+    bool impl__getDriverFeature(GPUDriverFeature feature) override;
+    GPUDriverOption impl__getDriverOption() override;
     void impl__setVerticalSync(bool value) override;
+    bool impl__getVerticalSync() override;
+    bool impl__shutdown() override;
 
-    // Context Creation: GLFW
-    #if defined(NOGPU_GLFW)
-        GPUContext *impl__createContext(GLFWwindow* win) override;
-    #endif
-
-    // Context Creation: SDL2 & SDL3
-    #if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
-        GPUContext *impl__createContext(SDL_Window *win) override;
-    #endif
-
-    // Context Creation: Raw Platform
-    #if defined(__unix__)
-        GPUContext *impl__createContext(GPUWindowX11 win) override;
-        GPUContext *impl__createContext(GPUWindowWayland win) override;
-    #endif
-
-    public: // GL Context Current
+    protected:
+        GLDriver();
         void makeCurrent(GLContext* ctx);
-        void makeDestroyed(GLContext* ctx);
-    protected: // GL Driver Initialize
-        GLDriver(int msaa_samples, bool rgba);
-        friend GPUDevice;
+        friend GPUDriver;
+        friend GLContext;
+        friend GLDevice;
+};
+
+class GLDevice : public GPUDevice {
+    GPUDeviceOption m_option;
+    GPUContextCache m_ctx_cache;
+    GLDriver* m_driver;
+    int m_samples;
+    bool m_rgba;
+
+    #if defined(__unix__)
+        LinuxEGLDevice m_egl_device;
+    #endif // __unix__
+
+    // Basic Device Info
+    GPUDeviceOption checkOption() override;
+    int checkSamples() override;
+    bool checkRGBA() override;
+    bool destroy() override;
+
+    // Context Creation: Linux
+    #if defined(__unix__)
+        bool createContextEGL(void* display, LinuxEGLOption device);
+        GPUContext *createContextX11(GPUWindowX11 win) override;
+        GPUContext *createContextWayland(GPUWindowWayland win) override;
+    #endif
+
+    protected: // OpenGL Device Constructor
+        GLDevice(GLDriver* driver, GPUDeviceOption device, int samples, bool rgba);
+        friend GLDriver;
+        friend GLContext;
 };
 
 #endif // OPENGL_DRIVER_H

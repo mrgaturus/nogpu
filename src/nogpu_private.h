@@ -7,8 +7,8 @@
 
 unsigned int next_power_of_two(unsigned int v);
 unsigned int levels_power_of_two(int w, int h, int limit);
-unsigned int device_driver_flag(GPUDeviceDriver driver);
-unsigned int device_feature_flag(GPUDeviceFeature feature);
+unsigned int driver_option_flag(GPUDriverOption driver);
+unsigned int driver_feature_flag(GPUDriverFeature feature);
 // Texture Pixel Types: Operations
 bool canTextureBuffer(GPUTexturePixelType type);
 bool canTransferChange(GPUTexturePixelType type);
@@ -16,9 +16,9 @@ GPUTextureTransferFormat computeTransferFormat(GPUTexturePixelType type);
 GPUTextureTransferSize computeTransferSize(GPUTexturePixelType type);
 int computeBytesPerPixel(GPUTextureTransferFormat format, GPUTextureTransferSize size);
 
-// -----------------
-// GPU Report Logger
-// -----------------
+// ---------------------
+// GPU Driver: Reporting
+// ---------------------
 
 class GPUReport {
     #if defined(__clang__) || defined(__GNUC__)

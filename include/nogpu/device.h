@@ -40,7 +40,7 @@ typedef struct {
 // GPU Objects: Driver
 // -------------------
 
-enum class GPUDeviceDriver : int {
+enum class GPUDriverOption : int {
     DRIVER_NONE,
     DRIVER_AUTO,
     // Driver Options
@@ -51,7 +51,16 @@ enum class GPUDeviceDriver : int {
     DRIVER_METAL
 };
 
-enum class GPUDeviceFeature : int {
+enum class GPUDeviceOption : int {
+    DEVICE_NONE,
+    DEVICE_AUTO,
+    // Device Options
+    DEVICE_X11,
+    DEVICE_WAYLAND,
+    DEVICE_WIN32,
+};
+
+enum class GPUDriverFeature : int {
     DRIVER_FEATURE_RASTERIZE,
     DRIVER_FEATURE_COMPUTE,
     DRIVER_FEATURE_DEBUG,
@@ -69,72 +78,66 @@ enum class GPUDeviceFeature : int {
     DRIVER_TEXTURE_COMPRESSED_ETC2,
     DRIVER_TEXTURE_COMPRESSED_ASTC,
 
-    // Shader Compiling
-    DRIVER_SHADER_GLSL,
-    DRIVER_SHADER_HLSL,
-    DRIVER_SHADER_SPIRV,
     // Built-in Shader Compiling
-    DRIVER_SHADER_LOW_GLSL, // OpenGL
-    DRIVER_SHADER_LOW_SPIRV, // Vulkan
-    DRIVER_SHADER_LOW_DXBC, // DirectX 11
-    DRIVER_SHADER_LOW_DXIL, // DirectX 12
-    DRIVER_SHADER_LOW_MTL, // Metal
+    DRIVER_SHADER_GLSL, // OpenGL
+    DRIVER_SHADER_SPIRV, // Vulkan
+    DRIVER_SHADER_DXBC, // DirectX 11
+    DRIVER_SHADER_DXIL, // DirectX 12
+    DRIVER_SHADER_MTL, // Metal
 };
 
 class GPUContext;
-class GPUDevice {
-    protected:
-        static GPUDevice *m_device;
-        GPUContext* m_ctx_cache = nullptr;
-        GPUContext* cached__find(void* window);
-        void cached__add(GPUContext* ctx);
-        void cached__remove(GPUContext* ctx);
+class GPUDevice;
+class GPUDriver {
+    static GPUDriver* m_driver;
+    static bool impl__checkDriver();
 
-        // Driver Abstract Implementation
-        virtual bool impl__shutdown() = 0;
-        virtual bool impl__checkInitialized() = 0;
-        virtual bool impl__checkRGBASurface() = 0;
-        virtual bool impl__checkVerticalSync() = 0;
-        virtual bool impl__checkFeature(GPUDeviceFeature feature) = 0;
-        virtual GPUDeviceDriver impl__getDeviceDriver() = 0;
-        virtual int impl__getMultisamplesCount() = 0;
-        virtual bool impl__getVerticalSync() = 0;
+    protected: // Driver Abstract Methods
+        virtual GPUDevice* impl__createDevice(GPUDeviceOption device, int samples, bool rgba) = 0;
+        virtual bool impl__getDriverFeature(GPUDriverFeature feature) = 0;
+        virtual GPUDriverOption impl__getDriverOption() = 0;
         virtual void impl__setVerticalSync(bool value) = 0;
+        virtual bool impl__getVerticalSync() = 0;
+        virtual bool impl__shutdown() = 0;
 
-    public: // Driver Initialize
-        static bool initialize(GPUDeviceDriver driver,
-            int msaa_samples = 0, bool rgba = false);
-        static bool shutdown();
-        // Driver Information
-        static bool checkInitialized();
-        static bool checkRGBASurface();
-        static bool checkVerticalSync();
-        static bool checkFeature(GPUDeviceFeature feature);
-        static GPUDeviceDriver getDeviceDriver();
-        static int getMultisamplesCount();
-        static bool getVerticalSync();
+    public: // Driver Public Methods
+        static bool initialize(GPUDriverOption driver);
+        static GPUDevice* createDevice(GPUDeviceOption device, int samples, bool rgba);
+        static bool getDriverFeature(GPUDriverFeature feature);
+        static GPUDriverOption getDriverOption();
         static void setVerticalSync(bool value);
+        static bool getVerticalSync();
+        static bool shutdown();
+};
 
-    // -- GPU Driver: Context Creation --
+class GPUDevice {
+    protected: class GPUContextCache {
+        public: GPUContext* m_list;
+        public: GPUContext* find(void* window);
+        public: void add(GPUContext* ctx);
+        public: void remove(GPUContext* ctx);
+    };
+
+    public: // Basic Device Info
+        virtual GPUDeviceOption checkOption() = 0;
+        virtual int checkSamples() = 0;
+        virtual bool checkRGBA() = 0;
+        virtual bool destroy() = 0;
 
     // Context Creation: GLFW
     #if defined(NOGPU_GLFW)
-        protected: virtual GPUContext *impl__createContext(GLFWwindow *win) = 0;
-        public: static GPUContext *createContext(GLFWwindow *win);
+        GPUContext *createContextGLFW(GLFWwindow *win);
     #endif
 
     // Context Creation: SDL2 & SDL3
     #if defined(NOGPU_SDL2) || defined(NOGPU_SDL3)
-        protected: virtual GPUContext *impl__createContext(SDL_Window *win) = 0;
-        public: static GPUContext *createContext(SDL_Window *win);
+        GPUContext *createContextSDL(SDL_Window *win);
     #endif
 
     // Context Creation: Raw Platform
     #if defined(__unix__)
-        protected: virtual GPUContext *impl__createContext(GPUWindowX11 win) = 0;
-        protected: virtual GPUContext *impl__createContext(GPUWindowWayland win) = 0;
-        public: static GPUContext *createContext(GPUWindowX11 win);
-        public: static GPUContext *createContext(GPUWindowWayland win);
+        virtual GPUContext *createContextX11(GPUWindowX11 win) = 0;
+        virtual GPUContext *createContextWayland(GPUWindowWayland win) = 0;
     #endif
 };
 

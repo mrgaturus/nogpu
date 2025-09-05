@@ -7,10 +7,6 @@
 #include "private/framebuffer.h"
 #include "private/glad.h"
 
-bool GLContext::isTransparent() {
-    return false;
-}
-
 // -------------------
 // GPU Object Creation
 // -------------------
@@ -25,10 +21,6 @@ GPUVertexArray* GLContext::createVertexArray() {
 
 GPUTextureBuffer* GLContext::createTextureBuffer(GPUBuffer* buffer, GPUTexturePixelType type) {
     return new GLTextureBuffer(this, static_cast<GLBuffer*>(buffer), type);
-}
-
-GPURenderBuffer* GLContext::createRenderBuffer(GPUTexturePixelType type) {
-    return new GLRenderBuffer(this, type);
 }
 
 // -------------------------------------
@@ -87,52 +79,30 @@ GPUFrameBuffer* GLContext::createFrameBuffer() {
     return new GLFrameBuffer(this);
 }
 
-GPUProgram* GLContext::createProgram() {
-    return nullptr;
+GPURenderBuffer* GLContext::createRenderBuffer(GPUTexturePixelType type) {
+    return new GLRenderBuffer(this, type);
 }
 
 GPUShader* GLContext::createShader(GPUShaderType type, char* buffer, int size) {
     return nullptr;
 }
 
-GPUPipeline* GLContext::createPipeline(GPUProgram* program) {
+GPUProgram* GLContext::createProgram() {
     return nullptr;
 }
 
-
-// -------------------
-// GPU Object Commands
-// -------------------
-
-void GLContext::gl__makeCurrent() {
-    m_device->makeCurrent(this);
+GPUPipeline* GLContext::createPipeline() {
+    return nullptr;
 }
 
 GPUCommands* GLContext::createCommands() {
     return nullptr;
 }
 
-void GLContext::submit(GPUCommands* commands) {
+// -----------------------------
+// GPU Context: This Weird Thing
+// -----------------------------
 
-}
-
-void GLContext::recreateSurface(int w, int h) {
-
-}
-
-void GLContext::swapSurface() {
-    gl__makeCurrent();
-    glClearColor(0.2, 0.2, 0.3, 0.5);
-    glClear(GL_COLOR_BUFFER_BIT);
-    // Swap Context Buffer
-    LinuxEGLContext *gtx = &m_gtx;
-    eglSwapBuffers(gtx->display, gtx->surface);
-}
-
-// ---------------------
-// GPU Object Destructor
-// ---------------------
-
-void GLContext::destroy() {
-
+void GLContext::gl__makeCurrent() {
+    m_driver->makeCurrent(this);
 }

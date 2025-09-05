@@ -45,7 +45,6 @@ elseif (NOGPU_SDL2)
 endif()
 
 include_directories(include)
-include(deps/cpptrace.cmake)
 add_subdirectory(src/opengl)
 add_subdirectory(src/vulkan)
 # Compile nogpu library

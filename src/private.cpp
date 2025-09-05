@@ -42,11 +42,11 @@ unsigned int levels_power_of_two(int w, int h, int limit) {
 // Device Feature Flags
 // --------------------
 
-unsigned int device_driver_flag(GPUDeviceDriver driver) {
+unsigned int driver_option_flag(GPUDriverOption driver) {
     return 1 << static_cast<unsigned int>(driver);
 }
 
-unsigned int device_feature_flag(GPUDeviceFeature feature) {
+unsigned int driver_feature_flag(GPUDriverFeature feature) {
     return 1 << static_cast<unsigned int>(feature);
 }
 
