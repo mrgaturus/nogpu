@@ -856,121 +856,109 @@ static void glad_gl_load_GL_ARB_texture_storage_multisample( GLADuserptrloadfunc
 
 
 
-static void glad_gl_free_extensions(char **exts_i) {
-    if (exts_i != NULL) {
-        unsigned int index;
-        for(index = 0; exts_i[index]; index++) {
-            free((void *) (exts_i[index]));
-        }
-        free((void *)exts_i);
-        exts_i = NULL;
-    }
+
+// -------------------------------
+// GLAD OpenGL Extensions: Hashing
+// -------------------------------
+
+static unsigned int glad_gl_crc32_extension(const unsigned char *name) {
+   unsigned int byte, crc, mask;
+   int i, j;
+
+   i = 0;
+   crc = 0xFFFFFFFF;
+   while (name[i] != 0) {
+      byte = name[i]; // Get next byte.
+      crc = crc ^ byte;
+      for (j = 7; j >= 0; j--) { // Do eight times.
+         mask = -(crc & 1);
+         crc = (crc >> 1) ^ (0xEDB88320 & mask);
+      }
+      i = i + 1;
+   }
+   return ~crc;
 }
-static int glad_gl_get_extensions( const char **out_exts, char ***out_exts_i) {
-#if defined(GL_ES_VERSION_3_0) || defined(GL_VERSION_3_0)
-    if (glad_glGetStringi != NULL && glad_glGetIntegerv != NULL) {
-        unsigned int index = 0;
-        unsigned int num_exts_i = 0;
-        char **exts_i = NULL;
-        glad_glGetIntegerv(GL_NUM_EXTENSIONS, (int*) &num_exts_i);
-        exts_i = (char **) malloc((num_exts_i + 1) * (sizeof *exts_i));
-        if (exts_i == NULL) {
-            return 0;
-        }
-        for(index = 0; index < num_exts_i; index++) {
-            const char *gl_str_tmp = (const char*) glad_glGetStringi(GL_EXTENSIONS, index);
-            size_t len = strlen(gl_str_tmp) + 1;
 
-            char *local_str = (char*) malloc(len * sizeof(char));
-            if(local_str == NULL) {
-                exts_i[index] = NULL;
-                glad_gl_free_extensions(exts_i);
-                return 0;
-            }
-
-            memcpy(local_str, gl_str_tmp, len * sizeof(char));
-            exts_i[index] = local_str;
-        }
-        exts_i[index] = NULL;
-
-        *out_exts_i = exts_i;
-
-        return 1;
-    }
-#else
-    GLAD_UNUSED(out_exts_i);
-#endif
-    if (glad_glGetString == NULL) {
-        return 0;
-    }
-    *out_exts = (const char *)glad_glGetString(GL_EXTENSIONS);
-    return 1;
-}
-static int glad_gl_has_extension(const char *exts, char **exts_i, const char *ext) {
-    if(exts_i) {
-        unsigned int index;
-        for(index = 0; exts_i[index]; index++) {
-            const char *e = exts_i[index];
-            if(strcmp(e, ext) == 0) {
-                return 1;
-            }
-        }
-    } else {
-        const char *extensions;
-        const char *loc;
-        const char *terminator;
-        extensions = exts;
-        if(extensions == NULL || ext == NULL) {
-            return 0;
-        }
-        while(1) {
-            loc = strstr(extensions, ext);
-            if(loc == NULL) {
-                return 0;
-            }
-            terminator = loc + strlen(ext);
-            if((loc == extensions || *(loc - 1) == ' ') &&
-                (*terminator == ' ' || *terminator == '\0')) {
-                return 1;
-            }
-            extensions = terminator;
+static void glad_gl_activate_extension(unsigned int *flags, unsigned int *crc32, int count, const char *name) {
+    if (name[0] == '\0') return;
+    int left = 0;
+    int right = count;
+    // Calculate extension name crc32 hash
+    unsigned int hash = glad_gl_crc32_extension(
+        (const unsigned char*) name);
+    
+    while (left < right) {
+        int mid = left + (right - left) / 2;
+        // Lower-Bound Search
+        if (crc32[mid] < hash) {
+            left = mid + 1;
+        } else {
+            right = mid;
         }
     }
-    return 0;
+    
+    // Activate if Extension was Found
+    if (left < count && hash == crc32[left])
+        flags[left] = 0xFFFFFFFF;
 }
 
-static GLADapiproc glad_gl_get_proc_from_userptr(void *userptr, const char* name) {
-    return (GLAD_GNUC_EXTENSION (GLADapiproc (*)(const char *name)) userptr)(name);
+// --------------------------------
+// GLAD OpenGL Extensions: Checking
+// --------------------------------
+
+// XXX: we can assume these functions are forever ABI stable in OpenGL nowadays
+typedef const GLubyte * (GLAD_API_PTR *GLAD__PFNGLGETSTRINGPROC)(GLenum name);
+typedef const GLubyte * (GLAD_API_PTR *GLAD__PFNGLGETSTRINGIPROC)(GLenum name, GLuint index);
+typedef void (GLAD_API_PTR *GLAD__PFNGLGETINTEGERVPROC)(GLenum pname, GLint * data);
+static GLAD__PFNGLGETSTRINGPROC glad__glGetString = NULL;
+static GLAD__PFNGLGETSTRINGIPROC glad__glGetStringi = NULL;
+static GLAD__PFNGLGETINTEGERVPROC glad__glGetIntegerv = NULL;
+#define GLAD__NUM_EXTENSIONS 0x821D
+#define GLAD__EXTENSIONS 0x1F03
+
+static void glad_gl_check_extensions(unsigned int *flags, unsigned int *crc32, int count) {
+    if (count == 0) return;
+    if (glad__glGetStringi != NULL && glad__glGetIntegerv != NULL) {
+        unsigned int num_exts = 0;
+        glad__glGetIntegerv(GLAD__NUM_EXTENSIONS, (int*) &num_exts);
+        if (num_exts == 0) goto GLAD__EXTENSIONS_WORKAROUND;
+        // Iterate Extensions and Find Available
+        for (unsigned int idx = 0; idx < num_exts; idx++) {
+            const char *name = (const char*) glad__glGetStringi(GLAD__EXTENSIONS, idx);
+            glad_gl_activate_extension(flags, crc32, count, name);
+        }
+    // Workaround for old OpenGL ES
+    } else if (glad__glGetString != NULL) {
+GLAD__EXTENSIONS_WORKAROUND:
+        const char *extensions = (const char *)
+            glad__glGetString(GLAD__EXTENSIONS);
+        // Prepare Extensions Buffer
+        char* ext = (char*) extensions;
+        char name[1024];
+        int idx = 0;
+        // Get Extensions
+        while (1) {
+            char letter = *ext++;
+            if (letter == ' ' || letter == '\0') {
+                name[idx] = '\0';
+                if (name[0] != '\0')
+                    glad_gl_activate_extension(
+                        flags, crc32, count, name);
+                // Exit Extensions Loop
+                idx = 0;
+                if (letter == '\0')
+                    break;
+            } else {
+                name[idx] = letter;
+                idx++;
+            }
+        }
+    }
 }
 
-static int glad_gl_find_extensions_gl(void) {
-    const char *exts = NULL;
-    char **exts_i = NULL;
-    if (!glad_gl_get_extensions(&exts, &exts_i)) return 0;
-
-    GLAD_GL_ARB_ES3_compatibility = glad_gl_has_extension(exts, exts_i, "GL_ARB_ES3_compatibility");
-    GLAD_GL_ARB_compute_shader = glad_gl_has_extension(exts, exts_i, "GL_ARB_compute_shader");
-    GLAD_GL_ARB_debug_output = glad_gl_has_extension(exts, exts_i, "GL_ARB_debug_output");
-    GLAD_GL_ARB_get_texture_sub_image = glad_gl_has_extension(exts, exts_i, "GL_ARB_get_texture_sub_image");
-    GLAD_GL_ARB_gl_spirv = glad_gl_has_extension(exts, exts_i, "GL_ARB_gl_spirv");
-    GLAD_GL_ARB_shader_atomic_counters = glad_gl_has_extension(exts, exts_i, "GL_ARB_shader_atomic_counters");
-    GLAD_GL_ARB_shader_image_load_store = glad_gl_has_extension(exts, exts_i, "GL_ARB_shader_image_load_store");
-    GLAD_GL_ARB_shader_image_size = glad_gl_has_extension(exts, exts_i, "GL_ARB_shader_image_size");
-    GLAD_GL_ARB_shader_storage_buffer_object = glad_gl_has_extension(exts, exts_i, "GL_ARB_shader_storage_buffer_object");
-    GLAD_GL_ARB_spirv_extensions = glad_gl_has_extension(exts, exts_i, "GL_ARB_spirv_extensions");
-    GLAD_GL_ARB_texture_buffer_range = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_buffer_range");
-    GLAD_GL_ARB_texture_compression_bptc = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_compression_bptc");
-    GLAD_GL_ARB_texture_cube_map_array = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_cube_map_array");
-    GLAD_GL_ARB_texture_storage = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_storage");
-    GLAD_GL_ARB_texture_storage_multisample = glad_gl_has_extension(exts, exts_i, "GL_ARB_texture_storage_multisample");
-    GLAD_GL_EXT_texture_compression_s3tc = glad_gl_has_extension(exts, exts_i, "GL_EXT_texture_compression_s3tc");
-    GLAD_GL_KHR_texture_compression_astc_hdr = glad_gl_has_extension(exts, exts_i, "GL_KHR_texture_compression_astc_hdr");
-    GLAD_GL_KHR_texture_compression_astc_ldr = glad_gl_has_extension(exts, exts_i, "GL_KHR_texture_compression_astc_ldr");
-
-    glad_gl_free_extensions(exts_i);
-
-    return 1;
-}
+// ----------------------
+// GLAD OpenGL Extensions
+// ----------------------
 
 static int glad_gl_find_core_gl(void) {
     int i;
@@ -984,7 +972,7 @@ static int glad_gl_find_core_gl(void) {
     };
     int major = 0;
     int minor = 0;
-    version = (const char*) glad_glGetString(GL_VERSION);
+    version = (const char*) glad__glGetString(GL_VERSION);
     if (!version) return 0;
     for (i = 0;  prefixes[i];  i++) {
         const size_t length = strlen(prefixes[i]);
@@ -995,7 +983,6 @@ static int glad_gl_find_core_gl(void) {
     }
 
     GLAD_IMPL_UTIL_SSCANF(version, "%d.%d", &major, &minor);
-
     GLAD_GL_VERSION_1_0 = (major == 1 && minor >= 0) || major > 1;
     GLAD_GL_VERSION_1_1 = (major == 1 && minor >= 1) || major > 1;
     GLAD_GL_VERSION_1_2 = (major == 1 && minor >= 2) || major > 1;
@@ -1008,17 +995,67 @@ static int glad_gl_find_core_gl(void) {
     GLAD_GL_VERSION_3_1 = (major == 3 && minor >= 1) || major > 3;
     GLAD_GL_VERSION_3_2 = (major == 3 && minor >= 2) || major > 3;
     GLAD_GL_VERSION_3_3 = (major == 3 && minor >= 3) || major > 3;
-
     return GLAD_MAKE_VERSION(major, minor);
 }
+
+static unsigned int glad_gl_crc32_extensions_gl[] = {
+        0x22eb0518, // GL_ARB_gl_spirv
+        0x299a86ca, // GL_ARB_texture_compression_bptc
+        0x3f22171c, // GL_EXT_texture_compression_s3tc
+        0x4a03d323, // GL_ARB_texture_buffer_range
+        0x56ea549b, // GL_ARB_texture_storage_multisample
+        0x67b4f8bb, // GL_ARB_shader_storage_buffer_object
+        0x7a21b127, // GL_ARB_shader_atomic_counters
+        0x7b80afe6, // GL_ARB_texture_cube_map_array
+        0x8a58e0da, // GL_ARB_spirv_extensions
+        0x98127c6a, // GL_ARB_get_texture_sub_image
+        0xb04ac249, // GL_ARB_compute_shader
+        0xb9ab7373, // GL_ARB_ES3_compatibility
+        0xc4e4e799, // GL_ARB_texture_storage
+        0xc8a531f1, // GL_ARB_debug_output
+        0xe47cbcf8, // GL_ARB_shader_image_size
+        0xe9fdddb4, // GL_KHR_texture_compression_astc_ldr
+        0xeef47568, // GL_KHR_texture_compression_astc_hdr
+        0xf48228f4, // GL_ARB_shader_image_load_store
+        0xffffffff
+};
+
+static void glad_gl_find_extensions_gl(void) {
+    unsigned int glad_gl_flags_extensions_gl[19] = {0};
+    glad_gl_check_extensions(glad_gl_flags_extensions_gl, glad_gl_crc32_extensions_gl, 18);
+    GLAD_GL_ARB_gl_spirv = (glad_gl_flags_extensions_gl[0] != 0);
+    GLAD_GL_ARB_texture_compression_bptc = (glad_gl_flags_extensions_gl[1] != 0);
+    GLAD_GL_EXT_texture_compression_s3tc = (glad_gl_flags_extensions_gl[2] != 0);
+    GLAD_GL_ARB_texture_buffer_range = (glad_gl_flags_extensions_gl[3] != 0);
+    GLAD_GL_ARB_texture_storage_multisample = (glad_gl_flags_extensions_gl[4] != 0);
+    GLAD_GL_ARB_shader_storage_buffer_object = (glad_gl_flags_extensions_gl[5] != 0);
+    GLAD_GL_ARB_shader_atomic_counters = (glad_gl_flags_extensions_gl[6] != 0);
+    GLAD_GL_ARB_texture_cube_map_array = (glad_gl_flags_extensions_gl[7] != 0);
+    GLAD_GL_ARB_spirv_extensions = (glad_gl_flags_extensions_gl[8] != 0);
+    GLAD_GL_ARB_get_texture_sub_image = (glad_gl_flags_extensions_gl[9] != 0);
+    GLAD_GL_ARB_compute_shader = (glad_gl_flags_extensions_gl[10] != 0);
+    GLAD_GL_ARB_ES3_compatibility = (glad_gl_flags_extensions_gl[11] != 0);
+    GLAD_GL_ARB_texture_storage = (glad_gl_flags_extensions_gl[12] != 0);
+    GLAD_GL_ARB_debug_output = (glad_gl_flags_extensions_gl[13] != 0);
+    GLAD_GL_ARB_shader_image_size = (glad_gl_flags_extensions_gl[14] != 0);
+    GLAD_GL_KHR_texture_compression_astc_ldr = (glad_gl_flags_extensions_gl[15] != 0);
+    GLAD_GL_KHR_texture_compression_astc_hdr = (glad_gl_flags_extensions_gl[16] != 0);
+    GLAD_GL_ARB_shader_image_load_store = (glad_gl_flags_extensions_gl[17] != 0);
+}
+
+// ------------------
+// GLAD OpenGL Loader
+// ------------------
 
 int gladLoadGLUserPtr( GLADuserptrloadfunc load, void *userptr) {
     int version;
 
-    glad_glGetString = (PFNGLGETSTRINGPROC) load(userptr, "glGetString");
-    if(glad_glGetString == NULL) return 0;
-    version = glad_gl_find_core_gl();
+    glad__glGetString = (GLAD__PFNGLGETSTRINGPROC) load(userptr, "glGetString");
+    glad__glGetStringi = (GLAD__PFNGLGETSTRINGIPROC) load(userptr, "glGetStringi");
+    glad__glGetIntegerv = (GLAD__PFNGLGETINTEGERVPROC) load(userptr, "glGetIntegerv");
+    if(glad__glGetString == NULL) return 0;
 
+    version = glad_gl_find_core_gl();
     glad_gl_load_GL_VERSION_1_0(load, userptr);
     glad_gl_load_GL_VERSION_1_1(load, userptr);
     glad_gl_load_GL_VERSION_1_2(load, userptr);
@@ -1032,7 +1069,7 @@ int gladLoadGLUserPtr( GLADuserptrloadfunc load, void *userptr) {
     glad_gl_load_GL_VERSION_3_2(load, userptr);
     glad_gl_load_GL_VERSION_3_3(load, userptr);
 
-    if (!glad_gl_find_extensions_gl()) return 0;
+    glad_gl_find_extensions_gl();
     glad_gl_load_GL_ARB_compute_shader(load, userptr);
     glad_gl_load_GL_ARB_debug_output(load, userptr);
     glad_gl_load_GL_ARB_get_texture_sub_image(load, userptr);
@@ -1049,6 +1086,10 @@ int gladLoadGLUserPtr( GLADuserptrloadfunc load, void *userptr) {
     return version;
 }
 
+
+static GLADapiproc glad_gl_get_proc_from_userptr(void *userptr, const char* name) {
+    return (GLAD_GNUC_EXTENSION (GLADapiproc (*)(const char *name)) userptr)(name);
+}
 
 int gladLoadGL( GLADloadfunc load) {
     return gladLoadGLUserPtr( glad_gl_get_proc_from_userptr, GLAD_GNUC_EXTENSION (void*) load);
