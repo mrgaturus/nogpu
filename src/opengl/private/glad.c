@@ -928,11 +928,8 @@ static void glad_gl_check_extensions(unsigned int *flags, unsigned int *crc32, i
             glad_gl_activate_extension(flags, crc32, count, name);
         }
     // Workaround for old OpenGL ES
-    } else if (glad__glGetString == NULL) {
-        return;
-    }
-
-GLAD__EXTENSIONS_WORKAROUND: {
+    } else if (glad__glGetString != NULL) {
+GLAD__EXTENSIONS_WORKAROUND: (void) 0;
         const char *extensions = (const char *)
             glad__glGetString(GLAD__EXTENSIONS);
         // Prepare Extensions Buffer
