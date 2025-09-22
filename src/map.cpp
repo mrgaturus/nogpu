@@ -130,7 +130,7 @@ void GPUHashmapOpaque::takeoff(int idx) {
 // Hashmap Manipulation: ID
 // ------------------------
 
-bool GPUHashmapOpaque::add_0(unsigned int key, void* data) {
+bool GPUHashmapOpaque::add_key0(unsigned int key, void* data) {
     int idx = this->find(key);
     bool check = idx >= m_len || this->lookup(idx)->key != key;
     // Check and Add to Hashmap
@@ -144,7 +144,7 @@ bool GPUHashmapOpaque::add_0(unsigned int key, void* data) {
     return check;
 }
 
-bool GPUHashmapOpaque::replace_0(unsigned int key, void* data) {
+bool GPUHashmapOpaque::replace_key0(unsigned int key, void* data) {
     int idx = this->find(key);
     bool check = idx >= m_len || this->lookup(idx)->key != key;
 
@@ -162,7 +162,7 @@ bool GPUHashmapOpaque::replace_0(unsigned int key, void* data) {
     return !check;
 }
 
-bool GPUHashmapOpaque::remove_0(unsigned int key) {
+bool GPUHashmapOpaque::remove_key0(unsigned int key) {
     int idx = this->find(key);
     // Check and Remove from Hashmap
     bool check = idx < m_len && this->lookup(idx)->key == key;
@@ -172,7 +172,7 @@ bool GPUHashmapOpaque::remove_0(unsigned int key) {
     return check;
 }
 
-bool GPUHashmapOpaque::check_0(unsigned int key) {
+bool GPUHashmapOpaque::check_key0(unsigned int key) {
     int idx = this->find(key);
     bool check = idx < m_len;
     if (!check) return check;
@@ -182,7 +182,7 @@ bool GPUHashmapOpaque::check_0(unsigned int key) {
     return item->key == key;
 }
 
-void* GPUHashmapOpaque::get_0(unsigned int key) {
+void* GPUHashmapOpaque::get_key0(unsigned int key) {
     int idx = this->find(key);
     bool check = idx < m_len;
 
@@ -200,27 +200,27 @@ void* GPUHashmapOpaque::get_0(unsigned int key) {
 // Hashmap Manipulation: Name
 // --------------------------
 
-bool GPUHashmapOpaque::add_0(const char* hash, void* data) {
+bool GPUHashmapOpaque::add_name0(const char* hash, void* data) {
     unsigned int crc32 = this->crc32(hash);
-    return this->add_0(crc32, data);
+    return this->add_key0(crc32, data);
 }
 
-bool GPUHashmapOpaque::replace_0(const char* hash, void* data) {
+bool GPUHashmapOpaque::replace_name0(const char* hash, void* data) {
     unsigned int crc32 = this->crc32(hash);
-    return this->replace_0(crc32, data);
+    return this->replace_key0(crc32, data);
 }
 
-bool GPUHashmapOpaque::remove_0(const char* hash) {
+bool GPUHashmapOpaque::remove_name0(const char* hash) {
     unsigned int crc32 = this->crc32(hash);
-    return this->remove_0(crc32);
+    return this->remove_key0(crc32);
 }
 
-bool GPUHashmapOpaque::check_0(const char* hash) {
+bool GPUHashmapOpaque::check_name0(const char* hash) {
     unsigned int crc32 = this->crc32(hash);
-    return this->check_0(crc32);
+    return this->check_key0(crc32);
 }
 
-void* GPUHashmapOpaque::get_0(const char* hash) {
+void* GPUHashmapOpaque::get_name0(const char* hash) {
     unsigned int crc32 = this->crc32(hash);
-    return this->get_0(crc32);
+    return this->get_key0(crc32);
 }

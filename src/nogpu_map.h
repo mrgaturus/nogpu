@@ -30,17 +30,17 @@ class GPUHashmapOpaque {
         ~GPUHashmapOpaque() noexcept;
 
     protected: // Hashmap Manipulation: ID
-        bool add_0(unsigned int key, void* data);
-        bool replace_0(unsigned int key, void* data);
-        bool remove_0(unsigned int key);
-        bool check_0(unsigned int key);
-        void* get_0(unsigned int key);
+        bool add_key0(unsigned int key, void* data);
+        bool replace_key0(unsigned int key, void* data);
+        bool remove_key0(unsigned int key);
+        bool check_key0(unsigned int key);
+        void* get_key0(unsigned int key);
     protected: // Hashmap Manipulation: Name
-        bool add_0(const char* name, void* data);
-        bool replace_0(const char* name, void* data);
-        bool remove_0(const char* name);
-        bool check_0(const char* name);
-        void* get_0(const char* name);
+        bool add_name0(const char* name, void* data);
+        bool replace_name0(const char* name, void* data);
+        bool remove_name0(const char* name);
+        bool check_name0(const char* name);
+        void* get_name0(const char* name);
 };
 
 // -------------------
@@ -75,17 +75,17 @@ class GPUHashmap : GPUHashmapOpaque {
         GPUHashmapIterator begin() { return GPUHashmapIterator::create((unsigned char*) m_buffer, 0); }
         GPUHashmapIterator end() { return GPUHashmapIterator::create((unsigned char*) m_buffer, m_len); }
     public: // Hashmap Manipulation: ID
-        bool add_key(unsigned int key, T data) { return add_0(key, &data); }
-        bool replace_key(unsigned int key, T data) { return replace_0(key, &data); }
-        bool remove_key(unsigned int key) { return remove_0(key); }
-        bool check_key(unsigned int key) { return check_0(key); }
-        T* get_key(unsigned int key) { return (T*) get_0(key);  }
+        bool add_key(unsigned int key, T data) { return add_key0(key, &data); }
+        bool replace_key(unsigned int key, T data) { return replace_key0(key, &data); }
+        bool remove_key(unsigned int key) { return remove_key0(key); }
+        bool check_key(unsigned int key) { return check_key0(key); }
+        T* get_key(unsigned int key) { return (T*) get_key0(key);  }
     public: // Hashmap Manipulation: Name
-        bool add_name(const char* name, T data) { return add_0(name, &data); }
-        bool replace_name(const char* name, T data) { return replace_0(name, &data); }
-        bool remove_name(const char* name) { return remove_0(name); }
-        bool check_name(const char* name) { return check_0(name); }
-        T* get_name(const char* name) { return (T*) get_0(name); }
+        bool add_name(const char* name, T data) { return add_name0(name, &data); }
+        bool replace_name(const char* name, T data) { return replace_name0(name, &data); }
+        bool remove_name(const char* name) { return remove_name0(name); }
+        bool check_name(const char* name) { return check_name0(name); }
+        T* get_name(const char* name) { return (T*) get_name0(name); }
 };
 
 #endif // NOGPU_MAP_H
