@@ -79,21 +79,21 @@ class GPUFrameBuffer {
     public: // Framebuffer Usage
         virtual void setColorIndex(int index) = 0;
         virtual void setColorIndexes(int *list, int count) = 0;
-        virtual void setColorSlice(int index, int layer, int level);
-        virtual void setDepthSlice(int layer, int level);
-        virtual void setStencilSlice(int layer, int level);
+        virtual void setColorSlice(int index, int layer, int level) = 0;
+        virtual void setDepthSlice(int layer, int level) = 0;
+        virtual void setStencilSlice(int layer, int level) = 0;
 
     public: // Framebuffer Attributes
-        virtual int getColorIndex();
-        virtual int getColorIndexes(int *list, int capacity);
-        virtual GPURenderBuffer* getColorCurrent();
+        virtual int getColorIndex() = 0;
+        virtual int getColorIndexes(int *list, int capacity) = 0;
+        virtual GPURenderBuffer* getColorCurrent() = 0;
         virtual GPURenderBuffer* getColor(int index) = 0;
         virtual GPURenderBuffer* getDepth() = 0;
         virtual GPURenderBuffer* getStencil() = 0;
     public: // Framebuffer Attributes: Slice
-        virtual GPUFrameBufferSlice getColorSlice(int index);
-        virtual GPUFrameBufferSlice getDepthSlice();
-        virtual GPUFrameBufferSlice getStencilSlice();
+        virtual GPUFrameBufferSlice getColorSlice(int index) = 0;
+        virtual GPUFrameBufferSlice getDepthSlice() = 0;
+        virtual GPUFrameBufferSlice getStencilSlice() = 0;
 };
 
 #endif // NOGPU_FRAMEBUFFER_H
