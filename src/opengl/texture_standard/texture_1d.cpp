@@ -67,7 +67,7 @@ void GLTexture1D::download(int x, int size, int level, void* data) {
             data);
     // Use Framebuffer Trick for Old Devices
     } else { 
-        compatDownload2D(x, 0, size, 1, level, data);
+        compatDownload1D(x, size, level, data);
     }
 }
 

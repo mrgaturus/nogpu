@@ -21,7 +21,7 @@ static GLenum valueAttachmentType(GPUTexturePixelType type) {
 // Texture 2D: Download Compatibility 3D
 // -------------------------------------
 
-GLenum GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data) {
+void GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data) {
     if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
 
     GLenum attachment = valueAttachmentType(m_pixel_type);
@@ -33,11 +33,11 @@ GLenum GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth,
     if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         glDeleteFramebuffers(1, &m_tex_fbo);
-        return GL_INVALID_OPERATION;
+        m_tex_fbo = 0;
+        return;
     }
 
     GLint read = 0;
-    GLenum error = GL_NO_ERROR;
     glGetIntegerv(GL_READ_BUFFER, &read);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 
@@ -63,27 +63,60 @@ GLenum GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth,
 // Texture 2D: Download Compatibility 2D
 // -------------------------------------
 
-GLenum GLTexture::compatDownload2D(int x, int y, int w, int h, int level, void* data) {
+void GLTexture::compatDownload2D(int x, int y, int w, int h, int level, void* data) {
     if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
 
     GLenum attachment = valueAttachmentType(m_pixel_type);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
-    glFramebufferTexture(GL_READ_FRAMEBUFFER,
-        attachment, m_tex, level);
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER,
+        attachment, m_tex_target, m_tex, level);
 
     // Check if Texture and Framebuffer is valid to hacky read
     if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         glDeleteFramebuffers(1, &m_tex_fbo);
-        return GL_INVALID_OPERATION;
+        m_tex_fbo = 0;
+        return;
     }
 
     GLint read = 0;
-    GLenum error = GL_NO_ERROR;
-    // Read Framebuffer Pixels
     glGetIntegerv(GL_READ_BUFFER, &read);
+    // Read Framebuffer Pixels
     glReadBuffer(GL_COLOR_ATTACHMENT0);
     glReadPixels(x, y, w, h,
+        toValue(m_transfer_format),
+        toValue(m_transfer_size),
+        data);
+
+    // Restore Read Buffer
+    glReadBuffer(read);
+}
+
+// -------------------------------------
+// Texture 2D: Download Compatibility 1D
+// -------------------------------------
+
+void GLTexture::compatDownload1D(int x, int size, int level, void* data) {
+    if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
+
+    GLenum attachment = valueAttachmentType(m_pixel_type);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_tex_fbo);
+    glFramebufferTexture1D(GL_READ_FRAMEBUFFER,
+        attachment, GL_TEXTURE_1D, m_tex, level);
+
+    // Check if Texture and Framebuffer is valid to hacky read
+    if (glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        glDeleteFramebuffers(1, &m_tex_fbo);
+        m_tex_fbo = 0;
+        return;
+    }
+
+    GLint read = 0;
+    glGetIntegerv(GL_READ_BUFFER, &read);
+    // Read Framebuffer Pixels
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    glReadPixels(x, 0, size, 1,
         toValue(m_transfer_format),
         toValue(m_transfer_size),
         data);

@@ -80,6 +80,7 @@ class GLTexture : virtual public GPUTexture {
         // Texture Compatible Download
         void compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data);
         void compatDownload2D(int x, int y, int w, int h, int level, void* data);
+        void compatDownload1D(int x, int size, int level, void* data);
         friend GLContext;
         friend GLRenderBuffer;
 };
