@@ -192,11 +192,11 @@ void GLDriver::impl__setVerticalSync(bool value) {
     // Apply Vertical Vsync
     LinuxEGLDriver *driver = &m_egl_driver;
     LinuxEGLDevice *device = driver->list;
-    while (device) {
+    while (device != nullptr) {
         GLDevice *dev = (GLDevice*) device->nogpu_device;
         GLContext* ctx = (GLContext*) dev->m_ctx_cache.m_list;
         // Apply Vertical Sync to Context
-        while (ctx) {
+        while (ctx != nullptr) {
             LinuxEGLContext* gtx = &ctx->m_egl_context;
             eglMakeCurrent(gtx->display, gtx->surface, gtx->surface, gtx->context);
             eglSwapInterval(gtx->display, (value) ? EGL_TRUE : EGL_FALSE);
@@ -248,8 +248,9 @@ bool GLDriver::prepareDevice(GLDevice* device, GPUDeviceOption option) {
     egl->nogpu_device = (void*) device;
     egl->nogpu_display = nullptr;
     // Connect Device to List
+    if (driver->list != nullptr)
+        driver->list->prev = egl;
     egl->next = driver->list;
-    driver->list->prev = egl;
     driver->list = egl;
     return true;
 }
@@ -454,9 +455,10 @@ GPUContext* GLDevice::createContextX11(GPUWindowX11 win) {
     gtx->linux_is_rgba = attribs.depth == 32;
     gtx->linux_is_x11 = true;
 
-    // Return Created Context and Show Logging
-    GPUReport::success("[opengl] EGL X11 surface created for XID:%ld", win.window);
+    // Return Created Context
     m_ctx_cache.add(ctx);
+    m_driver->setVerticalSync(m_driver->m_vsync);
+    GPUReport::success("[opengl] EGL X11 surface created for XID:0x%lx", win.window);
     return ctx;
 }
 
@@ -487,9 +489,9 @@ GPUContext* GLDevice::createContextWayland(GPUWindowWayland win) {
     // Create Wayland EGL Window Surface
     wl_egl_window_create_t wl_egl_window_create = (wl_egl_window_create_t)
         dlsym(driver->so_wayland, "wl_egl_window_create");
-    void* wl_surface = (void*) wl_egl_window_create(win.surface, 0, 0);
+    void* wl_surface = (void*) wl_egl_window_create(win.surface, 32, 32);
     if (wl_surface == nullptr) {
-        GPUReport::error("[opengl] failed creating wayland EGL surface");
+        GPUReport::error("[opengl] failed creating wayland EGL window");
         return nullptr;
     }
 
@@ -524,8 +526,9 @@ GPUContext* GLDevice::createContextWayland(GPUWindowWayland win) {
     gtx->wl_surface = wl_surface;
 
     // Return Created Context
-    GPUReport::success("[opengl] EGL Wayland surface created for wl_surface:%p", win.surface);
     m_ctx_cache.add(ctx);
+    m_driver->setVerticalSync(m_driver->m_vsync);
+    GPUReport::success("[opengl] EGL Wayland surface created for wl_surface:%p", win.surface);
     return ctx;
 }
 

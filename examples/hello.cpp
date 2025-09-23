@@ -54,27 +54,37 @@ int main() {
         return ~0;
     }
 
-    SDL_Window* win = SDL_CreateWindow("nogpu hello", 1024, 600, SDL_WINDOW_HIDDEN);
-    GPUDevice::initialize(GPUDeviceDriver::DRIVER_OPENGL);
-    GPUContext* ctx = GPUDevice::createContext(win);
-    GPUDevice::setVerticalSync(true);
+    SDL_Window* win = SDL_CreateWindow("nogpu hello", 1024, 600,
+        SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
+    GPUDriver::initialize(GPUDriverOption::DRIVER_OPENGL);
+    GPUDriver::setVerticalSync(true);
+    // Create GPU Device and Context
+    GPUDevice* dev = GPUDriver::createDevice(GPUDeviceOption::DEVICE_AUTO, 0, false);
+    GPUContext* ctx = dev->createContextSDL(win);
+    ctx->surfaceResize(1024, 600);
     SDL_ShowWindow(win);
 
     SDL_Event ev;
     while (true) {
         while (SDL_PollEvent(&ev)) {
-            if (ev.type == SDL_EVENT_QUIT) {
-                SDL_Quit();
-                goto SHUTDOWN_DRIVER;
+            switch (ev.type) {
+                case SDL_EVENT_QUIT:
+                    goto SHUTDOWN_DRIVER;
+                case SDL_EVENT_WINDOW_RESIZED:
+                    ctx->surfaceResize(ev.window.data1, ev.window.data2);
+                    break;
             }
         }
 
         // Swap Context Surface
-        ctx->swapSurface();
+        ctx->surfaceSwap();
     }
 
 SHUTDOWN_DRIVER:
-    GPUDevice::shutdown();
+    ctx->destroy();
+    dev->destroy();
+    GPUDriver::shutdown();
+    SDL_Quit();
     return 0;
 }
 

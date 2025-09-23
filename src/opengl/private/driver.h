@@ -59,13 +59,12 @@ typedef struct LinuxEGLContext {
 class GLDevice;
 class GLContext;
 class GLDriver : public GPUDriver {
-    static unsigned int initializeGL(void* getProcAddress);
-    GLContext* m_ctx_current;
-    unsigned int m_features;
-    bool m_vsync;
+    GLContext* m_ctx_current = nullptr;
+    unsigned int m_features = 0;
+    bool m_vsync = false;
 
     #if defined(__unix__)
-        LinuxEGLDriver m_egl_driver;
+        LinuxEGLDriver m_egl_driver = {};
         bool prepareDevice(GLDevice* device, GPUDeviceOption option);
         bool disposeDevice(GLDevice* device);
     #endif // __unix__
@@ -79,6 +78,7 @@ class GLDriver : public GPUDriver {
 
     protected:
         GLDriver();
+        static unsigned int initializeGL(void* getProcAddress);
         void makeCurrent(GLContext* ctx);
         friend GPUDriver;
         friend GLContext;
@@ -86,8 +86,8 @@ class GLDriver : public GPUDriver {
 };
 
 class GLDevice : public GPUDevice {
+    GPUContextCache m_ctx_cache = {};
     GPUDeviceOption m_option;
-    GPUContextCache m_ctx_cache;
     GLDriver* m_driver;
     int m_samples;
     bool m_rgba;
