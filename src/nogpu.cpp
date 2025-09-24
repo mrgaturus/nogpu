@@ -123,8 +123,64 @@ void GPUDevice::GPUContextCache::remove(GPUContext* ctx) {
 
 #if defined(NOGPU_GLFW)
 
-GPUContext* GPUDevice::createContext(GLFWwindow *win) {
+extern "C" {
+    extern GLFWAPI void* glfwGetX11Display(void);
+    extern GLFWAPI void* glfwGetWaylandDisplay(void);
+    extern GLFWAPI unsigned long glfwGetX11Window(GLFWwindow* window);
+    extern GLFWAPI void* glfwGetWaylandWindow(GLFWwindow* window);
+    extern GLFWAPI void* glfwGetGLXContext(GLFWwindow* window);
+    extern GLFWAPI void* glfwGetEGLContext(GLFWwindow* window);
+}
 
+GPUContext* GPUDevice::createContextGLFW(GLFWwindow *win) {
+    if (win == nullptr) {
+        GPUReport::error("invalid GLFW window");
+        return nullptr;
+    } else if (glfwGetGLXContext(win) || glfwGetEGLContext(win)) {
+        GPUReport::error("GLFW window must not have a GLX context or EGL context");
+        return nullptr;
+    } else if (glfwGetWindowAttrib(win, GLFW_CLIENT_API) != GLFW_NO_API) {
+        GPUReport::error("GLFW window hint GLFW_CLIENT_API must be GLFW_NO_API");
+        return nullptr;
+    }
+
+    // Try Wayland Surface
+    void* display = glfwGetWaylandDisplay();
+    if (display != nullptr) {
+        void* surface = glfwGetWaylandWindow(win);
+        if (display != nullptr && surface != nullptr) {
+            int w, h; glfwGetWindowSize(win, &w, &h);
+            GPUWindowWayland window_native;
+            window_native.display = display;
+            window_native.surface = surface;
+            window_native.w = w;
+            window_native.h = h;
+
+            // Return Wayland Native Surface
+            return createContextWayland(window_native);
+        }
+    }
+
+    // Try X11 Surface
+    display = glfwGetX11Display();
+    if (display != nullptr) {
+        unsigned long xid = glfwGetX11Window(win);
+        if (display != nullptr && xid != 0) {
+            int w, h; glfwGetWindowSize(win, &w, &h);
+            GPUWindowX11 window_native;
+            window_native.display = display;
+            window_native.window = xid;
+            window_native.w = w;
+            window_native.h = h;
+
+            // Return X11 Native Surface
+            return createContextX11(window_native);
+        }
+    }
+
+    // No Valid GLFW3 Window Found
+    GPUReport::error("GLFW window is not Wayland or X11");
+    return nullptr;
 }
 
 #endif
@@ -139,8 +195,11 @@ GPUContext* GPUDevice::createContext(GLFWwindow *win) {
 GPUContext* GPUDevice::createContextSDL(SDL_Window *win) {
     SDL_SysWMinfo syswm{};
     // Get SDL2 Native Info
-    if (!win || !SDL_GetWindowWMInfo(win, &syswm)) {
-        GPUReport::error("invalid SDL2 window %s", SDL_GetError());
+    if (win == nullptr) {
+        GPUReport::error("invalid SDL2 window");
+        return nullptr;
+    } else if (!SDL_GetWindowWMInfo(win, &syswm)) {
+        GPUReport::error("failed getting SDL2 syswm: %s", SDL_GetError());
         return nullptr;
     }
 
@@ -185,7 +244,7 @@ GPUContext* GPUDevice::createContextSDL(SDL_Window *win) {
                 window_native.w = w;
                 window_native.h = h;
 
-                // Return Wayland Native Surface
+                // Return X11 Native Surface
                 return createContextX11(window_native);
             }
         } break;

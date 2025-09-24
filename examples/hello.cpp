@@ -10,33 +10,48 @@
 #if defined(NOGPU_GLFW)
 #include <GLFW/glfw3.h>
 
+void glfw_windowSizeCallback(GLFWwindow* window, int width, int height) {
+    void* userdata = glfwGetWindowUserPointer(window);
+    GPUContext* ctx = reinterpret_cast<GPUContext*>(userdata);
+    ctx->surfaceResize(width, height);
+}
+
 int main() {
     // Initialize GLFW
     if (!glfwInit()) {
+        printf("failed initialize glfw\n");
         return -1;  // Failed to initialize GLFW
     }
 
     // Create a windowed mode window and its OpenGL context
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow* window = glfwCreateWindow(1024, 600, "nogpu hello", NULL, NULL);
-    if (!window) {
+    GLFWwindow* win = glfwCreateWindow(1024, 600, "nogpu glfw window", NULL, NULL);
+    if (!win) {
+        printf("failed create glfw window\n");
         glfwTerminate();
         return -1;  // Failed to create window
     }
 
-    // Create GPU Driver
-    GPUDevice::initialize(GPUDeviceDriver::DRIVER_OPENGL);
-    GPUContext* ctx = GPUDevice::createContext(window);
-    GPUDevice::setVerticalSync(true);
+    GPUDriver::initialize(GPUDriverOption::DRIVER_OPENGL);
+    GPUDriver::setVerticalSync(true);
+    // Create GPU Device and Context
+    GPUDevice* dev = GPUDriver::createDevice(GPUDeviceOption::DEVICE_AUTO, 0, false);
+    GPUContext* ctx = dev->createContextGLFW(win);
+    // Configure Resize Callback
+    glfwSetWindowUserPointer(win, (void*) ctx);
+    glfwSetWindowSizeCallback(win,
+        (GLFWwindowsizefun) glfw_windowSizeCallback);
 
     // Loop until the user closes the window
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(win)) {
        glfwPollEvents();
-       ctx->swapSurface();
+       ctx->surfaceSwap();
     }
 
     // Clean up GLFW
-    GPUDevice::shutdown();
+    ctx->destroy();
+    dev->destroy();
+    GPUDriver::shutdown();
     glfwTerminate();
     return 0;
 }
@@ -50,7 +65,7 @@ int main() {
 
 int main() {
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) == 0) {
-        printf("failed initialize video driver\n");
+        printf("failed initialize sdl3 video\n");
         return ~0;
     }
 
@@ -96,7 +111,7 @@ SHUTDOWN_DRIVER:
 
 int main() {
     if (SDL_VideoInit(NULL) != 0) {
-        printf("failed initialize video driver\n");
+        printf("failed initialize sdl2 video\n");
         return ~0;
     }
 
