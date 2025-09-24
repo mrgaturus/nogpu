@@ -3,10 +3,6 @@
 #ifndef NOGPU_MAP_H
 #define NOGPU_MAP_H
 
-unsigned int crc32c(
-    unsigned int crc,
-    const unsigned char *str);
-
 class GPUHashmapOpaque {
     typedef struct {
         unsigned int key;
@@ -18,9 +14,8 @@ class GPUHashmapOpaque {
         GPUHashmapItem* m_buffer;
         int m_capacity, m_len;
         int m_item, m_pad;
-        unsigned int find(unsigned int key);
-        unsigned int crc32(const char* name);
 
+        unsigned int find(unsigned int key);
         GPUHashmapItem* lookup(int idx);
         void insert(int idx, unsigned int key, void* data);
         void expand(int idx, unsigned int key, void* data);

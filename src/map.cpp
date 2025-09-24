@@ -24,6 +24,24 @@ GPUHashmapOpaque::~GPUHashmapOpaque() noexcept {
 // Hashmap Data: Finding
 // ---------------------
 
+static unsigned int FNV1a(void* seed, const char* key) {
+    unsigned int hash = 2166136261u;
+    unsigned int *s = (unsigned int*) &seed;
+    hash ^= s[0];
+    hash *= 16777619;
+    hash ^= s[1];
+    hash *= 16777619;
+
+    // Hash Key
+    while (*key) {
+        hash ^= (unsigned int) *key++;
+        hash *= 16777619;
+    }
+
+    // Return Hashed String
+    return hash;
+}
+
 unsigned int GPUHashmapOpaque::find(unsigned int key) {
     unsigned char* buffer = (unsigned char*) m_buffer;
     const unsigned int head = sizeof(GPUHashmapItem);
@@ -45,11 +63,6 @@ unsigned int GPUHashmapOpaque::find(unsigned int key) {
 
     // Return Found
     return idx;
-}
-
-unsigned int GPUHashmapOpaque::crc32(const char* name) {
-    unsigned int seed = reinterpret_cast<unsigned long long>(this);
-    return crc32c(seed, (unsigned char*) name);
 }
 
 // --------------------
@@ -201,26 +214,26 @@ void* GPUHashmapOpaque::get_key0(unsigned int key) {
 // --------------------------
 
 bool GPUHashmapOpaque::add_name0(const char* hash, void* data) {
-    unsigned int crc32 = this->crc32(hash);
-    return this->add_key0(crc32, data);
+    unsigned int key = FNV1a(this, hash);
+    return this->add_key0(key, data);
 }
 
 bool GPUHashmapOpaque::replace_name0(const char* hash, void* data) {
-    unsigned int crc32 = this->crc32(hash);
-    return this->replace_key0(crc32, data);
+    unsigned int key = FNV1a(this, hash);
+    return this->replace_key0(key, data);
 }
 
 bool GPUHashmapOpaque::remove_name0(const char* hash) {
-    unsigned int crc32 = this->crc32(hash);
-    return this->remove_key0(crc32);
+    unsigned int key = FNV1a(this, hash);
+    return this->remove_key0(key);
 }
 
 bool GPUHashmapOpaque::check_name0(const char* hash) {
-    unsigned int crc32 = this->crc32(hash);
-    return this->check_key0(crc32);
+    unsigned int key = FNV1a(this, hash);
+    return this->check_key0(key);
 }
 
 void* GPUHashmapOpaque::get_name0(const char* hash) {
-    unsigned int crc32 = this->crc32(hash);
-    return this->get_key0(crc32);
+    unsigned int key = FNV1a(this, hash);
+    return this->get_key0(key);
 }
