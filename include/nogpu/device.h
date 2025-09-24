@@ -16,26 +16,6 @@
 #include <SDL2/SDL.h>
 #endif
 
-// -------------------------
-// GPU Objects: Window Linux
-// -------------------------
-
-#if defined(__unix__)
-
-typedef struct {
-    void* display;        // Xlib.h :: Display
-    unsigned long window; // Xlib.h :: Window
-    int w, h;
-} GPUWindowX11;
-
-typedef struct {
-    void* display; // wayland-client.h :: wl_display
-    void* surface; // wayland-client.h :: wl_surface
-    int w, h;
-} GPUWindowWayland;
-
-#endif
-
 // -------------------
 // GPU Objects: Driver
 // -------------------
@@ -86,6 +66,30 @@ enum class GPUDriverFeature : int {
     DRIVER_SHADER_MTL, // Metal
 };
 
+// --------------------------
+// GPU Device: Linux Platform
+// --------------------------
+
+#if defined(__unix__)
+
+typedef struct {
+    void* display;        // Xlib.h :: Display
+    unsigned long window; // Xlib.h :: Window
+    int w, h;
+} GPUWindowX11;
+
+typedef struct {
+    void* display; // wayland-client.h :: wl_display
+    void* surface; // wayland-client.h :: wl_surface
+    int w, h;
+} GPUWindowWayland;
+
+#endif
+
+// -------------------
+// GPU Device: Objects
+// -------------------
+
 class GPUContext;
 class GPUDevice;
 class GPUDriver {
@@ -119,6 +123,8 @@ class GPUDevice {
     };
 
     public: // Basic Device Info
+        virtual void setVerticalSync(bool value) = 0;
+        virtual bool getVerticalSync() = 0;
         virtual GPUDeviceOption checkOption() = 0;
         virtual int checkSamples() = 0;
         virtual bool checkRGBA() = 0;

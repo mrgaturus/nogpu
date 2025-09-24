@@ -183,32 +183,6 @@ GPUDriverOption GLDriver::impl__getDriverOption() {
 }
 
 void GLDriver::impl__setVerticalSync(bool value) {
-    // Backup Current EGL Objects
-    EGLDisplay egl_dpy0 = eglGetCurrentDisplay();
-    EGLContext egl_ctx0 = eglGetCurrentContext();
-    EGLSurface egl_draw0 = eglGetCurrentSurface(EGL_DRAW);
-    EGLSurface egl_read0 = eglGetCurrentSurface(EGL_READ);
-
-    // Apply Vertical Vsync
-    LinuxEGLDriver *driver = &m_egl_driver;
-    LinuxEGLDevice *device = driver->list;
-    while (device != nullptr) {
-        GLDevice *dev = (GLDevice*) device->nogpu_device;
-        GLContext* ctx = (GLContext*) dev->m_ctx_cache.m_list;
-        // Apply Vertical Sync to Context
-        while (ctx != nullptr) {
-            LinuxEGLContext* gtx = &ctx->m_egl_context;
-            eglMakeCurrent(gtx->display, gtx->surface, gtx->surface, gtx->context);
-            eglSwapInterval(gtx->display, (value) ? EGL_TRUE : EGL_FALSE);
-            ctx = (GLContext*) ctx->m_next;
-        }
-
-        // Next Device
-        device = device->next;
-    }
-
-    // Restore Current EGL Objects
-    eglMakeCurrent(egl_dpy0, egl_draw0, egl_read0, egl_ctx0);
     m_vsync = value;
 }
 
@@ -283,6 +257,7 @@ GLDevice::GLDevice(GLDriver* driver, GPUDeviceOption option, int samples, bool r
         return;
     }
 
+    m_vsync = driver->m_vsync;
     // Define Device Attributes
     m_option = option;
     m_driver = driver;
@@ -312,6 +287,35 @@ bool GLDevice::destroy() {
     m_driver->disposeDevice(this);
     delete this;
     return true;
+}
+
+// -----------------------------------
+// Linux OpenGL Context: Vertical Sync
+// -----------------------------------
+
+void GLDevice::setVerticalSync(bool value) {
+    // Backup Current EGL Objects
+    EGLDisplay egl_dpy0 = eglGetCurrentDisplay();
+    EGLContext egl_ctx0 = eglGetCurrentContext();
+    EGLSurface egl_draw0 = eglGetCurrentSurface(EGL_DRAW);
+    EGLSurface egl_read0 = eglGetCurrentSurface(EGL_READ);
+
+    // Apply Vertical Sync to Contexts
+    GLContext* ctx = (GLContext*) m_ctx_cache.m_list;
+    while (ctx != nullptr) {
+        LinuxEGLContext* gtx = &ctx->m_egl_context;
+        eglMakeCurrent(gtx->display, gtx->surface, gtx->surface, gtx->context);
+        eglSwapInterval(gtx->display, (value) ? EGL_TRUE : EGL_FALSE);
+        ctx = (GLContext*) ctx->m_next;
+    }
+
+    // Restore Current EGL Objects
+    eglMakeCurrent(egl_dpy0, egl_draw0, egl_read0, egl_ctx0);
+    m_vsync = value;
+}
+
+bool GLDevice::getVerticalSync() {
+    return m_vsync;
 }
 
 // ----------------------------------------
@@ -457,7 +461,7 @@ GPUContext* GLDevice::createContextX11(GPUWindowX11 win) {
 
     // Return Created Context
     m_ctx_cache.add(ctx);
-    m_driver->setVerticalSync(m_driver->m_vsync);
+    this->setVerticalSync(m_driver->m_vsync);
     GPUReport::success("[opengl] EGL X11 surface created for XID:0x%lx", win.window);
     return ctx;
 }
@@ -527,7 +531,7 @@ GPUContext* GLDevice::createContextWayland(GPUWindowWayland win) {
 
     // Return Created Context
     m_ctx_cache.add(ctx);
-    m_driver->setVerticalSync(m_driver->m_vsync);
+    this->setVerticalSync(m_driver->m_vsync);
     GPUReport::success("[opengl] EGL Wayland surface created for wl_surface:%p", win.surface);
     return ctx;
 }

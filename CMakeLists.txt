@@ -16,7 +16,6 @@ option(NOGPU_SDL2 "use SDL2 windowing" OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(nogpu STATIC
-    src/map_crc32.cpp
     src/map.cpp
     src/nogpu.cpp
     src/private.cpp

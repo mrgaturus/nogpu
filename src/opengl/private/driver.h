@@ -61,7 +61,7 @@ class GLContext;
 class GLDriver : public GPUDriver {
     GLContext* m_ctx_current = nullptr;
     unsigned int m_features = 0;
-    bool m_vsync = false;
+    bool m_vsync = true;
 
     #if defined(__unix__)
         LinuxEGLDriver m_egl_driver = {};
@@ -91,12 +91,15 @@ class GLDevice : public GPUDevice {
     GLDriver* m_driver;
     int m_samples;
     bool m_rgba;
+    bool m_vsync;
 
     #if defined(__unix__)
         LinuxEGLDevice m_egl_device;
     #endif // __unix__
 
     // Basic Device Info
+    void setVerticalSync(bool value) override;
+    bool getVerticalSync() override;
     GPUDeviceOption checkOption() override;
     int checkSamples() override;
     bool checkRGBA() override;
@@ -111,6 +114,7 @@ class GLDevice : public GPUDevice {
 
     protected: // OpenGL Device Constructor
         GLDevice(GLDriver* driver, GPUDeviceOption device, int samples, bool rgba);
+        void prepareDebugContext();
         friend GLDriver;
         friend GLContext;
 };
