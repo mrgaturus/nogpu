@@ -60,6 +60,7 @@ class GLDevice;
 class GLContext;
 class GLDriver : public GPUDriver {
     GLContext* m_ctx_current = nullptr;
+    GPUDriverMode m_mode = GPUDriverMode::DRIVER_MODE_NORMAL;
     unsigned int m_features = 0;
     bool m_vsync = true;
 
@@ -77,7 +78,7 @@ class GLDriver : public GPUDriver {
     bool impl__shutdown() override;
 
     protected:
-        GLDriver();
+        GLDriver(GPUDriverMode mode, bool &result);
         static unsigned int initializeGL(void* getProcAddress);
         void makeCurrent(GLContext* ctx);
         friend GPUDriver;
@@ -114,7 +115,7 @@ class GLDevice : public GPUDevice {
 
     protected: // OpenGL Device Constructor
         GLDevice(GLDriver* driver, GPUDeviceOption device, int samples, bool rgba);
-        void prepareDebugContext();
+        void prepareDebugContext(GPUDriverMode mode);
         friend GLDriver;
         friend GLContext;
 };

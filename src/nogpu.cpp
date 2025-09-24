@@ -8,6 +8,8 @@
 GPUDriver* GPUDriver::m_driver = nullptr;
 bool GPUDriver::initialize(GPUDriverOption driver, GPUDriverMode mode) {
     GPUReport::setMode(mode);
+    GPUReport::setObject(nullptr);
+    bool result = false;
 
     if (m_driver) {
         GPUReport::error("driver already initialized");
@@ -17,14 +19,16 @@ bool GPUDriver::initialize(GPUDriverOption driver, GPUDriverMode mode) {
     // XXX: for now OpenGL to whole api battle test
     #if defined(__unix__)
     OPENGL_DRIVER: {
-        GLDriver* gl = new GLDriver();
-        if (gl) m_driver = gl;
-        else delete gl;
+        GLDriver* gl = new GLDriver(mode, result);
+        if (result) {
+            m_driver = gl;
+            return result;
+        } else delete gl;
     }
     #endif
 
     // Check Driver Initialized
-    return !! m_driver;
+    return result;
 }
 
 bool GPUDriver::impl__checkDriver() {

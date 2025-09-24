@@ -66,17 +66,35 @@ static void GLAD_API_PTR nogpu_debugCallback(
     switch (type) {
         case GL_DEBUG_TYPE_ERROR_ARB:
         case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:
-            GPUReport::error("[opengl] %d: %s", id, message); break;
+            GPUReport::error("0x%x: %s", id, message);
+            break;
+
         case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB:
         case GL_DEBUG_TYPE_PORTABILITY_ARB:
         case GL_DEBUG_TYPE_PERFORMANCE_ARB:
-            GPUReport::warning("[opengl] %d: %s", id, message); break;
+            GPUReport::warning("0x%x: %s", id, message);
+            break;
+
         case GL_DEBUG_TYPE_OTHER_ARB:
-            GPUReport::info("[opengl] %d: %s", id, message); break;
+            GPUReport::info("0x%x: %s", id, message);
+            break;
+
+        // Not Relevant Messages
         default: break;
     }
 }
 
-void GLDevice::prepareDebugContext() {
-
+void GLDevice::prepareDebugContext(GPUDriverMode mode) {
+    switch (mode) {
+        case GPUDriverMode::DRIVER_MODE_REPORT:
+        case GPUDriverMode::DRIVER_MODE_DEBUG:
+            glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB); 
+            glDebugMessageCallbackARB(nogpu_debugCallback, nullptr);
+            glDebugMessageControlARB( // Enable All Messages
+                GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE,
+                0, nullptr, GL_TRUE);
+        
+        // Debug not Enabled
+        default: break;
+    }
 }

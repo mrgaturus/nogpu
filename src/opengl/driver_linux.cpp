@@ -6,6 +6,7 @@
 #include "private/glad.h"
 // Include from C
 #include <cstdlib>
+#include <cstring>
 #include <dlfcn.h>
 
 static EGLint egl_attribs_dummy[] = {
@@ -33,7 +34,8 @@ static EGLint egl_attribs_context[] = {
     EGL_CONTEXT_MAJOR_VERSION, 3,
     EGL_CONTEXT_MINOR_VERSION, 3,
     EGL_CONTEXT_OPENGL_PROFILE_MASK, EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
-    EGL_CONTEXT_OPENGL_DEBUG, EGL_FALSE,
+    EGL_CONTEXT_OPENGL_DEBUG, EGL_FALSE, // Debug Mode [6, 7]
+    EGL_NONE, EGL_NONE, // Danger Mode [8, 9]
     EGL_NONE
 };
 
@@ -64,25 +66,46 @@ static void prepare__egl_attribs_config(int msaa_samples, bool rgba) {
     egl_attribs_config[19] = next_power_of_two(msaa_samples);
 }
 
-static void prepare__egl_attribs_context(int major, int minor, bool debug) {
+static void prepare__egl_attribs_context(EGLDisplay display, GPUDriverMode mode, int major, int minor) {
     egl_attribs_context[1] = major;
     egl_attribs_context[3] = minor;
 
-    // Prepare OpenGL Debug Context
-    egl_attribs_context[7] = debug ?
-        EGL_TRUE : EGL_FALSE;
+    switch (mode) {
+        case GPUDriverMode::DRIVER_MODE_NORMAL:
+            egl_attribs_context[7] = EGL_FALSE;
+            egl_attribs_context[8] = EGL_NONE;
+            egl_attribs_context[9] = EGL_NONE;
+        case GPUDriverMode::DRIVER_MODE_DANGER: {
+            const char* extensions = eglQueryString(display, EGL_EXTENSIONS);
+            if (extensions == nullptr)
+                return;
+
+            // Check EGL_KHR_create_context_no_error extension
+            if (strstr(extensions, "EGL_EXT_create_context_no_error")) {
+                egl_attribs_context[8] = 0x31B3;
+                egl_attribs_context[9] = EGL_TRUE;
+            }
+        } break;
+
+        case GPUDriverMode::DRIVER_MODE_DEBUG:
+        case GPUDriverMode::DRIVER_MODE_REPORT:
+            egl_attribs_context[7] = EGL_TRUE;
+            egl_attribs_context[8] = EGL_NONE;
+            egl_attribs_context[9] = EGL_NONE;
+    }
 }
 
 // --------------------------------
 // Linux OpenGL Device: Constructor
 // --------------------------------
 
-GLDriver::GLDriver() {
+GLDriver::GLDriver(GPUDriverMode mode, bool &result) {
     EGLDisplay egl_display;
     EGLConfig egl_config;
     EGLContext egl_context;
     int egl_num_config;
     int egl_major, egl_minor;
+    result = false;
 
     // Use OpenGL API for EGL
     if (eglBindAPI(EGL_OPENGL_API) == EGL_FALSE) {
@@ -107,10 +130,10 @@ GLDriver::GLDriver() {
     }
 
     // Create OpenGL Dummy Context
-    prepare__egl_attribs_context(3, 3, false);
+    prepare__egl_attribs_context(egl_display, mode, 3, 3);
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_attribs_context);
     if (egl_context == EGL_NO_CONTEXT) {
-        prepare__egl_attribs_context(2, 0, false);
+        prepare__egl_attribs_context(egl_display, mode, 2, 1);
         egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_attribs_context);
     }
 
@@ -130,6 +153,8 @@ GLDriver::GLDriver() {
         const char* vendor = (const char*) glGetString(0x1F02);
         GPUReport::success("[opengl] EGL version: %d.%d", egl_major, egl_minor);
         GPUReport::success("[opengl] OpenGL version: %s", vendor);
+        m_mode = mode;
+        result = true;
     }
 
 TERMINATE_EGL:
@@ -373,6 +398,18 @@ bool GLDevice::createContextEGL(void* display, LinuxEGLOption option) {
         GPUReport::error("[opengl] failed create EGL context");
         goto TERMINATE_EGL;
     }
+
+DEBUG_CONTEXT: {
+    EGLDisplay egl_dpy0 = eglGetCurrentDisplay();
+    EGLContext egl_ctx0 = eglGetCurrentContext();
+    EGLSurface egl_draw0 = eglGetCurrentSurface(EGL_DRAW);
+    EGLSurface egl_read0 = eglGetCurrentSurface(EGL_READ);
+
+    // Initialize: EGL Debug Context
+    eglMakeCurrent(egl->display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl->context);
+    this->prepareDebugContext(m_driver->m_mode);
+    eglMakeCurrent(egl_dpy0, egl_draw0, egl_read0, egl_ctx0);
+}
 
     return true;
 // Terminate Display

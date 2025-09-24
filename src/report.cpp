@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include "nogpu_private.h"
-#include <csignal>
 #include <cstdlib>
 #include <cstdarg>
 #include <cstdio>
@@ -15,6 +14,17 @@ const char* debug_headers[] = {
     "\e[0;31m[nogpu: assert]\033[0m",
     "\e[0;37m[nogpu: log]\033[0m",
 };
+
+#if defined(__i386__) || defined(__x86_64__)
+    #define __nogpu_trap() __asm__ volatile ("int $0x03")
+#elif defined(__arm__)
+    #define __nogpu_trap() __asm__ volatile ("bkpt #0")
+#elif defined(__aarch64__)
+    #define __nogpu_trap() __asm__ volatile ("brk #0")
+#elif define(__unix__)
+    #include <csignal>
+    #define __nogpu_trap() raise(SIGTRAP) 
+#endif
 
 // ----------------
 // GPU Report State
@@ -35,13 +45,12 @@ void GPUReport::setMessage(GPUDebugLevel level, const char* message, int size) {
             switch (level) {
                 default: break;
                 case GPUDebugLevel::DEBUG_ERROR:
-                    #ifdef __unix__
-                        raise(SIGTRAP);
-                    #endif
+                    __nogpu_trap();
+                    break;
+
                 // Avoid Pass Debugging Stuff
-                case GPUDebugLevel::DEBUG_ASSERT:
-                case GPUDebugLevel::DEBUG_LOG:
-                    return;
+                case GPUDebugLevel::DEBUG_ASSERT: abort();
+                case GPUDebugLevel::DEBUG_LOG: return;
             }
         }
 
@@ -68,14 +77,14 @@ static void setMessageFormat(GPUDebugLevel level, const char *format, va_list ar
 
     va_list tmp;
     va_copy(tmp, args);
-    static char buffer[128];
+    static char buffer[256];
     char* message = buffer;
     // Output Message to Temporal Buffer
-    int len = vsnprintf(message, 128, format, tmp);
+    int len = vsnprintf(message, 256, format, tmp);
     va_end(tmp);
 
     // Check Extra Buffer
-    if (len + 1 > 128) {
+    if (len + 1 > 256) {
         message = (char*) malloc(len + 1);
         len = vsnprintf(message, len + 1, format, args);
     }
@@ -83,7 +92,7 @@ static void setMessageFormat(GPUDebugLevel level, const char *format, va_list ar
     // Dispatch Message
     message[len] = '\0';
     GPUReport::setMessage(level, message, len);
-    if (len + 1 > 128)
+    if (len + 1 > 256)
         free(message);
 }
 
@@ -154,8 +163,6 @@ void GPUReport::assert(bool condition, const char *format, ...) {
     va_start(args, format);
     setMessageFormat(GPUDebugLevel::DEBUG_ASSERT, format, args);
     va_end(args);
-    // Exit Program
-    exit(~0);
 }
 
 void GPUReport::debug(const char *format, ...) {
