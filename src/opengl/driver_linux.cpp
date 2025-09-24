@@ -324,9 +324,9 @@ bool GLDevice::createContextEGL(void* display, LinuxEGLOption option) {
     if (egl->option == LinuxEGLOption::LINUX_AUTO)
         egl->option = option;
     else if (option != egl->option) {
-        if (option == LinuxEGLOption::LINUX_X11)
+        if (egl->option == LinuxEGLOption::LINUX_X11)
             GPUReport::error("gpu device is reserved for x11");
-        else if (option == LinuxEGLOption::LINUX_WAYLAND)
+        else if (egl->option == LinuxEGLOption::LINUX_WAYLAND)
             GPUReport::error("gpu device is reserved for wayland");
         // GL Device Context not Created
         return false;
@@ -489,7 +489,7 @@ GPUContext* GLDevice::createContextWayland(GPUWindowWayland win) {
     // Create Wayland EGL Window Surface
     wl_egl_window_create_t wl_egl_window_create = (wl_egl_window_create_t)
         dlsym(driver->so_wayland, "wl_egl_window_create");
-    void* wl_surface = (void*) wl_egl_window_create(win.surface, 32, 32);
+    void* wl_surface = (void*) wl_egl_window_create(win.surface, win.w, win.h);
     if (wl_surface == nullptr) {
         GPUReport::error("[opengl] failed creating wayland EGL window");
         return nullptr;

@@ -134,9 +134,66 @@ GPUContext* GPUDevice::createContext(GLFWwindow *win) {
 // ----------------------
 
 #if defined(NOGPU_SDL2)
+#include <SDL2/SDL_syswm.h>
 
 GPUContext* GPUDevice::createContextSDL(SDL_Window *win) {
+    SDL_SysWMinfo syswm{};
+    // Get SDL2 Native Info
+    if (!win || !SDL_GetWindowWMInfo(win, &syswm)) {
+        GPUReport::error("invalid SDL2 window %s", SDL_GetError());
+        return nullptr;
+    }
 
+    // Check SDL2 Window Flags
+    if (SDL_GetWindowFlags(win) & (SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL)) {
+        GPUReport::error("SDL2 window flags must not have SDL_WINDOW_OPENGL | SDL_WINDOW_VULKAN | SDL_WINDOW_METAL");
+        return nullptr;
+    } else if (SDL_HasWindowSurface(win) || SDL_GetRenderer(win)) {
+        GPUReport::error("SDL2 window must not have a SDL_Surface or SDL_Renderer");
+        return nullptr;
+    }
+
+    // Create Wayland Context
+    switch (syswm.subsystem) {
+        default: break;
+
+        case SDL_SYSWM_WAYLAND: {
+            if (syswm.info.wl.egl_window != nullptr) {
+                GPUReport::error("SDL2 window must not have an egl_window");
+                return nullptr;
+            }
+
+            int w, h; SDL_GetWindowSize(win, &w, &h);
+            if (syswm.info.wl.display && syswm.info.wl.surface) {
+                GPUWindowWayland window_native;
+                window_native.display = syswm.info.wl.display;
+                window_native.surface = syswm.info.wl.surface;
+                window_native.w = w;
+                window_native.h = h;
+
+                // Return Wayland Native Surface
+                return createContextWayland(window_native);
+            }
+        } break;
+
+        case SDL_SYSWM_X11: {
+            int w, h; SDL_GetWindowSize(win, &w, &h);
+            if (syswm.info.x11.display && syswm.info.x11.window) {
+                GPUWindowX11 window_native;
+                window_native.display = syswm.info.x11.display;
+                window_native.window = syswm.info.x11.window;
+                window_native.w = w;
+                window_native.h = h;
+
+                // Return Wayland Native Surface
+                return createContextX11(window_native);
+            }
+        } break;
+    }
+
+    // Invalid Windowing
+    GPUReport::error("SDL2 window is not Wayland or X11");
+    return nullptr;
 }
 
 #endif
