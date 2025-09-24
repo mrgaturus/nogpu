@@ -3,22 +3,35 @@
 #ifndef NOGPU_DEVICE_H
 #define NOGPU_DEVICE_H
 
-// Include GLFW Window
-#if defined(NOGPU_GLFW)
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-#endif
+enum class GPUDebugLevel : int {
+    DEBUG_INFO,
+    DEBUG_SUCCESS,
+    DEBUG_WARNING,
+    DEBUG_ERROR,
+    DEBUG_ASSERT,
+    DEBUG_LOG,
+};
 
-// Include SDL Window
-#if defined(NOGPU_SDL3)
-#include <SDL3/SDL.h>
-#elif defined(NOGPU_SDL2)
-#include <SDL2/SDL.h>
-#endif
+typedef struct {
+    void* object;
+    const char* message;
+    int message_size;
+    GPUDebugLevel level;
+} GPUDebugReport;
 
-// -------------------
-// GPU Objects: Driver
-// -------------------
+typedef void (*GPUDebugCallback)(
+    void* userdata, GPUDebugReport report);
+
+// ---------------------------
+// GPU Objects: Driver Options
+// ---------------------------
+
+enum class GPUDriverMode : int {
+    DRIVER_MODE_NORMAL,
+    DRIVER_MODE_DANGER,
+    DRIVER_MODE_REPORT,
+    DRIVER_MODE_DEBUG,
+};
 
 enum class GPUDriverOption : int {
     DRIVER_NONE,
@@ -66,9 +79,22 @@ enum class GPUDriverFeature : int {
     DRIVER_SHADER_MTL, // Metal
 };
 
-// --------------------------
-// GPU Device: Linux Platform
-// --------------------------
+// ---------------------------
+// GPU Device: Native Platform
+// ---------------------------
+
+// Include GLFW Window
+#if defined(NOGPU_GLFW)
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+#endif
+
+// Include SDL Window
+#if defined(NOGPU_SDL3)
+#include <SDL3/SDL.h>
+#elif defined(NOGPU_SDL2)
+#include <SDL2/SDL.h>
+#endif
 
 #if defined(__unix__)
 
@@ -98,19 +124,20 @@ class GPUDriver {
 
     protected: // Driver Abstract Methods
         virtual GPUDevice* impl__createDevice(GPUDeviceOption device, int samples, bool rgba) = 0;
-        virtual bool impl__getDriverFeature(GPUDriverFeature feature) = 0;
-        virtual GPUDriverOption impl__getDriverOption() = 0;
         virtual void impl__setVerticalSync(bool value) = 0;
         virtual bool impl__getVerticalSync() = 0;
+        virtual bool impl__getDriverFeature(GPUDriverFeature feature) = 0;
+        virtual GPUDriverOption impl__getDriverOption() = 0;
         virtual bool impl__shutdown() = 0;
 
-    public: // Driver Public Methods
-        static bool initialize(GPUDriverOption driver);
+    public: // Driver Preload Methods
+        static bool initialize(GPUDriverOption driver, GPUDriverMode mode);
         static GPUDevice* createDevice(GPUDeviceOption device, int samples, bool rgba);
-        static bool getDriverFeature(GPUDriverFeature feature);
-        static GPUDriverOption getDriverOption();
+        static void setDebugCallback(GPUDebugCallback cb, void* userdata);
         static void setVerticalSync(bool value);
         static bool getVerticalSync();
+        static bool getDriverFeature(GPUDriverFeature feature);
+        static GPUDriverOption getDriverOption();
         static bool shutdown();
 };
 

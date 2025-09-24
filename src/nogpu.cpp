@@ -6,7 +6,9 @@
 
 // Global Driver Definition
 GPUDriver* GPUDriver::m_driver = nullptr;
-bool GPUDriver::initialize(GPUDriverOption driver) {
+bool GPUDriver::initialize(GPUDriverOption driver, GPUDriverMode mode) {
+    GPUReport::setMode(mode);
+
     if (m_driver) {
         GPUReport::error("driver already initialized");
         return false;
@@ -52,6 +54,23 @@ GPUDevice* GPUDriver::createDevice(GPUDeviceOption option, int samples, bool rgb
     return device;
 }
 
+void GPUDriver::setDebugCallback(GPUDebugCallback cb, void* userdata) {
+    GPUReport::setCallback(cb, userdata);
+}
+
+void GPUDriver::setVerticalSync(bool value) {
+    if (impl__checkDriver())
+        m_driver->impl__setVerticalSync(value);
+}
+
+bool GPUDriver::getVerticalSync() {
+    bool check = false;
+    if (impl__checkDriver())
+        check = m_driver->impl__getVerticalSync();
+    // Return Check Vertical Sync
+    return check;
+}
+
 bool GPUDriver::getDriverFeature(GPUDriverFeature feature) {
     bool check = false;
     if (impl__checkDriver())
@@ -66,19 +85,6 @@ GPUDriverOption GPUDriver::getDriverOption() {
         option = m_driver->impl__getDriverOption();
     // Return Driver Option
     return option;
-}
-
-void GPUDriver::setVerticalSync(bool value) {
-    if (impl__checkDriver())
-        m_driver->impl__setVerticalSync(value);
-}
-
-bool GPUDriver::getVerticalSync() {
-    bool check = false;
-    if (impl__checkDriver())
-        check = m_driver->impl__getVerticalSync();
-    // Return Check Vertical Sync
-    return check;
 }
 
 // -------------------------------

@@ -174,20 +174,20 @@ GPUDevice* GLDriver::impl__createDevice(GPUDeviceOption device, int samples, boo
     return new GLDevice(this, device, samples, rgba);
 }
 
-bool GLDriver::impl__getDriverFeature(GPUDriverFeature feature) {
-    return (m_features & driver_feature_flag(feature)) != 0;
-}
-
-GPUDriverOption GLDriver::impl__getDriverOption() {
-    return GPUDriverOption::DRIVER_OPENGL;
-}
-
 void GLDriver::impl__setVerticalSync(bool value) {
     m_vsync = value;
 }
 
 bool GLDriver::impl__getVerticalSync() {
     return m_vsync;
+}
+
+bool GLDriver::impl__getDriverFeature(GPUDriverFeature feature) {
+    return (m_features & driver_feature_flag(feature)) != 0;
+}
+
+GPUDriverOption GLDriver::impl__getDriverOption() {
+    return GPUDriverOption::DRIVER_OPENGL;
 }
 
 // ----------------------------------

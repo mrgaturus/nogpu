@@ -70,10 +70,10 @@ class GLDriver : public GPUDriver {
     #endif // __unix__
 
     GPUDevice* impl__createDevice(GPUDeviceOption option, int samples, bool rgba) override;
-    bool impl__getDriverFeature(GPUDriverFeature feature) override;
-    GPUDriverOption impl__getDriverOption() override;
     void impl__setVerticalSync(bool value) override;
     bool impl__getVerticalSync() override;
+    bool impl__getDriverFeature(GPUDriverFeature feature) override;
+    GPUDriverOption impl__getDriverOption() override;
     bool impl__shutdown() override;
 
     protected:

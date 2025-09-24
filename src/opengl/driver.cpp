@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include <nogpu_private.h>
 #include "private/driver.h"
 #include "private/glad.h"
@@ -46,4 +48,35 @@ unsigned int GLDriver::initializeGL(void* getProcAddress) {
 
     // Return Features
     return features;
+}
+
+// --------------------
+// OpenGL Debug Context
+// --------------------
+
+static void GLAD_API_PTR nogpu_debugCallback(
+    GLenum source, 
+    GLenum type, 
+    unsigned int id, 
+    GLenum severity, 
+    GLsizei length, 
+    const char *message, 
+    const void *user)
+{
+    switch (type) {
+        case GL_DEBUG_TYPE_ERROR_ARB:
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB:
+            GPUReport::error("[opengl] %d: %s", id, message); break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB:
+        case GL_DEBUG_TYPE_PORTABILITY_ARB:
+        case GL_DEBUG_TYPE_PERFORMANCE_ARB:
+            GPUReport::warning("[opengl] %d: %s", id, message); break;
+        case GL_DEBUG_TYPE_OTHER_ARB:
+            GPUReport::info("[opengl] %d: %s", id, message); break;
+        default: break;
+    }
+}
+
+void GLDevice::prepareDebugContext() {
+
 }

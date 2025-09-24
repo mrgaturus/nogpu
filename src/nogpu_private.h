@@ -21,6 +21,22 @@ int computeBytesPerPixel(GPUTextureTransferFormat format, GPUTextureTransferSize
 // ---------------------
 
 class GPUReport {
+    friend GPUDriver;
+    friend GPUDevice;
+    // Report Attributes
+    static GPUReport m_report;
+    GPUDebugCallback m_callback;
+    GPUDriverMode m_mode;
+    void* m_userdata;
+    void* m_object;
+
+    public: // Reporting Properties
+        static void setMessage(GPUDebugLevel level, const char* message, int size);
+        static void setCallback(GPUDebugCallback cb, void* userdata);
+        static void setMode(GPUDriverMode mode);
+        static void setObject(void* object);
+        static bool getEnabled();
+
     #if defined(__clang__) || defined(__GNUC__)
         public:
             static void info(const char* format, ...)
@@ -32,12 +48,10 @@ class GPUReport {
             static void error(const char* format, ...)
                 __attribute__ ((format (printf, 1, 2)));
 
-            // Stacktrace Debugging
             static void assert(bool condition, const char* format, ...)
                 __attribute__ ((format (printf, 2, 3)));
             static void debug(const char* format, ...)
                 __attribute__ ((format (printf, 1, 2)));
-            static void stacktrace();
     #else
         public:
             static void info(const char* format, ...);
@@ -45,10 +59,8 @@ class GPUReport {
             static void warning(const char* format, ...);
             static void error(const char* format, ...);
 
-            // Stacktrace Debugging
             static void assert(bool condition, const char* format, ...);
             static void debug(const char* format, ...);
-            static void stacktrace();
     #endif
 };
 
