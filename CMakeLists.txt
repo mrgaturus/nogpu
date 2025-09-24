@@ -22,6 +22,10 @@ add_library(nogpu STATIC
     src/private.cpp
     src/report.cpp)
 
+# --------------------------
+# NOGPU: Windowing Libraries
+# --------------------------
+
 # Windowing Surface: GLFW 3.4
 if (NOGPU_GLFW)
     set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -43,6 +47,19 @@ elseif (NOGPU_SDL2)
     add_definitions(-DNOGPU_SDL2)
     target_link_libraries(nogpu PRIVATE SDL2::SDL2)
 endif()
+
+# Windowing Surface: Native Platform
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_sources(nogpu PRIVATE src/nogpu_linux.cpp)
+elseif(WIN32)
+    target_sources(nogpu PRIVATE src/nogpu_win32.cpp)
+else() # Invalid Native Platform
+    message(FATAL_ERROR "system target for nogpu is not supported")
+endif()
+
+# ----------------------------
+# NOGPU: Graphics API Backends
+# ----------------------------
 
 include_directories(include)
 add_subdirectory(src/opengl)
