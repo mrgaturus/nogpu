@@ -96,7 +96,7 @@ class GLDevice : public GPUDevice {
     bool m_vsync;
 
     #if defined(__unix__)
-        LinuxEGLDevice m_egl_device;
+        LinuxEGLDevice m_egl_device = {};
     #endif // __unix__
 
     // Basic Device Info

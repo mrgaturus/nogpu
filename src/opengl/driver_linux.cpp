@@ -187,6 +187,7 @@ bool GLDriver::impl__shutdown() {
     delete this;
 
     // Return Driver Shutdown Status
+    GPUReport::setObject(nullptr);
     if (result) GPUReport::success("[opengl] terminated EGL display");
     else GPUReport::error("[opengl] failed terminating EGL & OpenGL");
     return result;
