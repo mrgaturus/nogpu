@@ -126,6 +126,17 @@ void GLTexture::generateMipmaps() {
 // GPU Objects: Texture Sync
 // -------------------------
 
+void GLTexture::syncEnable(bool value) {
+    m_ctx->makeCurrentTexture(this);
+    m_sync_check = value;
+
+    // Remove Sync Object
+    if (value == false && m_sync) {
+        glDeleteSync(m_sync);
+        m_sync = nullptr;
+    }
+}
+
 void GLTexture::syncCPU() {
     m_ctx->makeCurrentTexture(this);
     // Stall CPU until Fence Signaled
@@ -138,22 +149,6 @@ void GLTexture::syncGPU() {
     // Stall GL Queue until Fence Signaled
     if (m_sync_check && m_sync)
         glWaitSync(m_sync, 0, GL_TIMEOUT_IGNORED);
-}
-
-void GLTexture::syncEnable() {
-    m_ctx->makeCurrentTexture(this);
-    m_sync_check = true;
-}
-
-void GLTexture::syncDisable() {
-    m_ctx->makeCurrentTexture(this);
-    m_sync_check = false;
-
-    // Remove Sync Object
-    if (m_sync) {
-        glDeleteSync(m_sync);
-        m_sync = nullptr;
-    }
 }
 
 // -------------------------------

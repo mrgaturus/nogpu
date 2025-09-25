@@ -59,10 +59,9 @@ class GLTexture : virtual public GPUTexture {
     void setWrap(GPUTextureWrap wrap) override;
     void generateMipmaps() override;
     // GPU Texture Fences
+    void syncEnable(bool value) override;
     void syncCPU() override;
     void syncGPU() override;
-    void syncEnable() override;
-    void syncDisable() override;
 
     public: // Texture Attributes
         GLContext* m_ctx;

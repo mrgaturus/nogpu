@@ -207,10 +207,9 @@ class GPUTexture {
         virtual void generateMipmaps() = 0;
 
     public: // GPU Texture Fences
+        virtual void syncEnable(bool value) = 0;
         virtual void syncCPU() = 0;
         virtual void syncGPU() = 0;
-        virtual void syncEnable() = 0;
-        virtual void syncDisable() = 0;
 
     public: // GPU Texture Attributes: Size
         int getWidth() { return m_width; }

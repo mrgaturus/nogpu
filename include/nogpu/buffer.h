@@ -46,10 +46,9 @@ class GPUBuffer {
         virtual void unmap() = 0;
 
     public: // GPU Buffer Fences
+        virtual void syncEnable(bool value) = 0;
         virtual void syncCPU() = 0;
         virtual void syncGPU() = 0;
-        virtual void syncEnable() = 0;
-        virtual void syncDisable() = 0;
 };
 
 // -------------------------

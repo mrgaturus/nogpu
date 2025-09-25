@@ -22,10 +22,9 @@ class GLBuffer : public GPUBuffer {
     void unmap() override;
 
     // GPU Buffer Fences
+    void syncEnable(bool value) override;
     void syncCPU() override;
     void syncGPU() override;
-    void syncEnable() override;
-    void syncDisable() override;
 
     public: // GL Attributes
         GLContext* m_ctx;

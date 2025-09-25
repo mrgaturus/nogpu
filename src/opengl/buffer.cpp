@@ -163,6 +163,17 @@ void GLBuffer::unmap() {
 // OpenGL GPU Buffer: Buffer Sync
 // ------------------------------
 
+void GLBuffer::syncEnable(bool value) {
+    m_ctx->makeCurrent(this);
+    m_sync_check = value;
+
+    // Remove Sync Object
+    if (value == false && m_sync) {
+        glDeleteSync(m_sync);
+        m_sync = nullptr;
+    }
+}
+
 void GLBuffer::syncCPU() {
     m_ctx->makeCurrent(this);
     // Stall CPU until Fence Signaled
@@ -175,20 +186,4 @@ void GLBuffer::syncGPU() {
     // Stall GL Queue until Fence Signaled
     if (m_sync_check && m_sync)
         glWaitSync(m_sync, 0, GL_TIMEOUT_IGNORED);
-}
-
-void GLBuffer::syncEnable() {
-    m_ctx->makeCurrent(this);
-    m_sync_check = true;
-}
-
-void GLBuffer::syncDisable() {
-    m_ctx->makeCurrent(this);
-    m_sync_check = false;
-
-    // Remove Sync Object
-    if (m_sync) {
-        glDeleteSync(m_sync);
-        m_sync = nullptr;
-    }
 }
