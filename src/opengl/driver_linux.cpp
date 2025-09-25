@@ -87,8 +87,9 @@ static void prepare__egl_attribs_context(EGLDisplay display, GPUDriverMode mode,
             }
         } break;
 
-        case GPUDriverMode::DRIVER_MODE_DEBUG:
         case GPUDriverMode::DRIVER_MODE_REPORT:
+        case GPUDriverMode::DRIVER_MODE_LOGGER:
+        case GPUDriverMode::DRIVER_MODE_DEBUG:
             egl_attribs_context[7] = EGL_TRUE;
             egl_attribs_context[8] = EGL_NONE;
             egl_attribs_context[9] = EGL_NONE;

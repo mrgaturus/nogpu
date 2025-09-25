@@ -30,6 +30,7 @@ enum class GPUDriverMode : int {
     DRIVER_MODE_NORMAL,
     DRIVER_MODE_DANGER,
     DRIVER_MODE_REPORT,
+    DRIVER_MODE_LOGGER,
     DRIVER_MODE_DEBUG,
 };
 

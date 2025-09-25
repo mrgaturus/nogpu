@@ -87,6 +87,7 @@ static void GLAD_API_PTR nogpu_debugCallback(
 void GLDevice::prepareDebugContext(GPUDriverMode mode) {
     switch (mode) {
         case GPUDriverMode::DRIVER_MODE_REPORT:
+        case GPUDriverMode::DRIVER_MODE_LOGGER:
         case GPUDriverMode::DRIVER_MODE_DEBUG:
             glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB); 
             glDebugMessageCallbackARB(nogpu_debugCallback, nullptr);

@@ -33,6 +33,7 @@ const char* debug_headers[] = {
 void GPUReport::setMessage(GPUDebugLevel level, const char* message, int size) {
     // Dispatch Message Reporting
     switch (m_report.m_mode) {
+        case GPUDriverMode::DRIVER_MODE_LOGGER:
         case GPUDriverMode::DRIVER_MODE_DEBUG: {
             const int lvl = static_cast<int>(level);
             const char* head = debug_headers[lvl];
@@ -40,6 +41,8 @@ void GPUReport::setMessage(GPUDebugLevel level, const char* message, int size) {
             if (m_report.m_object != nullptr)
                 printf("%s [%p] %s\n", head, m_report.m_object, message);
             else printf("%s %s\n", head, message);
+            if (m_report.m_mode == GPUDriverMode::DRIVER_MODE_LOGGER)
+                break;
 
             // Issue Debug Breakpoint
             switch (level) {
@@ -112,6 +115,7 @@ void GPUReport::setObject(void* object) {
 bool GPUReport::getEnabled() {
     switch (m_report.m_mode) {
         case GPUDriverMode::DRIVER_MODE_REPORT:
+        case GPUDriverMode::DRIVER_MODE_LOGGER:
         case GPUDriverMode::DRIVER_MODE_DEBUG:
             return true;
         default: return false;
