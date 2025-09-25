@@ -22,7 +22,7 @@ GLCompressed1D::GLCompressed1D(GLContext* ctx, GPUTextureCompressedType type) : 
 // -------------------------------
 
 void GLCompressed1D::allocate(int size, int levels) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     this->generateTexture();
     GLenum target = m_tex_target;
     // Allocate Texture Storage
@@ -37,7 +37,7 @@ void GLCompressed1D::allocate(int size, int levels) {
 }
 
 void GLCompressed1D::upload(int x, int size, int level, void* data, int bytes) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLenum target = m_tex_target;
     // Upload Compressed Data
     glBindTexture(target, m_tex);
@@ -50,7 +50,7 @@ void GLCompressed1D::upload(int x, int size, int level, void* data, int bytes) {
 // -----------------------------------------
 
 void GLCompressed1D::unpack(int x, int size, int level, GPUBuffer *pbo, int bytes, int offset) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Copy PBO Pixels to Texture
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);

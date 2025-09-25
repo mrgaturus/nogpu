@@ -19,7 +19,7 @@ void GLTextureBuffer::updateTexture() {
 // ---------------------------
 
 GLTextureBuffer::GLTextureBuffer(GLContext* ctx, GLBuffer* buffer, GPUTexturePixelType type) {
-    ctx->gl__makeCurrent();
+    ctx->makeCurrentTexture(this);
 
     // Check if driver has Texture Buffer
     if (!GLAD_GL_ARB_texture_buffer_range) {
@@ -44,7 +44,7 @@ GLTextureBuffer::GLTextureBuffer(GLContext* ctx, GLBuffer* buffer, GPUTexturePix
 }
 
 void GLTextureBuffer::destroy() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Dealloc Texture Buffer Object
     glBindTexture(GL_TEXTURE_BUFFER, 0);
@@ -58,7 +58,7 @@ void GLTextureBuffer::destroy() {
 // ----------------------------
 
 void GLTextureBuffer::setType(GPUTexturePixelType type) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     // Check Valid Texture Pixel Type
     if (!canTextureBuffer(type)) {
         GPUReport::error("invalid pixel format for texture buffer %p", this);
@@ -71,7 +71,7 @@ void GLTextureBuffer::setType(GPUTexturePixelType type) {
 }
 
 void GLTextureBuffer::setBuffer(GPUBuffer* buffer) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Update Texture Buffer
     m_buffer = static_cast<GLBuffer*>(buffer);
@@ -83,7 +83,7 @@ void GLTextureBuffer::setBuffer(GPUBuffer* buffer) {
 // ----------------------------------
 
 void GLTextureBuffer::setRange(GPUTextureBufferRange range) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     if (range.size <= 0) {
         this->clearRange();
         return;
@@ -102,7 +102,7 @@ void GLTextureBuffer::setRange(GPUTextureBufferRange range) {
 }
 
 void GLTextureBuffer::clearRange() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     // Clear Buffer Range
     m_offset = 0;
     m_size = 0;
@@ -116,11 +116,11 @@ void GLTextureBuffer::clearRange() {
 // ------------------------------------
 
 GPUTexturePixelType GLTextureBuffer::getType() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     return m_pixel_type;
 }
 
 GPUBuffer* GLTextureBuffer::getBuffer() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     return m_buffer;
 }

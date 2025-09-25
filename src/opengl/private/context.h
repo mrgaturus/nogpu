@@ -12,6 +12,7 @@
 class GLContext : GPUContext {
     GLDriver* m_driver;
     GLDevice* m_device;
+    unsigned int m_stole;
     #if defined(__unix__)
         LinuxEGLContext m_egl_context;
     #endif
@@ -47,7 +48,8 @@ class GLContext : GPUContext {
     int surfaceSamples() override;
     bool surfaceRGBA() override;
 
-    public: void gl__makeCurrent();
+    public: void makeCurrent(void* object);
+    public: void makeCurrentTexture(void* object);
     protected: // Commands Constructor
         void destroy() override;
         friend GLDriver;

@@ -10,7 +10,7 @@
 // -----------------------------------------------
 
 void GLRenderBuffer::createOffscreen(int w, int h, int samples) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     this->destroyInternal();
 
     m_object = &m_tex;
@@ -31,7 +31,7 @@ void GLRenderBuffer::createOffscreen(int w, int h, int samples) {
 // ----------------------------------------
 
 void GLRenderBuffer::createTexture(int w, int h, int levels, int samples) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     levels = levels_power_of_two(w, h, levels);
     samples = (samples > 0) ? next_power_of_two(samples) : 1;
     // Check Texture Recreate
@@ -76,7 +76,7 @@ void GLRenderBuffer::createTexture(int w, int h, int levels, int samples) {
 }
 
 void GLRenderBuffer::createTextureArray(int w, int h, int layers, int levels, int samples) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     levels = levels_power_of_two(w, h, levels);
     samples = (samples > 0) ? next_power_of_two(samples) : 1;
     // Check Texture Recreate
@@ -126,7 +126,7 @@ void GLRenderBuffer::createTextureArray(int w, int h, int layers, int levels, in
 // ----------------------------------------
 
 void GLRenderBuffer::createTexture3D(int w, int h, int layers, int levels) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     levels = levels_power_of_two(w, h, levels);
     this->prepareInternal();
 

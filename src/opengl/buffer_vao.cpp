@@ -38,7 +38,7 @@ static GLenum toValue(GPUAttributeType type) {
 // -----------------------------
 
 GLVertexArray::GLVertexArray(GLContext* ctx) {
-    ctx->gl__makeCurrent();
+    ctx->makeCurrent(this);
     m_ctx = ctx;
 
     // Generate Vertex Array
@@ -48,7 +48,7 @@ GLVertexArray::GLVertexArray(GLContext* ctx) {
 }
 
 void GLVertexArray::destroy() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     glDeleteVertexArrays(1, &m_vao);
 }
 
@@ -57,7 +57,7 @@ void GLVertexArray::destroy() {
 // -------------------------
 
 void GLVertexArray::useArrayBuffer(GPUBuffer* buffer) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
 
     if (buffer) {
         glBindVertexArray(m_vao);
@@ -70,7 +70,7 @@ void GLVertexArray::useArrayBuffer(GPUBuffer* buffer) {
 };
 
 void GLVertexArray::useElementsBuffer(GPUBuffer* buffer) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
 
     if (buffer) {
         glBindVertexArray(m_vao);
@@ -87,7 +87,7 @@ void GLVertexArray::useElementsBuffer(GPUBuffer* buffer) {
 // ----------------------------
 
 void GLVertexArray::defineAttribute(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     if (!m_array_buffer) {
         GPUReport::error("an array buffer is not used to define attribute #%d for %p", index, this);
         return;
@@ -103,7 +103,7 @@ void GLVertexArray::defineAttribute(int index, GPUAttributeSize size, GPUAttribu
 };
 
 void GLVertexArray::defineNormalized(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     if (!m_array_buffer) {
         GPUReport::error("an array buffer is not used to define normalized attribute #%d for %p", index, this);
         return;
@@ -122,14 +122,14 @@ void GLVertexArray::defineNormalized(int index, GPUAttributeSize size, GPUAttrib
 };
 
 void GLVertexArray::disableAttribute(int index) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     // Disable Vertex Attribute
     glBindVertexArray(m_vao);
     glDisableVertexAttribArray(index);
 };
 
 void GLVertexArray::enableAttribute(int index) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     // Enable Vertex Attribute
     glBindVertexArray(m_vao);
     glEnableVertexAttribArray(index);

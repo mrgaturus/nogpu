@@ -409,6 +409,7 @@ DEBUG_CONTEXT: {
     // Initialize: EGL Debug Context
     eglMakeCurrent(egl->display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl->context);
     this->prepareDebugContext(m_driver->m_mode);
+    this->prepareStoleTexture();
     eglMakeCurrent(egl_dpy0, egl_draw0, egl_read0, egl_ctx0);
 }
 
@@ -593,7 +594,7 @@ void GLDriver::makeCurrent(GLContext* ctx) {
 
 void GLContext::surfaceSwap() {
     // XXX: THIS IS A DUMMY :XXX
-    gl__makeCurrent();
+    makeCurrent(this);
     glClearColor(0.2, 0.2, 0.3, 0.5);
     glClear(GL_COLOR_BUFFER_BIT);
     // Swap Context Buffer

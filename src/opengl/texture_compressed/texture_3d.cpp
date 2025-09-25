@@ -18,7 +18,7 @@ GLCompressed3D::GLCompressed3D(GLContext* ctx, GPUTextureCompressedType type) : 
 }
 
 GPUTexture3DMode GLCompressed3D::getMode() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     switch (m_tex_target) {
         case GL_TEXTURE_3D:
@@ -45,7 +45,7 @@ void GLCompressed3D::setMode(GPUTexture3DMode mode) {
 // -------------------------------
 
 void GLCompressed3D::allocate(GPUTexture3DMode mode, int w, int h, int depth, int levels) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     this->setMode(mode);
     this->generateTexture();
@@ -62,7 +62,7 @@ void GLCompressed3D::allocate(GPUTexture3DMode mode, int w, int h, int depth, in
 }
 
 void GLCompressed3D::upload(int x, int y, int z, int w, int h, int depth, int level, void* data, int bytes) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLenum target = m_tex_target;
     // Upload Compressed Data
     glBindTexture(target, m_tex);
@@ -75,7 +75,7 @@ void GLCompressed3D::upload(int x, int y, int z, int w, int h, int depth, int le
 // -----------------------------------------
 
 void GLCompressed3D::unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int bytes, int offset) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Copy PBO Pixels to Texture
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);

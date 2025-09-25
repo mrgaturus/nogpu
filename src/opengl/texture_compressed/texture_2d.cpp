@@ -18,7 +18,7 @@ GLCompressed2D::GLCompressed2D(GLContext* ctx, GPUTextureCompressedType type) : 
 }
 
 GPUTexture2DMode GLCompressed2D::getMode() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     switch (m_tex_target) {
         case GL_TEXTURE_2D:
@@ -49,7 +49,7 @@ void GLCompressed2D::setMode(GPUTexture2DMode mode) {
 // -------------------------------
 
 void GLCompressed2D::allocate(GPUTexture2DMode mode, int w, int h, int levels) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     this->setMode(mode);
     this->generateTexture();
@@ -66,7 +66,7 @@ void GLCompressed2D::allocate(GPUTexture2DMode mode, int w, int h, int levels) {
 }
 
 void GLCompressed2D::upload(int x, int y, int w, int h, int level, void* data, int bytes) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLenum target = m_tex_target;
     // Upload Compressed Data
     glBindTexture(target, m_tex);
@@ -79,7 +79,7 @@ void GLCompressed2D::upload(int x, int y, int w, int h, int level, void* data, i
 // -----------------------------------------
 
 void GLCompressed2D::unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int bytes, int offset) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Copy PBO Pixels to Texture
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);

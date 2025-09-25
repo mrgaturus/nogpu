@@ -91,6 +91,7 @@ class GLDevice : public GPUDevice {
     GPUDeviceOption m_option;
     GLDriver* m_driver;
     int m_samples;
+    int m_stole;
     bool m_rgba;
     bool m_vsync;
 
@@ -116,6 +117,7 @@ class GLDevice : public GPUDevice {
     protected: // OpenGL Device Constructor
         GLDevice(GLDriver* driver, GPUDeviceOption device, int samples, bool rgba);
         void prepareDebugContext(GPUDriverMode mode);
+        void prepareStoleTexture();
         friend GLDriver;
         friend GLContext;
 };

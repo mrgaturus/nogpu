@@ -23,7 +23,7 @@ GLTexture1D::GLTexture1D(
 // -------------------------------
 
 void GLTexture1D::allocate(int size, int levels) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     this->generateTexture();
     GLenum target = m_tex_target;
     // Allocate Texture Storage
@@ -38,7 +38,7 @@ void GLTexture1D::allocate(int size, int levels) {
 }
 
 void GLTexture1D::upload(int x, int size, int level, void* data) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLenum target = m_tex_target;
     // Upload Texture Data
     glBindTexture(target, m_tex);
@@ -48,7 +48,7 @@ void GLTexture1D::upload(int x, int size, int level, void* data) {
 }
 
 void GLTexture1D::download(int x, int size, int level, void* data) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
 
@@ -76,7 +76,7 @@ void GLTexture1D::download(int x, int size, int level, void* data) {
 // -----------------------------------------
 
 void GLTexture1D::unpack(int x, int size, int level, GPUBuffer *pbo, int offset) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Copy PBO Pixels to Texture
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);
@@ -87,7 +87,7 @@ void GLTexture1D::unpack(int x, int size, int level, GPUBuffer *pbo, int offset)
 }
 
 void GLTexture1D::pack(int x, int size, int level, GPUBuffer *pbo, int offset) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Copy Texture Pixels to PBO
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);

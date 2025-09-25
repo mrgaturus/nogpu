@@ -26,7 +26,7 @@ GLTextureCubemapArray::GLTextureCubemapArray(
 }
 
 void GLTextureCubemapArray::allocate(int w, int h, int layers, int levels) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     this->generateTexture();
     GLenum target = m_tex_target;
@@ -46,7 +46,7 @@ void GLTextureCubemapArray::allocate(int w, int h, int layers, int levels) {
 // ------------------------------------
 
 void GLTextureCubemapArray::upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLenum target = m_tex_target;
     // Upload Texture Data
     glBindTexture(target, m_tex);
@@ -56,7 +56,7 @@ void GLTextureCubemapArray::upload(GPUTextureCubemapSide side, int x, int y, int
 }
 
 void GLTextureCubemapArray::download(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLenum target = m_tex_target;
     GLenum target_side = toValue(side);
     GLint target_index = layer * 6 + (target_side - 0x8515);
@@ -81,7 +81,7 @@ void GLTextureCubemapArray::download(GPUTextureCubemapSide side, int x, int y, i
 // ----------------------------------------------
 
 void GLTextureCubemapArray::unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Copy PBO Pixels to Texture
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);
@@ -92,7 +92,7 @@ void GLTextureCubemapArray::unpack(GPUTextureCubemapSide side, int x, int y, int
 }
 
 void GLTextureCubemapArray::pack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Copy Texture Pixels to PBO
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);

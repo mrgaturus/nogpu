@@ -25,7 +25,7 @@ GLCompressedCubemapArray::GLCompressedCubemapArray(GLContext* ctx, GPUTextureCom
 }
 
 void GLCompressedCubemapArray::allocate(int w, int h, int layers, int levels) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     this->generateTexture();
     GLenum target = m_tex_target;
     // Allocate Texture Storage
@@ -44,7 +44,7 @@ void GLCompressedCubemapArray::allocate(int w, int h, int layers, int levels) {
 // ------------------------------------
 
 void GLCompressedCubemapArray::upload(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data, int bytes) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLenum target = m_tex_target;
     // Upload Compressed Data
     glBindTexture(target, m_tex);
@@ -57,7 +57,7 @@ void GLCompressedCubemapArray::upload(GPUTextureCubemapSide side, int x, int y, 
 // ----------------------------------------------
 
 void GLCompressedCubemapArray::unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int bytes, int offset) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Copy PBO Pixels to Texture
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);

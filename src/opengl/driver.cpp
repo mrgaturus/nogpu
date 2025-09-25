@@ -99,3 +99,18 @@ void GLDevice::prepareDebugContext(GPUDriverMode mode) {
         default: break;
     }
 }
+
+// --------------------
+// OpenGL Texture Stole
+// --------------------
+
+void GLDevice::prepareStoleTexture() {
+    GLint max_texture_units = 0;
+    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
+        &max_texture_units);
+
+    // Prepare Stole Texture Unit
+    m_stole = GL_TEXTURE0;
+    if (max_texture_units > 0)
+        m_stole += max_texture_units - 1;
+}

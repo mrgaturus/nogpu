@@ -19,7 +19,7 @@ GLTexture3D::GLTexture3D(
 }
 
 GPUTexture3DMode GLTexture3D::getMode() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     switch (m_tex_target) {
         case GL_TEXTURE_3D:
@@ -46,7 +46,7 @@ void GLTexture3D::setMode(GPUTexture3DMode mode) {
 // -------------------------------
 
 void GLTexture3D::allocate(GPUTexture3DMode mode, int w, int h, int depth, int levels) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     this->setMode(mode);
     this->generateTexture();
@@ -63,7 +63,7 @@ void GLTexture3D::allocate(GPUTexture3DMode mode, int w, int h, int depth, int l
 }
 
 void GLTexture3D::upload(int x, int y, int z, int w, int h, int depth, int level, void* data) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLenum target = m_tex_target;
     // Upload Texture Data
     glBindTexture(target, m_tex);
@@ -73,7 +73,7 @@ void GLTexture3D::upload(int x, int y, int z, int w, int h, int depth, int level
 }
 
 void GLTexture3D::download(int x, int y, int z, int w, int h, int depth, int level, void* data) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
 
@@ -101,7 +101,7 @@ void GLTexture3D::download(int x, int y, int z, int w, int h, int depth, int lev
 // -----------------------------------------
 
 void GLTexture3D::unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Copy PBO Pixels to Texture
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);
@@ -113,7 +113,7 @@ void GLTexture3D::unpack(int x, int y, int z, int w, int h, int depth, int level
 }
 
 void GLTexture3D::pack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Copy Texture Pixels to PBO
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);

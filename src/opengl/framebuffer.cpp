@@ -8,7 +8,7 @@
 #include <string.h>
 
 GLFrameBuffer::GLFrameBuffer(GLContext* ctx) {
-    ctx->gl__makeCurrent();
+    ctx->makeCurrentTexture(this);
     glGenFramebuffers(1, &m_fbo);
     // Initialize Current List
     m_colors_index.indexes = &m_color_index;
@@ -19,7 +19,7 @@ GLFrameBuffer::GLFrameBuffer(GLContext* ctx) {
 }
 
 void GLFrameBuffer::destroy() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     // Destroy FrameBuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDeleteFramebuffers(1, &m_fbo);
@@ -106,7 +106,7 @@ void GLFrameBuffer::updateAttachment(GLenum attachment, GLRenderLink* link) {
 }
 
 GPUFrameBufferStatus GLFrameBuffer::checkAttachments() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
     // Check Color Attachments
@@ -174,7 +174,7 @@ void GLFrameBuffer::updateIndexes() {
 
 void GLFrameBuffer::attachColor(GPURenderBuffer *target, int index) {
     auto buffer = dynamic_cast<GLRenderBuffer*>(target);
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     if (index < 0) index = 0;
 
     // Check Attachment Buffer
@@ -198,7 +198,7 @@ void GLFrameBuffer::attachColor(GPURenderBuffer *target, int index) {
 
 void GLFrameBuffer::attachDepth(GPURenderBuffer *target) {
     auto buffer = dynamic_cast<GLRenderBuffer*>(target);
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Check Attachment Buffer
     if (buffer == nullptr) {
@@ -218,7 +218,7 @@ void GLFrameBuffer::attachDepth(GPURenderBuffer *target) {
 
 void GLFrameBuffer::attachStencil(GPURenderBuffer *target) {
     auto buffer = dynamic_cast<GLRenderBuffer*>(target);
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Check Attachment Buffer
     if (buffer == nullptr) {
@@ -241,7 +241,7 @@ void GLFrameBuffer::attachStencil(GPURenderBuffer *target) {
 // ------------------------------
 
 void GLFrameBuffer::detachColor(int index) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     if (index < 0) index = 0;
     // Update Render Link Pointer
     if (m_colors.remove_key(index))
@@ -261,7 +261,7 @@ void GLFrameBuffer::detachStencil() {
 // ------------------------------
 
 void GLFrameBuffer::setColorIndex(int index) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     // Set One Color Index
     this->reserveIndexes(1);
     this->m_colors_index.indexes[0] = index;
@@ -269,7 +269,7 @@ void GLFrameBuffer::setColorIndex(int index) {
 }
 
 void GLFrameBuffer::setColorIndexes(int *list, int count) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     // Set Multiple Color Index
     this->reserveIndexes(count);
     void* indexes = m_colors_index.indexes;
@@ -282,7 +282,7 @@ void GLFrameBuffer::setColorIndexes(int *list, int count) {
 // --------------------------------
 
 void GLFrameBuffer::setColorSlice(int index, int layer, int level) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     // Update Color Indexes
     GLRenderLink* result = m_colors.get_key(index);
     if (result != nullptr) {
@@ -295,7 +295,7 @@ void GLFrameBuffer::setColorSlice(int index, int layer, int level) {
 }
 
 void GLFrameBuffer::setDepthSlice(int layer, int level) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     if (m_depth.target == nullptr) {
         GPUReport::warning("depth attachment not found");
         return;
@@ -308,7 +308,7 @@ void GLFrameBuffer::setDepthSlice(int layer, int level) {
 }
 
 void GLFrameBuffer::setStencilSlice(int layer, int level) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     if (m_stencil.target == nullptr) {
         GPUReport::warning("stencil attachment not found");
         return;
@@ -325,7 +325,7 @@ void GLFrameBuffer::setStencilSlice(int layer, int level) {
 // ----------------------
 
 int GLFrameBuffer::getColorIndex() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Return Current Color Index
     if (m_color == nullptr)
@@ -334,7 +334,7 @@ int GLFrameBuffer::getColorIndex() {
 }
 
 int GLFrameBuffer::getColorIndexes(int *list, int capacity) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLRenderIndexes* list0 = &m_colors_index;
 
     // Clamp Count to Capacity
@@ -354,7 +354,7 @@ int GLFrameBuffer::getColorIndexes(int *list, int capacity) {
 }
 
 GPURenderBuffer* GLFrameBuffer::getColorCurrent() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GPURenderBuffer* result = nullptr;
     GLRenderLink* color = m_color;
 
@@ -365,7 +365,7 @@ GPURenderBuffer* GLFrameBuffer::getColorCurrent() {
 }
 
 GPURenderBuffer* GLFrameBuffer::getColor(int index) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GPURenderBuffer* result = nullptr;
     GLRenderLink* color = m_colors.get_key(index);
 
@@ -376,12 +376,12 @@ GPURenderBuffer* GLFrameBuffer::getColor(int index) {
 }
 
 GPURenderBuffer* GLFrameBuffer::getDepth() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     return m_depth.target;
 }
 
 GPURenderBuffer* GLFrameBuffer::getStencil() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     return m_stencil.target;
 }
 
@@ -390,7 +390,7 @@ GPURenderBuffer* GLFrameBuffer::getStencil() {
 // -----------------------------
 
 GPUFrameBufferSlice GLFrameBuffer::getColorSlice(int index) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GPURenderBuffer* result = nullptr;
     GLRenderLink* color = m_colors.get_key(index);
 
@@ -402,7 +402,7 @@ GPUFrameBufferSlice GLFrameBuffer::getColorSlice(int index) {
 }
 
 GPUFrameBufferSlice GLFrameBuffer::getDepthSlice() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     // Return Depth Slice
     if (m_depth.target == nullptr)
         GPUReport::warning("depth attachment not found");
@@ -410,7 +410,7 @@ GPUFrameBufferSlice GLFrameBuffer::getDepthSlice() {
 }
 
 GPUFrameBufferSlice GLFrameBuffer::getStencilSlice() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     // Return Stencil Slice
     if (m_stencil.target == nullptr)
         GPUReport::warning("stencil attachment not found");

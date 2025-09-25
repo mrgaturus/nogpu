@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
+#include "nogpu_private.h"
 #include "private/buffer.h"
 #include "private/context.h"
 #include "private/texture.h"
@@ -99,10 +100,17 @@ GPUCommands* GLContext::createCommands() {
     return nullptr;
 }
 
-// -----------------------------
-// GPU Context: This Weird Thing
-// -----------------------------
+// -------------------------
+// GPU Context: Make Current
+// -------------------------
 
-void GLContext::gl__makeCurrent() {
+void GLContext::makeCurrent(void* object) {
+    GPUReport::setObject(object);
     m_driver->makeCurrent(this);
+}
+
+void GLContext::makeCurrentTexture(void* object) {
+    GPUReport::setObject(object);
+    m_driver->makeCurrent(this);
+    glActiveTexture(m_stole);
 }

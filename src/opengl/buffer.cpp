@@ -57,7 +57,7 @@ static GLenum toValue(GPUBufferMapping flags) {
 // ------------------------------
 
 GLBuffer::GLBuffer(GLContext* ctx) {
-    ctx->gl__makeCurrent();
+    ctx->makeCurrent(this);
     m_ctx = ctx;
 
     // Create OpenGL Buffer
@@ -68,7 +68,7 @@ GLBuffer::GLBuffer(GLContext* ctx) {
 }
 
 void GLBuffer::destroy() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     if (m_mapping) unmap();
     if (m_sync) glDeleteSync(m_sync);
     glDeleteBuffers(1, &m_vbo);
@@ -82,7 +82,7 @@ void GLBuffer::destroy() {
 // ------------------------
 
 void GLBuffer::orphan(int bytes, GPUBufferUsage usage) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     glBufferData(GL_COPY_WRITE_BUFFER, bytes, NULL, toValue(usage));
     // Set Buffer Bytes
@@ -90,7 +90,7 @@ void GLBuffer::orphan(int bytes, GPUBufferUsage usage) {
 };
 
 void GLBuffer::upload(int bytes, void *data, GPUBufferUsage usage) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     glBufferData(GL_COPY_WRITE_BUFFER, bytes, data, toValue(usage));
     // Set Buffer Bytes
@@ -98,21 +98,21 @@ void GLBuffer::upload(int bytes, void *data, GPUBufferUsage usage) {
 };
 
 void GLBuffer::update(int bytes, int offset, void *data) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     // Update Buffer Data
     glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     glBufferSubData(GL_COPY_WRITE_BUFFER, offset, bytes, data);
 };
 
 void GLBuffer::download(int bytes, int offset, void *data) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     // Download Buffer Data
     glBindBuffer(GL_COPY_READ_BUFFER, m_vbo);
     glGetBufferSubData(GL_COPY_READ_BUFFER, offset, bytes, data);
 };
 
 void GLBuffer::copy(GPUBuffer *data, int bytes, int offset_read, int offset_write) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     GLBuffer* buf = static_cast<GLBuffer*>(data);
     // Copy Buffer Data from Other Buffer
     glBindBuffer(GL_COPY_WRITE_BUFFER, buf->m_vbo);
@@ -126,7 +126,7 @@ void GLBuffer::copy(GPUBuffer *data, int bytes, int offset_read, int offset_writ
 // --------------------------
 
 void* GLBuffer::map(int bytes, int offset, GPUBufferMapping flags) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     if (m_mapping) {
         GPUReport::error("buffer %p is already mapped", this);
         return nullptr;
@@ -147,7 +147,7 @@ void* GLBuffer::map(int bytes, int offset, GPUBufferMapping flags) {
 };
 
 void GLBuffer::unmap() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     if (!m_mapping) {
         GPUReport::error("buffer %p is not mapped", this);
         return;
@@ -164,26 +164,26 @@ void GLBuffer::unmap() {
 // ------------------------------
 
 void GLBuffer::syncCPU() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     // Stall CPU until Fence Signaled
     if (m_sync_check && m_sync)
         glClientWaitSync(m_sync, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
 }
 
 void GLBuffer::syncGPU() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     // Stall GL Queue until Fence Signaled
     if (m_sync_check && m_sync)
         glWaitSync(m_sync, 0, GL_TIMEOUT_IGNORED);
 }
 
 void GLBuffer::syncEnable() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     m_sync_check = true;
 }
 
 void GLBuffer::syncDisable() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrent(this);
     m_sync_check = false;
 
     // Remove Sync Object

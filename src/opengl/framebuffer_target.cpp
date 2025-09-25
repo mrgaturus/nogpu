@@ -6,7 +6,7 @@
 #include "private/glad.h"
 
 GLRenderBuffer::GLRenderBuffer(GLContext* ctx, GPUTexturePixelType type) {
-    ctx->gl__makeCurrent();
+    ctx->makeCurrentTexture(this);
     if (type == GPUTexturePixelType::TEXTURE_PIXEL_COMPRESSED) {
         GPUReport::error("compressed framebuffer texture type is not supported");
         delete this;
@@ -20,7 +20,7 @@ GLRenderBuffer::GLRenderBuffer(GLContext* ctx, GPUTexturePixelType type) {
 }
 
 void GLRenderBuffer::destroy() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Destroy Object
     this->destroyInternal();
@@ -132,7 +132,7 @@ void GLRenderBuffer::updateExternal() {
 }
 
 void GLRenderBuffer::useTexture(GPUTexture* texture) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLTexture* tex0 = dynamic_cast<GLTexture*>(texture);
     if (tex0->m_pixel_type != m_pixel_type) {
         GPUReport::error("mismatch texture pixel type for framebuffer");
@@ -152,13 +152,13 @@ void GLRenderBuffer::useTexture(GPUTexture* texture) {
 // -------------------------------------
 
 GPUTexturePixelType GLRenderBuffer::getPixelType() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     this->updateExternal();
     return m_pixel_type;
 }
 
 GPURenderBufferMode GLRenderBuffer::getMode() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     this->updateExternal();
     return m_mode;
 }
@@ -168,7 +168,7 @@ GPURenderBufferMode GLRenderBuffer::getMode() {
 // ------------------------------
 
 GPUTexture* GLRenderBuffer::getTexture() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     switch (m_mode) {
         case GPURenderBufferMode::RENDERBUFFER_UNDEFINED:
@@ -184,7 +184,7 @@ GPUTexture* GLRenderBuffer::getTexture() {
 }
 
 GPUTextureSize GLRenderBuffer::getSize() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GPUTextureSize size = {0, 0};
 
     switch (m_mode) {
@@ -216,7 +216,7 @@ int GLRenderBuffer::getHeight() {
 }
 
 int GLRenderBuffer::getDepth() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     switch (m_mode) {
         case GPURenderBufferMode::RENDERBUFFER_UNDEFINED:
@@ -235,7 +235,7 @@ int GLRenderBuffer::getLayers() {
 }
 
 int GLRenderBuffer::getLevels() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Return Texture Levels
     switch (m_mode) {
@@ -251,7 +251,7 @@ int GLRenderBuffer::getLevels() {
 }
 
 int GLRenderBuffer::getSamples() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     if (m_mode == GPURenderBufferMode::RENDERBUFFER_UNDEFINED)
         GPUReport::warning("cannot get samples of undefined renderbuffer");
 

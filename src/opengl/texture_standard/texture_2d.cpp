@@ -19,7 +19,7 @@ GLTexture2D::GLTexture2D(
 }
 
 GPUTexture2DMode GLTexture2D::getMode() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     switch (m_tex_target) {
         case GL_TEXTURE_2D:
@@ -50,7 +50,7 @@ void GLTexture2D::setMode(GPUTexture2DMode mode) {
 // -------------------------------
 
 void GLTexture2D::allocate(GPUTexture2DMode mode, int w, int h, int levels) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     this->setMode(mode);
     this->generateTexture();
@@ -67,7 +67,7 @@ void GLTexture2D::allocate(GPUTexture2DMode mode, int w, int h, int levels) {
 }
 
 void GLTexture2D::upload(int x, int y, int w, int h, int level, void* data) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLenum target = m_tex_target;
     // Upload Texture Data
     glBindTexture(target, m_tex);
@@ -77,7 +77,7 @@ void GLTexture2D::upload(int x, int y, int w, int h, int level, void* data) {
 }
 
 void GLTexture2D::download(int x, int y, int w, int h, int level, void* data) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
 
@@ -107,7 +107,7 @@ void GLTexture2D::download(int x, int y, int w, int h, int level, void* data) {
 // -----------------------------------------
 
 void GLTexture2D::unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Copy PBO Pixels to Texture
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);
@@ -118,7 +118,7 @@ void GLTexture2D::unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, 
 }
 
 void GLTexture2D::pack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Copy Texture Pixels to PBO
     GLBuffer* buf = static_cast<GLBuffer*>(pbo);

@@ -6,7 +6,7 @@
 #include "private/glad.h"
 
 GLTexture::GLTexture(GLContext* ctx) {
-    ctx->gl__makeCurrent();
+    ctx->makeCurrentTexture(this);
 
     // Generate OpenGL Texture
     glGenTextures(1, &m_tex);
@@ -17,7 +17,7 @@ GLTexture::GLTexture(GLContext* ctx) {
 }
 
 void GLTexture::destroy() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Destroy OpenGL Texture
     if (m_sync) glDeleteSync(m_sync);
@@ -35,7 +35,7 @@ void GLTexture::destroy() {
 // -------------------------
 
 void GLTexture::setTransferSize(GPUTextureTransferSize size) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     // Check if Pixel Type has transfer mode not fixed
     if (!canTransferChange(m_pixel_type)) {
         GPUReport::error("transfer size cannot be changed for %p", this);
@@ -47,7 +47,7 @@ void GLTexture::setTransferSize(GPUTextureTransferSize size) {
 }
 
 void GLTexture::setTransferFormat(GPUTextureTransferFormat format) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     // Check if Pixel Type has transfer mode not fixed
     if (!canTransferChange(m_pixel_type)) {
         GPUReport::error("transfer format cannot be changed for %p", this);
@@ -59,7 +59,7 @@ void GLTexture::setTransferFormat(GPUTextureTransferFormat format) {
 }
 
 void GLTexture::setSwizzle(GPUTextureSwizzle swizzle) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     m_swizzle = swizzle;
 
     // Change Texture Swizzle
@@ -72,7 +72,7 @@ void GLTexture::setSwizzle(GPUTextureSwizzle swizzle) {
 }
 
 void GLTexture::setFilter(GPUTextureFilter filter) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     m_filter = filter;
 
     // Change Texture Filter
@@ -83,7 +83,7 @@ void GLTexture::setFilter(GPUTextureFilter filter) {
 }
 
 void GLTexture::setWrap(GPUTextureWrap wrap) {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     m_wrap = wrap;
 
     // Change Texture Wrapping
@@ -99,7 +99,7 @@ void GLTexture::setWrap(GPUTextureWrap wrap) {
 // ---------------------------------
 
 void GLTexture::generateTexture() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     GLenum target = m_tex_target;
     glBindTexture(target, m_tex);
 
@@ -114,7 +114,7 @@ void GLTexture::generateTexture() {
 }
 
 void GLTexture::generateMipmaps() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Generate Texture Mipmaps
     GLenum target = m_tex_target;
@@ -127,26 +127,26 @@ void GLTexture::generateMipmaps() {
 // -------------------------
 
 void GLTexture::syncCPU() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     // Stall CPU until Fence Signaled
     if (m_sync_check && m_sync)
         glClientWaitSync(m_sync, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
 }
 
 void GLTexture::syncGPU() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     // Stall GL Queue until Fence Signaled
     if (m_sync_check && m_sync)
         glWaitSync(m_sync, 0, GL_TIMEOUT_IGNORED);
 }
 
 void GLTexture::syncEnable() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     m_sync_check = true;
 }
 
 void GLTexture::syncDisable() {
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
     m_sync_check = false;
 
     // Remove Sync Object
@@ -162,7 +162,7 @@ void GLTexture::syncDisable() {
 
 void GLTexture::generateSync() {
     if (!m_sync_check) return;
-    m_ctx->gl__makeCurrent();
+    m_ctx->makeCurrentTexture(this);
 
     // Stamp Sync Object
     if (m_sync) glDeleteSync(m_sync);
