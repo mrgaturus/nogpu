@@ -38,7 +38,7 @@ void GLTexture::setTransferSize(GPUTextureTransferSize size) {
     m_ctx->makeCurrentTexture(this);
     // Check if Pixel Type has transfer mode not fixed
     if (!canTransferChange(m_pixel_type)) {
-        GPUReport::error("transfer size cannot be changed for %p", this);
+        GPUReport::error("transfer size cannot be changed");
         return;
     }
     
@@ -50,7 +50,7 @@ void GLTexture::setTransferFormat(GPUTextureTransferFormat format) {
     m_ctx->makeCurrentTexture(this);
     // Check if Pixel Type has transfer mode not fixed
     if (!canTransferChange(m_pixel_type)) {
-        GPUReport::error("transfer format cannot be changed for %p", this);
+        GPUReport::error("transfer format cannot be changed");
         return;
     }
 

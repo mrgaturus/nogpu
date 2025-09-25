@@ -28,7 +28,7 @@ GLTextureBuffer::GLTextureBuffer(GLContext* ctx, GLBuffer* buffer, GPUTexturePix
         return;
     // Check Texture Pixel Format
     } else if (!canTextureBuffer(type)) {
-        GPUReport::error("invalid pixel format for texture buffer %p", this);
+        GPUReport::error("invalid pixel format for texture buffer");
         delete this;
         return;
     }
@@ -61,7 +61,7 @@ void GLTextureBuffer::setType(GPUTexturePixelType type) {
     m_ctx->makeCurrentTexture(this);
     // Check Valid Texture Pixel Type
     if (!canTextureBuffer(type)) {
-        GPUReport::error("invalid pixel format for texture buffer %p", this);
+        GPUReport::error("invalid pixel format for texture buffer");
         return;
     }
 

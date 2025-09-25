@@ -89,7 +89,7 @@ void GLVertexArray::useElementsBuffer(GPUBuffer* buffer) {
 void GLVertexArray::defineAttribute(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) {
     m_ctx->makeCurrent(this);
     if (!m_array_buffer) {
-        GPUReport::error("an array buffer is not used to define attribute #%d for %p", index, this);
+        GPUReport::error("an array buffer is not used to define attribute #%d", index);
         return;
     }
 
@@ -105,10 +105,10 @@ void GLVertexArray::defineAttribute(int index, GPUAttributeSize size, GPUAttribu
 void GLVertexArray::defineNormalized(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) {
     m_ctx->makeCurrent(this);
     if (!m_array_buffer) {
-        GPUReport::error("an array buffer is not used to define normalized attribute #%d for %p", index, this);
+        GPUReport::error("an array buffer is not used to define normalized attribute #%d", index);
         return;
     } else if (type == GPUAttributeType::ATTRIBUTE_TYPE_FLOAT || type == GPUAttributeType::ATTRIBUTE_TYPE_DOUBLE) {
-        GPUReport::error("float or double cannot be normalized to define attribute #%d for %p", index, this);
+        GPUReport::error("float or double cannot be normalized to define attribute #%d", index);
         return;
     }
 

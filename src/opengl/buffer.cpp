@@ -128,7 +128,7 @@ void GLBuffer::copy(GPUBuffer *data, int bytes, int offset_read, int offset_writ
 void* GLBuffer::map(int bytes, int offset, GPUBufferMapping flags) {
     m_ctx->makeCurrent(this);
     if (m_mapping) {
-        GPUReport::error("buffer %p is already mapped", this);
+        GPUReport::error("buffer is already mapped");
         return nullptr;
     }
 
@@ -149,7 +149,7 @@ void* GLBuffer::map(int bytes, int offset, GPUBufferMapping flags) {
 void GLBuffer::unmap() {
     m_ctx->makeCurrent(this);
     if (!m_mapping) {
-        GPUReport::error("buffer %p is not mapped", this);
+        GPUReport::warning("buffer is not mapped");
         return;
     }
 
