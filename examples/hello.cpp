@@ -32,8 +32,7 @@ int main() {
         return -1;  // Failed to create window
     }
 
-    GPUDriver::initialize(GPUDriverOption::DRIVER_OPENGL,
-        GPUDriverMode::DRIVER_MODE_DEBUG);
+    GPUDriver::initialize(GPUDriverOption::DRIVER_OPENGL, GPUDriverMode::DRIVER_MODE_DEBUG);
     GPUDriver::setVerticalSync(true);
     // Create GPU Device and Context
     GPUDevice* dev = GPUDriver::createDevice(GPUDeviceOption::DEVICE_AUTO, 0, false);
@@ -72,8 +71,7 @@ int main() {
 
     SDL_Window* win = SDL_CreateWindow("nogpu sdl3 window", 1024, 600,
         SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
-    GPUDriver::initialize(GPUDriverOption::DRIVER_OPENGL,
-        GPUDriverMode::DRIVER_MODE_DEBUG);
+    GPUDriver::initialize(GPUDriverOption::DRIVER_OPENGL, GPUDriverMode::DRIVER_MODE_DEBUG);
     GPUDriver::setVerticalSync(true);
     // Create GPU Device and Context
     GPUDevice* dev = GPUDriver::createDevice(GPUDeviceOption::DEVICE_AUTO, 0, false);
@@ -120,8 +118,7 @@ int main() {
     SDL_Window* win = SDL_CreateWindow("nogpu sdl2 window",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024, 600,
         SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
-    GPUDriver::initialize(GPUDriverOption::DRIVER_OPENGL,
-        GPUDriverMode::DRIVER_MODE_DEBUG);
+    GPUDriver::initialize(GPUDriverOption::DRIVER_OPENGL, GPUDriverMode::DRIVER_MODE_DEBUG);
     GPUDriver::setVerticalSync(true);
     // Create GPU Device and Context
     GPUDevice* dev = GPUDriver::createDevice(GPUDeviceOption::DEVICE_AUTO, 0, false);

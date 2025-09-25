@@ -81,7 +81,7 @@ static void prepare__egl_attribs_context(EGLDisplay display, GPUDriverMode mode,
                 return;
 
             // Check EGL_KHR_create_context_no_error extension
-            if (strstr(extensions, "EGL_EXT_create_context_no_error")) {
+            if (strstr(extensions, "EGL_KHR_create_context_no_error")) {
                 egl_attribs_context[8] = 0x31B3;
                 egl_attribs_context[9] = EGL_TRUE;
             }
