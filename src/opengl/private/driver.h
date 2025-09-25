@@ -59,16 +59,16 @@ typedef struct LinuxEGLContext {
 class GLDevice;
 class GLContext;
 class GLDriver : public GPUDriver {
+    #if defined(__unix__)
+        LinuxEGLDriver m_egl_driver{};
+        bool prepareDevice(GLDevice* device, GPUDeviceOption option);
+        bool disposeDevice(GLDevice* device);
+    #endif // __unix__
+
     GLContext* m_ctx_current = nullptr;
     GPUDriverMode m_mode = GPUDriverMode::DRIVER_MODE_NORMAL;
     unsigned int m_features = 0;
     bool m_vsync = true;
-
-    #if defined(__unix__)
-        LinuxEGLDriver m_egl_driver = {};
-        bool prepareDevice(GLDevice* device, GPUDeviceOption option);
-        bool disposeDevice(GLDevice* device);
-    #endif // __unix__
 
     GPUDevice* impl__createDevice(GPUDeviceOption option, int samples, bool rgba) override;
     void impl__setVerticalSync(bool value) override;
@@ -87,17 +87,17 @@ class GLDriver : public GPUDriver {
 };
 
 class GLDevice : public GPUDevice {
-    GPUContextCache m_ctx_cache = {};
+    #if defined(__unix__)
+        LinuxEGLDevice m_egl_device{};
+    #endif // __unix__
+
+    GPUContextCache m_ctx_cache{};
     GPUDeviceOption m_option;
     GLDriver* m_driver;
     int m_samples;
     int m_stole;
     bool m_rgba;
     bool m_vsync;
-
-    #if defined(__unix__)
-        LinuxEGLDevice m_egl_device = {};
-    #endif // __unix__
 
     // Basic Device Info
     void setVerticalSync(bool value) override;
