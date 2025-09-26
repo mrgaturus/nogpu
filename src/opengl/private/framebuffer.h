@@ -16,7 +16,7 @@ class GLRenderBuffer : GPURenderBuffer {
     // Renderbuffer Manipulation
     void useTexture(GPUTexture* texture) override;
     void createOffscreen(int w, int h, int samples) override;
-    void createTexture(int w, int h, int levels, int samples) override;
+    void createTexture2D(int w, int h, int levels, int samples) override;
     void createTextureArray(int w, int h, int layers, int levels, int samples) override;
     void createTexture3D(int w, int h, int layers, int levels) override;
     // Renderbuffer Attributes
@@ -34,12 +34,12 @@ class GLRenderBuffer : GPURenderBuffer {
     public:
         GLContext* m_ctx;
         GLTexture* m_target;
-        GLuint* m_object;
+        GLenum m_tex_target;
         GLuint m_tex;
-        // Offscreen
-        GLint m_samples;
+        // Offscreen Texture
         GLint m_width;
         GLint m_height;
+        GLint m_samples;
 
     protected: // Renderbuffer Constructor
         GLRenderBuffer(GLContext* ctx, GPUTexturePixelType type);
@@ -96,6 +96,9 @@ class GLFrameBuffer : GPUFrameBuffer {
     void setColorSlice(int index, int layer, int level) override;
     void setDepthSlice(int layer, int level) override;
     void setStencilSlice(int layer, int level) override;
+    void setCubemapColorSlice(GPUTextureCubemapSide side, int index, int layer, int level) override;
+    void setCubemapDepthSlice(GPUTextureCubemapSide side, int layer, int level) override;
+    void setCubemapStencilSlice(GPUTextureCubemapSide side, int layer, int level) override;
 
     // Framebuffer Attributes
     int getColorIndex() override;

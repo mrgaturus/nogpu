@@ -226,6 +226,28 @@ void GLFrameBuffer::setStencilSlice(int layer, int level) {
     m_stencil.tex_cache = 0;
 }
 
+// ---------------------------------
+// Framebuffer Usage: Cubemap Slices
+// ---------------------------------
+
+void GLFrameBuffer::setCubemapColorSlice(GPUTextureCubemapSide side, int index, int layer, int level) {
+    GLenum target_side = toValue(side);
+    layer = layer * 6 + (target_side - 0x8515);
+    this->setColorSlice(index, layer, level);
+}
+
+void GLFrameBuffer::setCubemapDepthSlice(GPUTextureCubemapSide side, int layer, int level) {
+    GLenum target_side = toValue(side);
+    layer = layer * 6 + (target_side - 0x8515);
+    this->setDepthSlice(layer, level);
+}
+
+void GLFrameBuffer::setCubemapStencilSlice(GPUTextureCubemapSide side, int layer, int level) {
+    GLenum target_side = toValue(side);
+    layer = layer * 6 + (target_side - 0x8515);
+    this->setStencilSlice(layer, level);
+}
+
 // ----------------------
 // Framebuffer Attributes
 // ----------------------

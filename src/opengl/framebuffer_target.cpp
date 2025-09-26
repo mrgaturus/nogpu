@@ -36,20 +36,21 @@ void GLRenderBuffer::destroyInternal() {
         // Destroy Offscreen Render Buffer
         case GPURenderBufferMode::RENDERBUFFER_UNDEFINED: break;
         case GPURenderBufferMode::RENDERBUFFER_OFFSCREEN:
-            glDeleteRenderbuffers(1, m_object);
+            glDeleteRenderbuffers(1, &m_tex);
             break;
 
         // Destroy Texture Render Buffer
-        case GPURenderBufferMode::RENDERBUFFER_TEXTURE:
+        case GPURenderBufferMode::RENDERBUFFER_TEXTURE_2D:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_3D:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_ARRAY:
-        case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE:
+        case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE_2D:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE_ARRAY:
             m_target->destroy();
             break;
         
         // Target Cannot be Destroyed
-        case GPURenderBufferMode::RENDERBUFFER_TARGET:
+        case GPURenderBufferMode::RENDERBUFFER_TARGET_1D:
+        case GPURenderBufferMode::RENDERBUFFER_TARGET_2D:
         case GPURenderBufferMode::RENDERBUFFER_TARGET_3D:
         case GPURenderBufferMode::RENDERBUFFER_TARGET_ARRAY:
         case GPURenderBufferMode::RENDERBUFFER_TARGET_CUBEMAP:
@@ -60,22 +61,22 @@ void GLRenderBuffer::destroyInternal() {
     // Make RenderBuffer Undefined
     m_mode = GPURenderBufferMode::RENDERBUFFER_UNDEFINED;
     m_target = nullptr;
-    m_object = nullptr;
     m_tex = 0;
-    m_samples = 0;
+    m_tex_target = 0;
     m_width = 0;
     m_height = 0;
+    m_samples = 0;
 }
 
 void GLRenderBuffer::prepareInternal() {
     // Check Needs Re-create
     switch (m_mode) {
-        case GPURenderBufferMode::RENDERBUFFER_TEXTURE:
+        case GPURenderBufferMode::RENDERBUFFER_TEXTURE_2D:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_3D:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_ARRAY:
-        case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE:
+        case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE_2D:
         case GPURenderBufferMode::RENDERBUFFER_TEXTURE_MULTISAMPLE_ARRAY:
-            glDeleteTextures(1, m_object);
+            glDeleteTextures(1, &m_tex);
             break;
         
         default: // Create Texture
@@ -84,7 +85,6 @@ void GLRenderBuffer::prepareInternal() {
             tex0->m_pixel_type = m_pixel_type;
             // Use Internal Texture
             m_target = tex0;
-            m_object = &tex0->m_tex;
             break;
     }
 }
@@ -94,17 +94,20 @@ void GLRenderBuffer::prepareInternal() {
 // -------------------------------------
 
 void GLRenderBuffer::updateExternal() {
-    bool check = *(m_object) != m_tex;
-    if (!check) return;
+    if (m_target == nullptr || m_target->m_tex == m_tex)
+        return; // External is Already Cached
 
-    // Check External Mode
-    m_tex = *(m_object);
     m_samples = 1;
-    switch (m_target->m_tex_target) {
+    // Check External Mode
+    m_tex = m_target->m_tex;
+    m_tex_target = m_target->m_tex_target;
+    switch (m_tex_target) {
         case GL_TEXTURE_1D:
+            m_mode = GPURenderBufferMode::RENDERBUFFER_TARGET_1D;
+            break;
         case GL_TEXTURE_2D:
         case GL_TEXTURE_RECTANGLE:
-            m_mode = GPURenderBufferMode::RENDERBUFFER_TARGET;
+            m_mode = GPURenderBufferMode::RENDERBUFFER_TARGET_2D;
             break;
 
         // Array Textures
@@ -143,7 +146,6 @@ void GLRenderBuffer::useTexture(GPUTexture* texture) {
     this->destroyInternal();
     // Use External Texture
     m_target = tex0;
-    m_object = &tex0->m_tex;
     this->updateExternal();
 }
 

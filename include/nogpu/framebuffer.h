@@ -11,12 +11,13 @@
 enum class GPURenderBufferMode : int {
     RENDERBUFFER_UNDEFINED,
     RENDERBUFFER_OFFSCREEN,
-    RENDERBUFFER_TEXTURE,
+    RENDERBUFFER_TEXTURE_2D,
     RENDERBUFFER_TEXTURE_3D,
     RENDERBUFFER_TEXTURE_ARRAY,
-    RENDERBUFFER_TEXTURE_MULTISAMPLE,
+    RENDERBUFFER_TEXTURE_MULTISAMPLE_2D,
     RENDERBUFFER_TEXTURE_MULTISAMPLE_ARRAY,
-    RENDERBUFFER_TARGET,
+    RENDERBUFFER_TARGET_1D,
+    RENDERBUFFER_TARGET_2D,
     RENDERBUFFER_TARGET_3D,
     RENDERBUFFER_TARGET_ARRAY,
     RENDERBUFFER_TARGET_CUBEMAP,
@@ -32,7 +33,7 @@ class GPURenderBuffer {
         virtual void destroy() = 0;
         virtual void useTexture(GPUTexture* texture) = 0;
         virtual void createOffscreen(int w, int h, int samples) = 0;
-        virtual void createTexture(int w, int h, int levels, int samples) = 0;
+        virtual void createTexture2D(int w, int h, int levels, int samples) = 0;
         virtual void createTextureArray(int w, int h, int layers, int levels, int samples) = 0;
         virtual void createTexture3D(int w, int h, int layers, int levels) = 0;
 
@@ -76,12 +77,15 @@ class GPUFrameBuffer {
         virtual void detachDepth() = 0;
         virtual void detachStencil() = 0;
 
-    public: // Framebuffer Usage
+    public: // Framebuffer Attachment Slice
         virtual void setColorIndex(int index) = 0;
         virtual void setColorIndexes(int *list, int count) = 0;
         virtual void setColorSlice(int index, int layer, int level) = 0;
         virtual void setDepthSlice(int layer, int level) = 0;
         virtual void setStencilSlice(int layer, int level) = 0;
+        virtual void setCubemapColorSlice(GPUTextureCubemapSide side, int index, int layer, int level) = 0;
+        virtual void setCubemapDepthSlice(GPUTextureCubemapSide side, int layer, int level) = 0;
+        virtual void setCubemapStencilSlice(GPUTextureCubemapSide side, int layer, int level) = 0;
 
     public: // Framebuffer Attributes
         virtual int getColorIndex() = 0;
