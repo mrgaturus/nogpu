@@ -84,8 +84,13 @@ class GPUVertexArray {
         virtual void useElementsBuffer(GPUBuffer* buffer) = 0;
         virtual void defineAttribute(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) = 0;
         virtual void defineNormalized(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) = 0;
+        virtual void defineInstanceDivisor(int index, int divisor) = 0;
         virtual void disableAttribute(int index) = 0;
         virtual void enableAttribute(int index) = 0;
+
+    public: // GPU Vertex Array: Getters
+        GPUBuffer* getArrayBuffer() { return m_array_buffer; }
+        GPUBuffer* getElementsBuffer() { return m_elements_buffer; }
 };
 
 GPUBufferMapping operator|(GPUBufferMapping a, GPUBufferMapping b);

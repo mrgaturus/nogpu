@@ -45,6 +45,7 @@ class GLVertexArray : GPUVertexArray {
     void useElementsBuffer(GPUBuffer* buffer) override;
     void defineAttribute(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) override;
     void defineNormalized(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) override;
+    void defineInstanceDivisor(int index, int divisor) override;
     void disableAttribute(int index) override;
     void enableAttribute(int index) override;
 

@@ -82,9 +82,9 @@ void GLVertexArray::useElementsBuffer(GPUBuffer* buffer) {
     m_elements_buffer = buffer;
 };
 
-// ----------------------------
-// GPU Vertex Array: Attributes
-// ----------------------------
+// -----------------------------------
+// GPU Vertex Array: Define Attributes
+// -----------------------------------
 
 void GLVertexArray::defineAttribute(int index, GPUAttributeSize size, GPUAttributeType type, int stride, int offset) {
     m_ctx->makeCurrent(this);
@@ -120,6 +120,17 @@ void GLVertexArray::defineNormalized(int index, GPUAttributeSize size, GPUAttrib
     // Enable Attribute by Default
     glEnableVertexAttribArray(index);
 };
+
+void GLVertexArray::defineInstanceDivisor(int index, int divisor) {
+    m_ctx->makeCurrent(this);
+    // Define Instance Divisor
+    glBindVertexArray(m_vao);
+    glVertexAttribDivisor(index, divisor);
+}
+
+// -----------------------------------
+// GPU Vertex Array: Enable Attributes
+// -----------------------------------
 
 void GLVertexArray::disableAttribute(int index) {
     m_ctx->makeCurrent(this);
