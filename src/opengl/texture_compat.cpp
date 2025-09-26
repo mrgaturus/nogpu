@@ -17,9 +17,9 @@ static GLenum valueAttachmentType(GPUTexturePixelType type) {
     }
 }
 
-// -------------------------------------
-// Texture 2D: Download Compatibility 3D
-// -------------------------------------
+// --------------------------------------
+// OpenGL Texture: Download Compatibility
+// --------------------------------------
 
 void GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data) {
     if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
@@ -59,10 +59,6 @@ void GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth, i
     glReadBuffer(read);
 }
 
-// -------------------------------------
-// Texture 2D: Download Compatibility 2D
-// -------------------------------------
-
 void GLTexture::compatDownload2D(int x, int y, int w, int h, int level, void* data) {
     if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
 
@@ -92,10 +88,6 @@ void GLTexture::compatDownload2D(int x, int y, int w, int h, int level, void* da
     glReadBuffer(read);
 }
 
-// -------------------------------------
-// Texture 2D: Download Compatibility 1D
-// -------------------------------------
-
 void GLTexture::compatDownload1D(int x, int size, int level, void* data) {
     if (!m_tex_fbo) glGenFramebuffers(1, &m_tex_fbo);
 
@@ -124,3 +116,9 @@ void GLTexture::compatDownload1D(int x, int size, int level, void* data) {
     // Restore Read Buffer
     glReadBuffer(read);
 }
+
+// -----------------------------------
+// OpenGL Texture: Clear Compatibility
+// -----------------------------------
+
+

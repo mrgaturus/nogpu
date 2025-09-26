@@ -24,7 +24,7 @@ add_library(nogpu_opengl OBJECT
     texture_compressed/texture_cubemap.cpp
     texture_compressed/texture_cubemap_array.cpp
     texture_buffer.cpp
-    texture_download.cpp
+    texture_compat.cpp
     texture_values.cpp
     texture.cpp
 )
