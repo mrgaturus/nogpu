@@ -36,6 +36,8 @@ int GLAD_GL_VERSION_3_1 = 0;
 int GLAD_GL_VERSION_3_2 = 0;
 int GLAD_GL_VERSION_3_3 = 0;
 int GLAD_GL_ARB_ES3_compatibility = 0;
+int GLAD_GL_ARB_clear_buffer_object = 0;
+int GLAD_GL_ARB_clear_texture = 0;
 int GLAD_GL_ARB_compute_shader = 0;
 int GLAD_GL_ARB_debug_output = 0;
 int GLAD_GL_ARB_get_texture_sub_image = 0;
@@ -84,6 +86,8 @@ PFNGLBUFFERSUBDATAPROC glad_glBufferSubData = NULL;
 PFNGLCHECKFRAMEBUFFERSTATUSPROC glad_glCheckFramebufferStatus = NULL;
 PFNGLCLAMPCOLORPROC glad_glClampColor = NULL;
 PFNGLCLEARPROC glad_glClear = NULL;
+PFNGLCLEARBUFFERDATAPROC glad_glClearBufferData = NULL;
+PFNGLCLEARBUFFERSUBDATAPROC glad_glClearBufferSubData = NULL;
 PFNGLCLEARBUFFERFIPROC glad_glClearBufferfi = NULL;
 PFNGLCLEARBUFFERFVPROC glad_glClearBufferfv = NULL;
 PFNGLCLEARBUFFERIVPROC glad_glClearBufferiv = NULL;
@@ -91,6 +95,8 @@ PFNGLCLEARBUFFERUIVPROC glad_glClearBufferuiv = NULL;
 PFNGLCLEARCOLORPROC glad_glClearColor = NULL;
 PFNGLCLEARDEPTHPROC glad_glClearDepth = NULL;
 PFNGLCLEARSTENCILPROC glad_glClearStencil = NULL;
+PFNGLCLEARTEXIMAGEPROC glad_glClearTexImage = NULL;
+PFNGLCLEARTEXSUBIMAGEPROC glad_glClearTexSubImage = NULL;
 PFNGLCLIENTWAITSYNCPROC glad_glClientWaitSync = NULL;
 PFNGLCOLORMASKPROC glad_glColorMask = NULL;
 PFNGLCOLORMASKIPROC glad_glColorMaski = NULL;
@@ -804,6 +810,16 @@ static void glad_gl_load_GL_VERSION_3_3( GLADuserptrloadfunc load, void* userptr
     glad_glVertexAttribP4ui = (PFNGLVERTEXATTRIBP4UIPROC) load(userptr, "glVertexAttribP4ui");
     glad_glVertexAttribP4uiv = (PFNGLVERTEXATTRIBP4UIVPROC) load(userptr, "glVertexAttribP4uiv");
 }
+static void glad_gl_load_GL_ARB_clear_buffer_object( GLADuserptrloadfunc load, void* userptr) {
+    if(!GLAD_GL_ARB_clear_buffer_object) return;
+    glad_glClearBufferData = (PFNGLCLEARBUFFERDATAPROC) load(userptr, "glClearBufferData");
+    glad_glClearBufferSubData = (PFNGLCLEARBUFFERSUBDATAPROC) load(userptr, "glClearBufferSubData");
+}
+static void glad_gl_load_GL_ARB_clear_texture( GLADuserptrloadfunc load, void* userptr) {
+    if(!GLAD_GL_ARB_clear_texture) return;
+    glad_glClearTexImage = (PFNGLCLEARTEXIMAGEPROC) load(userptr, "glClearTexImage");
+    glad_glClearTexSubImage = (PFNGLCLEARTEXSUBIMAGEPROC) load(userptr, "glClearTexSubImage");
+}
 static void glad_gl_load_GL_ARB_compute_shader( GLADuserptrloadfunc load, void* userptr) {
     if(!GLAD_GL_ARB_compute_shader) return;
     glad_glDispatchCompute = (PFNGLDISPATCHCOMPUTEPROC) load(userptr, "glDispatchCompute");
@@ -1004,7 +1020,9 @@ static unsigned int glad_gl_crc32_extensions_gl[] = {
         0x3f22171c, // GL_EXT_texture_compression_s3tc
         0x4a03d323, // GL_ARB_texture_buffer_range
         0x56ea549b, // GL_ARB_texture_storage_multisample
+        0x5e9c0578, // GL_ARB_clear_texture
         0x67b4f8bb, // GL_ARB_shader_storage_buffer_object
+        0x717a6418, // GL_ARB_clear_buffer_object
         0x7a21b127, // GL_ARB_shader_atomic_counters
         0x7b80afe6, // GL_ARB_texture_cube_map_array
         0x8a58e0da, // GL_ARB_spirv_extensions
@@ -1021,26 +1039,28 @@ static unsigned int glad_gl_crc32_extensions_gl[] = {
 };
 
 static void glad_gl_find_extensions_gl(void) {
-    unsigned int glad_gl_flags_extensions_gl[19] = {0};
-    glad_gl_check_extensions(glad_gl_flags_extensions_gl, glad_gl_crc32_extensions_gl, 18);
+    unsigned int glad_gl_flags_extensions_gl[21] = {0};
+    glad_gl_check_extensions(glad_gl_flags_extensions_gl, glad_gl_crc32_extensions_gl, 20);
     GLAD_GL_ARB_gl_spirv = (glad_gl_flags_extensions_gl[0] != 0);
     GLAD_GL_ARB_texture_compression_bptc = (glad_gl_flags_extensions_gl[1] != 0);
     GLAD_GL_EXT_texture_compression_s3tc = (glad_gl_flags_extensions_gl[2] != 0);
     GLAD_GL_ARB_texture_buffer_range = (glad_gl_flags_extensions_gl[3] != 0);
     GLAD_GL_ARB_texture_storage_multisample = (glad_gl_flags_extensions_gl[4] != 0);
-    GLAD_GL_ARB_shader_storage_buffer_object = (glad_gl_flags_extensions_gl[5] != 0);
-    GLAD_GL_ARB_shader_atomic_counters = (glad_gl_flags_extensions_gl[6] != 0);
-    GLAD_GL_ARB_texture_cube_map_array = (glad_gl_flags_extensions_gl[7] != 0);
-    GLAD_GL_ARB_spirv_extensions = (glad_gl_flags_extensions_gl[8] != 0);
-    GLAD_GL_ARB_get_texture_sub_image = (glad_gl_flags_extensions_gl[9] != 0);
-    GLAD_GL_ARB_compute_shader = (glad_gl_flags_extensions_gl[10] != 0);
-    GLAD_GL_ARB_ES3_compatibility = (glad_gl_flags_extensions_gl[11] != 0);
-    GLAD_GL_ARB_texture_storage = (glad_gl_flags_extensions_gl[12] != 0);
-    GLAD_GL_ARB_debug_output = (glad_gl_flags_extensions_gl[13] != 0);
-    GLAD_GL_ARB_shader_image_size = (glad_gl_flags_extensions_gl[14] != 0);
-    GLAD_GL_KHR_texture_compression_astc_ldr = (glad_gl_flags_extensions_gl[15] != 0);
-    GLAD_GL_KHR_texture_compression_astc_hdr = (glad_gl_flags_extensions_gl[16] != 0);
-    GLAD_GL_ARB_shader_image_load_store = (glad_gl_flags_extensions_gl[17] != 0);
+    GLAD_GL_ARB_clear_texture = (glad_gl_flags_extensions_gl[5] != 0);
+    GLAD_GL_ARB_shader_storage_buffer_object = (glad_gl_flags_extensions_gl[6] != 0);
+    GLAD_GL_ARB_clear_buffer_object = (glad_gl_flags_extensions_gl[7] != 0);
+    GLAD_GL_ARB_shader_atomic_counters = (glad_gl_flags_extensions_gl[8] != 0);
+    GLAD_GL_ARB_texture_cube_map_array = (glad_gl_flags_extensions_gl[9] != 0);
+    GLAD_GL_ARB_spirv_extensions = (glad_gl_flags_extensions_gl[10] != 0);
+    GLAD_GL_ARB_get_texture_sub_image = (glad_gl_flags_extensions_gl[11] != 0);
+    GLAD_GL_ARB_compute_shader = (glad_gl_flags_extensions_gl[12] != 0);
+    GLAD_GL_ARB_ES3_compatibility = (glad_gl_flags_extensions_gl[13] != 0);
+    GLAD_GL_ARB_texture_storage = (glad_gl_flags_extensions_gl[14] != 0);
+    GLAD_GL_ARB_debug_output = (glad_gl_flags_extensions_gl[15] != 0);
+    GLAD_GL_ARB_shader_image_size = (glad_gl_flags_extensions_gl[16] != 0);
+    GLAD_GL_KHR_texture_compression_astc_ldr = (glad_gl_flags_extensions_gl[17] != 0);
+    GLAD_GL_KHR_texture_compression_astc_hdr = (glad_gl_flags_extensions_gl[18] != 0);
+    GLAD_GL_ARB_shader_image_load_store = (glad_gl_flags_extensions_gl[19] != 0);
 }
 
 // ------------------
@@ -1070,6 +1090,8 @@ int gladLoadGLUserPtr( GLADuserptrloadfunc load, void *userptr) {
     glad_gl_load_GL_VERSION_3_3(load, userptr);
 
     glad_gl_find_extensions_gl();
+    glad_gl_load_GL_ARB_clear_buffer_object(load, userptr);
+    glad_gl_load_GL_ARB_clear_texture(load, userptr);
     glad_gl_load_GL_ARB_compute_shader(load, userptr);
     glad_gl_load_GL_ARB_debug_output(load, userptr);
     glad_gl_load_GL_ARB_get_texture_sub_image(load, userptr);

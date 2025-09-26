@@ -129,13 +129,20 @@ void GLBuffer::clear(int offset, int bytes) {
         return;
     }
 
-    // Fill Buffer With Zeros
+    // Use Optimized glClearBufferSubData is available
     glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
-    void* map = glMapBufferRange(GL_COPY_WRITE_BUFFER, offset, bytes, GL_MAP_WRITE_BIT);
+    if (GLAD_GL_ARB_clear_buffer_object) {
+        glClearBufferSubData(GL_COPY_WRITE_BUFFER, GL_R8,
+            offset, bytes, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+        return;
+    }
+
+    // Fill Buffer With Zeros
+    void* map = glMapBufferRange(GL_COPY_WRITE_BUFFER,
+        offset, bytes, GL_MAP_WRITE_BIT);
     memset(map, 0, bytes);
     glUnmapBuffer(GL_COPY_WRITE_BUFFER);
 }
-
 
 // --------------------------
 // OpenGL GPU Buffer: Mapping

@@ -66,9 +66,23 @@ void GLTexture1D::download(int x, int size, int level, void* data) {
             toValue(m_transfer_size),
             data);
     // Use Framebuffer Trick for Old Devices
-    } else { 
-        compatDownload1D(x, size, level, data);
-    }
+    } else compatDownload1D(x, size, level, data);
+}
+
+void GLTexture1D::clear(int x, int size, int level) {
+    m_ctx->makeCurrentTexture(this);
+    GLenum target = m_tex_target;
+    glBindTexture(target, m_tex);
+
+    // Use Optimized glClearTexSubImage if available
+    if (GLAD_GL_ARB_clear_texture) {
+        glClearTexSubImage(m_tex, level,
+            x, 0, 0, size, 1, 1,
+            toValue(m_transfer_format),
+            toValue(m_transfer_size),
+            nullptr);
+    // Use Framebuffer Trick for Old Devices
+    } else compatClear1D(x, size, level);
 }
 
 // -----------------------------------------

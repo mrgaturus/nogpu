@@ -91,9 +91,23 @@ void GLTexture3D::download(int x, int y, int z, int w, int h, int depth, int lev
             toValue(m_transfer_size),
             data);
     // Use Framebuffer Trick for Old Devices
-    } else {
-        compatDownload3D(x, y, z, w, h, depth, level, data);
-    }
+    } else compatDownload3D(x, y, z, w, h, depth, level, data);
+}
+
+void GLTexture3D::clear(int x, int y, int z, int w, int h, int depth, int level) {
+    m_ctx->makeCurrentTexture(this);
+    GLenum target = m_tex_target;
+    glBindTexture(target, m_tex);
+
+    // Use Optimized glClearTexSubImage if available
+    if (GLAD_GL_ARB_clear_texture) {
+        glClearTexSubImage(m_tex, level,
+            x, y, z, w, h, depth,
+            toValue(m_transfer_format),
+            toValue(m_transfer_size),
+            nullptr);
+    // Use Framebuffer Trick for Old Devices
+    } else compatClear3D(x, y, z, w, h, depth, level);
 }
 
 // -----------------------------------------

@@ -241,6 +241,7 @@ class GPUTexture1D : public virtual GPUTexture {
         virtual void download(int x, int size, int level, void* data) = 0;
         virtual void unpack(int x, int size, int level, GPUBuffer *pbo, int offset) = 0;
         virtual void pack(int x, int size, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void clear(int x, int size, int level) = 0;
 };
 
 enum class GPUTexture2DMode : int {
@@ -257,6 +258,7 @@ class GPUTexture2D : public virtual GPUTexture {
         virtual void download(int x, int y, int w, int h, int level, void* data) = 0;
         virtual void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) = 0;
         virtual void pack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void clear(int x, int y, int w, int h, int level) = 0;
 };
 
 enum class GPUTexture3DMode : int {
@@ -272,6 +274,7 @@ class GPUTexture3D : public virtual GPUTexture {
         virtual void download(int x, int y, int z, int w, int h, int depth, int level, void* data) = 0;
         virtual void unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) = 0;
         virtual void pack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void clear(int x, int y, int z, int w, int h, int depth, int level) = 0;
 };
 
 enum class GPUTextureCubemapSide : int {
@@ -290,6 +293,7 @@ class GPUTextureCubemap : public virtual GPUTexture {
         virtual void download(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, void* data) = 0;
         virtual void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) = 0;
         virtual void pack(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void clear(GPUTextureCubemapSide side, int x, int y, int w, int h, int level) = 0;
 };
 
 class GPUTextureCubemapArray : public virtual GPUTexture {
@@ -299,6 +303,7 @@ class GPUTextureCubemapArray : public virtual GPUTexture {
         virtual void download(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data) = 0;
         virtual void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) = 0;
         virtual void pack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) = 0;
+        virtual void clear(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level) = 0;
 };
 
 #endif // NOGPU_TEXTURE_H

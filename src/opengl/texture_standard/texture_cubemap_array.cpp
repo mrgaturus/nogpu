@@ -72,9 +72,32 @@ void GLTextureCubemapArray::download(GPUTextureCubemapSide side, int x, int y, i
     } else {
         m_tex_target = target_side;
         compatDownload3D(x, y, target_index, w, h, 1, level, data);
-        m_tex_target = GL_TEXTURE_CUBE_MAP;
+        m_tex_target = GL_TEXTURE_CUBE_MAP_ARRAY_ARB;
     }
 }
+
+void GLTextureCubemapArray::clear(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level) {
+    m_ctx->makeCurrentTexture(this);
+    GLenum target = m_tex_target;
+    GLenum target_side = toValue(side);
+    GLint target_index = layer * 6 + (target_side - 0x8515);
+    glBindTexture(target, m_tex);
+
+    // Use Optimized glClearTexSubImage if available
+    if (GLAD_GL_ARB_clear_texture) {
+        glClearTexSubImage(m_tex, level,
+            x, y, target_index, w, h, 1,
+            toValue(m_transfer_format),
+            toValue(m_transfer_size),
+            nullptr);
+    // Use Framebuffer Trick for Old Devices
+    } else {
+        m_tex_target = target_side;
+        compatClear3D(x, y, target_index, w, h, 1, level);
+        m_tex_target = GL_TEXTURE_CUBE_MAP_ARRAY_ARB;
+    }
+}
+
 
 // ----------------------------------------------
 // Texture Cubemap: Buffer Manipulation using PBO

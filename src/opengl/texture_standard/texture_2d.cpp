@@ -102,6 +102,25 @@ void GLTexture2D::download(int x, int y, int w, int h, int level, void* data) {
     }
 }
 
+void GLTexture2D::clear(int x, int y, int w, int h, int level) {
+    m_ctx->makeCurrentTexture(this);
+    GLenum target = m_tex_target;
+    glBindTexture(target, m_tex);
+
+    // Use Optimized glClearTexSubImage if available
+    if (GLAD_GL_ARB_clear_texture) {
+        glClearTexSubImage(m_tex, level,
+            x, y, 0, w, h, 1,
+            toValue(m_transfer_format),
+            toValue(m_transfer_size),
+            nullptr);
+    } else if (m_tex_target == GL_TEXTURE_2D) {
+        compatClear2D(x, y, w, h, level);
+    } else if (m_tex_target == GL_TEXTURE_1D_ARRAY) {
+        compatClear3D(x, 0, y, w, 1, h, level);
+    }
+}
+
 // -----------------------------------------
 // Texture 2D: Buffer Manipulation using PBO
 // -----------------------------------------

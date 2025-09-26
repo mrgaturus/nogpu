@@ -71,15 +71,20 @@ class GLTexture : virtual public GPUTexture {
         GLuint m_sync_check;
         GLsync m_sync;
 
+    protected: // Texture Compatible: Downloading
+        void compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data);
+        void compatDownload2D(int x, int y, int w, int h, int level, void* data);
+        void compatDownload1D(int x, int size, int level, void* data);
+    protected: // Texture Compatible: Clearing
+        void compatClear3D(int x, int y, int z, int w, int h, int depth, int level);
+        void compatClear2D(int x, int y, int w, int h, int level);
+        void compatClear1D(int x, int size, int level);
+
     protected: // Texture Constructor
         GLTexture(GLContext* ctx);
         void destroy() override;
         void generateTexture();
         void generateSync();
-        // Texture Compatible Download
-        void compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data);
-        void compatDownload2D(int x, int y, int w, int h, int level, void* data);
-        void compatDownload1D(int x, int size, int level, void* data);
         friend GLContext;
         friend GLRenderBuffer;
 };
@@ -91,6 +96,7 @@ class GLTexture1D : GLTexture, GPUTexture1D {
     void download(int x, int size, int level, void* data) override;
     void unpack(int x, int size, int level, GPUBuffer *pbo, int offset) override;
     void pack(int x, int size, int level, GPUBuffer *pbo, int offset) override;
+    void clear(int x, int size, int level) override;
 
     // Texture Object Constructor
     protected: GLTexture1D(GLContext* ctx, GPUTexturePixelType type);
@@ -108,6 +114,7 @@ class GLTexture2D : GLTexture, GPUTexture2D {
     void download(int x, int y, int w, int h, int level, void* data) override;
     void unpack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
     void pack(int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
+    void clear(int x, int y, int w, int h, int level) override;
 
     // Texture Object Constructor
     protected: GLTexture2D(GLContext* ctx, GPUTexturePixelType type);
@@ -125,6 +132,7 @@ class GLTexture3D : GLTexture, GPUTexture3D {
     void download(int x, int y, int z, int w, int h, int depth, int level, void* data) override;
     void unpack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) override;
     void pack(int x, int y, int z, int w, int h, int depth, int level, GPUBuffer *pbo, int offset) override;
+    void clear(int x, int y, int z, int w, int h, int depth, int level) override;
 
     // Texture Object Constructor
     protected: GLTexture3D(GLContext* ctx, GPUTexturePixelType type);
@@ -139,6 +147,7 @@ class GLTextureCubemap : GLTexture, GPUTextureCubemap {
     void download(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, void* data) override;
     void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
     void pack(GPUTextureCubemapSide side, int x, int y, int w, int h, int level, GPUBuffer *pbo, int offset) override;
+    void clear(GPUTextureCubemapSide side, int x, int y, int w, int h, int level) override;
 
     // Texture Object Constructor
     protected: GLTextureCubemap(GLContext* ctx, GPUTexturePixelType type);
@@ -153,6 +162,7 @@ class GLTextureCubemapArray : GLTexture, GPUTextureCubemapArray {
     void download(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, void* data) override;
     void unpack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) override;
     void pack(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level, GPUBuffer *pbo, int offset) override;
+    void clear(GPUTextureCubemapSide side, int x, int y, int w, int h, int layer, int level) override;
 
     // Texture Object Constructor
     protected: GLTextureCubemapArray(GLContext* ctx, GPUTexturePixelType type);
