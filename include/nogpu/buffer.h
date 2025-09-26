@@ -37,10 +37,11 @@ class GPUBuffer {
 
     public: // GPU Buffer Usage
         virtual void orphan(int bytes, GPUBufferUsage usage) = 0;
-        virtual void upload(int bytes, void *data, GPUBufferUsage usage) = 0;
-        virtual void update(int bytes, int offset, void *data) = 0;
-        virtual void download(int bytes, int offset, void *data) = 0;
-        virtual void copy(GPUBuffer *dst, int bytes, int offset_read, int offset_write) = 0;
+        virtual void upload(void *data, int bytes, GPUBufferUsage usage) = 0;
+        virtual void update(void *data, int bytes, int offset) = 0;
+        virtual void download(void *data, int bytes, int offset) = 0;
+        virtual void copy(GPUBuffer *dest, int bytes, int offset_read, int offset_write) = 0;
+        virtual void clear(int offset, int bytes) = 0;
     public: // GPU Buffer Usage: Mapping
         virtual void* map(int bytes, int offset, GPUBufferMapping flags) = 0;
         virtual void unmap() = 0;

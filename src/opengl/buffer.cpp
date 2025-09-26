@@ -4,6 +4,7 @@
 #include "private/buffer.h"
 #include "private/context.h"
 #include "private/glad.h"
+#include <cstring>
 
 static GLenum toValue(GPUBufferUsage usage) {
     switch (usage) {
@@ -89,7 +90,7 @@ void GLBuffer::orphan(int bytes, GPUBufferUsage usage) {
     m_bytes = bytes;
 };
 
-void GLBuffer::upload(int bytes, void *data, GPUBufferUsage usage) {
+void GLBuffer::upload(void *data, int bytes, GPUBufferUsage usage) {
     m_ctx->makeCurrent(this);
     glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     glBufferData(GL_COPY_WRITE_BUFFER, bytes, data, toValue(usage));
@@ -97,29 +98,44 @@ void GLBuffer::upload(int bytes, void *data, GPUBufferUsage usage) {
     m_bytes = bytes;
 };
 
-void GLBuffer::update(int bytes, int offset, void *data) {
+void GLBuffer::update(void *data, int bytes, int offset) {
     m_ctx->makeCurrent(this);
     // Update Buffer Data
     glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     glBufferSubData(GL_COPY_WRITE_BUFFER, offset, bytes, data);
 };
 
-void GLBuffer::download(int bytes, int offset, void *data) {
+void GLBuffer::download(void *data, int bytes, int offset) {
     m_ctx->makeCurrent(this);
     // Download Buffer Data
     glBindBuffer(GL_COPY_READ_BUFFER, m_vbo);
     glGetBufferSubData(GL_COPY_READ_BUFFER, offset, bytes, data);
 };
 
-void GLBuffer::copy(GPUBuffer *data, int bytes, int offset_read, int offset_write) {
+void GLBuffer::copy(GPUBuffer *dest, int bytes, int offset_read, int offset_write) {
     m_ctx->makeCurrent(this);
-    GLBuffer* buf = static_cast<GLBuffer*>(data);
     // Copy Buffer Data from Other Buffer
-    glBindBuffer(GL_COPY_WRITE_BUFFER, buf->m_vbo);
+    GLBuffer* dst = static_cast<GLBuffer*>(dest);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, dst->m_vbo);
     glBindBuffer(GL_COPY_READ_BUFFER, this->m_vbo);
     glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER,
         offset_read, offset_write, bytes);
 };
+
+void GLBuffer::clear(int offset, int bytes) {
+    m_ctx->makeCurrent(this);
+    if (m_mapping) {
+        GPUReport::error("buffer is mapped");
+        return;
+    }
+
+    // Fill Buffer With Zeros
+    glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
+    void* map = glMapBufferRange(GL_COPY_WRITE_BUFFER, offset, bytes, GL_MAP_WRITE_BIT);
+    memset(map, 0, bytes);
+    glUnmapBuffer(GL_COPY_WRITE_BUFFER);
+}
+
 
 // --------------------------
 // OpenGL GPU Buffer: Mapping

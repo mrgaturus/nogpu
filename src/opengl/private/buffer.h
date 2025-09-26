@@ -13,10 +13,11 @@ class GLContext;
 class GLBuffer : public GPUBuffer {
     // GPU Buffer Usage
     void orphan(int bytes, GPUBufferUsage usage) override;
-    void upload(int bytes, void *data, GPUBufferUsage usage) override;
-    void update(int bytes, int offset, void *data) override;
-    void download(int bytes, int offset, void *data) override;
-    void copy(GPUBuffer *data, int bytes, int offset_read, int offset_write) override;
+    void upload(void *data, int bytes, GPUBufferUsage usage) override;
+    void update(void *data, int bytes, int offset) override;
+    void download(void *data, int bytes, int offset) override;
+    void copy(GPUBuffer *dest, int bytes, int offset_read, int offset_write) override;
+    void clear(int offset, int bytes) override;
     // GPU Buffer Usage: Mapping
     void* map(int bytes, int offset, GPUBufferMapping flags) override;
     void unmap() override;
