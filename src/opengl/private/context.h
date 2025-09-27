@@ -37,7 +37,7 @@ class GLContext : GPUContext {
     // GPU Rendering Objects
     GPUFrameBuffer* createFrameBuffer() override;
     GPURenderBuffer* createRenderBuffer(GPUTexturePixelType type) override;
-    GPUShader* createShader(GPUShaderType type, char* buffer, int size) override;
+    GPUShader* createShader(GPUShaderType type, GPUShaderSource data) override;
     GPUProgram* createProgram() override;
     GPUPipeline* createPipeline() override;
     GPUCommands* createCommands() override;

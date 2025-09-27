@@ -6,6 +6,7 @@
 #include "private/texture.h"
 #include "private/compressed.h"
 #include "private/framebuffer.h"
+#include "private/shader.h"
 #include "private/glad.h"
 
 // -------------------
@@ -84,12 +85,12 @@ GPURenderBuffer* GLContext::createRenderBuffer(GPUTexturePixelType type) {
     return new GLRenderBuffer(this, type);
 }
 
-GPUShader* GLContext::createShader(GPUShaderType type, char* buffer, int size) {
-    return nullptr;
+GPUShader* GLContext::createShader(GPUShaderType type, GPUShaderSource data) {
+    return new GLShader(this, type, data);
 }
 
 GPUProgram* GLContext::createProgram() {
-    return nullptr;
+    return new GLProgram(this);
 }
 
 GPUPipeline* GLContext::createPipeline() {

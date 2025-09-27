@@ -3,52 +3,65 @@
 #ifndef OPENGL_SHADER_H
 #define OPENGL_SHADER_H
 #include <nogpu/shader.h>
+#include "glad.h"
 
 // -----------------
 // OpenGL GPU Shader
 // -----------------
 
 class GLContext;
-class GLProgram;
 class GLShader : GPUShader {
-    bool checkCompile() override;
-    char* checkReport() override;
+    GLContext* m_ctx;
+    GLuint m_shader;
 
-    protected: // Shader Constructor
-        GLShader(GPUShaderType type, char* buffer, int size);
+    // GPU Shader: Check
+    bool compileCheck() override;
+    const char* compileReport() override;
+    // GPU Shader: Properties
+    GPUShaderType getType() override;
+    GPUShaderDriver getDriver() override;
+
+    protected: // OpenGL Shader Constructor
+        GLShader(GLContext* ctx, GPUShaderType type, GPUShaderSource data);
         void destroy() override;
         friend GLContext;
 };
 
+// ------------------
+// OpenGL GPU Uniform
+// ------------------
+
+class GLProgram;
 class GLUniform : GPUUniform {
-    protected: // Uniform Constructor
-        GLUniform(char* label);
-        void destroy() override;
+    unsigned int m_value[16];
+    GLProgram* m_program;
+    GLContext* m_ctx;
+    GLuint m_uniform;
+    unsigned int m_name;
+
+    // GPU Sampler Attributes: Value
+    void setValueRaw(void *src) override;
+    void setValueBoolean(bool value) override;
+    void setValueInteger(int value) override;
+    void setValueFloat(float value) override;
+
+    // GPU Sampler Attributes: Sampler
+    void setBlockSampler(int index) override;
+    void setBlockBuffer(int index) override;
+    void setBlockShaderStorage(int index) override;
+    void setBlockAtomicCounter(int index) override;
+
+    // GPU Sampler Attributes: Getter
+    GPUProgram* getProgram() override;
+    GPUUniformType getType() override;
+    void getValue(void *dest) override;
+    int getBytes() override;
+
+    protected: // OpenGL Uniform Constructor
+        GLUniform(GLProgram* program, unsigned int name, GPUUniformType type);
+        void destroy();
         friend GLProgram;
-};
-
-class GLUniformSampler : GLUniform, GPUUniformSampler {
-    void setTexture(GPUTexture *texture) override;
-    protected: // Uniform Constructor
-        GLUniformSampler(char* label);
-        friend GPUProgram;
-};
-
-class GLUniformBlock : GLUniform, GPUUniformBlock {
-    void setBuffer(GPUBuffer *m_ubo) override;
-    protected: // Uniform Constructor
-        GLUniformBlock(char* label, int index);
-        friend GPUProgram;
-};
-
-class GLUniformValue : GLUniform, GPUUniformValue {
-    void setValue(void *value) override;
-    void getValue(void *value) override;
-    int getTypeSize() override;
-
-    protected: // Uniform Constructor
-        GLUniformValue(GPUUniformValueType type, char* label);
-        friend GPUProgram;
+        friend GLContext;
 };
 
 // ------------------
@@ -56,22 +69,23 @@ class GLUniformValue : GLUniform, GPUUniformValue {
 // ------------------
 
 class GLProgram : GPUProgram {
-    // GPU Program Shader Attachment
+    GLContext* m_ctx;
+    GLuint m_program;
+
+    // GPU Program Shaders
     void attachVertex(GPUShader *vertex) override;
     void attachFragment(GPUShader *fragment) override;
     void attachCompute(GPUShader *compute) override;
     bool compileProgram() override;
-    char* compileReport() override;
+    const char* compileReport() override;
 
     // GPU Program Uniforms
-    GPUUniformValue *uniformValue(char* label) override;
-    GPUUniformSampler *uniformSampler(char* label) override;
-    GPUUniformBlock *uniformBlock(char* label, int index) override;
-    GPUUniform *removeUniform(char* label) override;
-    GPUUniform *getUniform(char* label) override;
+    GPUUniform* createUniform(const char* label, GPUUniformType type) override;
+    void removeUniformObject(GPUUniform* uniform) override;
+    void removeUniformLabel(const char* label) override;
 
-    protected: // Program Constructor
-        GLProgram();
+    protected: // OpenGL Program Constructor
+        GLProgram(GLContext* ctx);
         void destroy() override;
         friend GLContext;
 };

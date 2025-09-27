@@ -2,8 +2,6 @@
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #ifndef NOGPU_SHADER_H
 #define NOGPU_SHADER_H
-#include "buffer.h"
-#include "texture.h"
 
 // ---------------------------
 // GPU Objects: Program Shader
@@ -15,61 +13,46 @@ enum class GPUShaderType : int {
     SHADER_COMPUTE
 };
 
-class GPUProgram;
-class GPUShader {
-    protected: GPUShaderType m_type;
-    protected: GPUShader(GPUShaderType type, char* buffer, int size);
-    protected: ~GPUShader();
-    public: virtual void destroy() = 0;
+enum class GPUShaderDriver : int {
+    SHADER_GLSL, // OpenGL
+    SHADER_SPIRV, // Vulkan
+    SHADER_DXBC, // DirectX 11
+    SHADER_DXIL, // DirectX 12
+    SHADER_MTL, // Metal
+};
 
-    public: // GPU Shader Attributes
-        virtual bool checkCompile() = 0;
-        virtual char* checkReport() = 0;
-        GPUShaderType getType() { return m_type; };
+typedef struct {
+    const char* buffer;
+    GPUShaderDriver driver;
+    int bytes;
+} GPUShaderSource;
+
+class GPUShader {
+    public: // GPU Shader: Check
+        virtual void destroy() = 0;
+        virtual bool compileCheck() = 0;
+        virtual const char* compileReport() = 0;
+    public: // GPU Shader: Properties
+        virtual GPUShaderType getType() = 0;
+        virtual GPUShaderDriver getDriver() = 0;
 };
 
 // ----------------------------
 // GPU Objects: Program Uniform
 // ----------------------------
 
-class GPUUniform {
-    protected:
-        char* m_label;
-        GPUProgram *program;
-        GPUUniform(char* label);
-        ~GPUUniform();
-    public: virtual void destroy() = 0;
-    public: char* getLabel() { return m_label; };
-};
+enum class GPUUniformType : int {
+    UNIFORM_BLOCK_SAMPLER,
+    UNIFORM_BLOCK_BUFFER,
+    UNIFORM_BLOCK_SHADER_STORAGE,
+    UNIFORM_BLOCK_ATOMIC_COUNTER,
 
-class GPUUniformSampler : GPUUniform {
-    protected: GPUTexture *m_texture;
-    protected: GPUUniformSampler(char* label);
-    public: // GPU Sampler Attributes
-        virtual void setTexture(GPUTexture *texture) = 0;
-        GPUTexture *getTexture() { return m_texture; };
-};
-
-enum class GPUUniformBlockType : int {
-    BLOCK_UNIFORM_BUFFER,
-    BLOCK_SHADER_STORAGE_BUFFER,
-    BLOCK_ATOMIC_COUNTER_BUFFER
-};
-
-class GPUUniformBlock : GPUUniform {
-    protected: // GPU Uniform Block
-        GPUUniformBlockType m_type;
-        GPUBuffer *m_ubo;
-        int m_index;
-
-    protected: GPUUniformBlock(char* label, int index);
-    public: // GPU Sampler Attributes
-        virtual void setBuffer(GPUBuffer *m_ubo) = 0;
-        GPUBuffer *getBuffer() { return m_ubo; };
-        int getIndex() { return m_index; };
-};
-
-enum class GPUUniformValueType : int {
+    // Booleans
+    UNIFORM_BOOL,
+    UNIFORM_BOOL_x2,
+    UNIFORM_BOOL_x3,
+    UNIFORM_BOOL_x4,
+    // Integers & Floats
     UNIFORM_INT,
     UNIFORM_INT_x2,
     UNIFORM_INT_x3,
@@ -101,20 +84,28 @@ enum class GPUUniformValueType : int {
     UNIFORM_MATRIX_TRANSPOSED_2x4,
     UNIFORM_MATRIX_TRANSPOSED_4x2,
     UNIFORM_MATRIX_TRANSPOSED_3x4,
-    UNIFORM_MATRIX_TRANSPOSED_4x3,
+    UNIFORM_MATRIX_TRANSPOSED_4x3
 };
 
-class GPUUniformValue : GPUUniform {
-    protected: // GPU Uniform Value
-        GPUUniformValueType m_type;
-        unsigned int m_value[16];
+class GPUProgram;
+class GPUUniform {
+    public: // GPU Sampler Attributes: Value
+        virtual void setValueRaw(void *src) = 0;
+        virtual void setValueBoolean(bool value) = 0;
+        virtual void setValueInteger(int value) = 0;
+        virtual void setValueFloat(float value) = 0;
 
-    protected: GPUUniformValue(GPUUniformValueType type, char* label);
-    public: // GPU Sampler Attributes
-        virtual void setValue(void *value) = 0;
-        virtual void getValue(void *value) = 0;
-        GPUUniformValueType getType() { return m_type; };
-        virtual int getTypeSize() = 0;
+    public: // GPU Sampler Attributes: Sampler
+        virtual void setBlockSampler(int index) = 0;
+        virtual void setBlockBuffer(int index) = 0;
+        virtual void setBlockShaderStorage(int index) = 0;
+        virtual void setBlockAtomicCounter(int index) = 0;
+
+    public: // GPU Sampler Attributes: Getter
+        virtual GPUProgram* getProgram() = 0;
+        virtual GPUUniformType getType() = 0;
+        virtual void getValue(void *dest) = 0;
+        virtual int getBytes() = 0;
 };
 
 // --------------------
@@ -122,24 +113,18 @@ class GPUUniformValue : GPUUniform {
 // --------------------
 
 class GPUProgram {
-    protected:
-        GPUProgram();
-        ~GPUProgram();
-    public: virtual void destroy() = 0;
-
-    public: // GPU Program Shader Attachment
+    public: // GPU Program Shaders
+        virtual void destroy() = 0;
         virtual void attachVertex(GPUShader *vertex) = 0;
         virtual void attachFragment(GPUShader *fragment) = 0;
         virtual void attachCompute(GPUShader *compute) = 0;
         virtual bool compileProgram() = 0;
-        virtual char* compileReport() = 0;
+        virtual const char* compileReport() = 0;
 
     public: // GPU Program Uniforms
-        virtual GPUUniformValue *uniformValue(char* label) = 0;
-        virtual GPUUniformSampler *uniformSampler(char* label) = 0;
-        virtual GPUUniformBlock *uniformBlock(char* label, int index) = 0;
-        virtual GPUUniform *removeUniform(char* label) = 0;
-        virtual GPUUniform *getUniform(char* label) = 0;
+        virtual GPUUniform* createUniform(const char* label, GPUUniformType type) = 0;
+        virtual void removeUniformObject(GPUUniform* uniform) = 0;
+        virtual void removeUniformLabel(const char* label) = 0;
 };
 
 #endif // NOGPU_SHADER_H

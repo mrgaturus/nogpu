@@ -39,7 +39,7 @@ class GPUContext {
     public: // GPU Rendering Objects
         virtual GPUFrameBuffer* createFrameBuffer() = 0;
         virtual GPURenderBuffer* createRenderBuffer(GPUTexturePixelType type) = 0;
-        virtual GPUShader* createShader(GPUShaderType type, char* buffer, int size) = 0;
+        virtual GPUShader* createShader(GPUShaderType type, GPUShaderSource data) = 0;
         virtual GPUProgram* createProgram() = 0;
         virtual GPUPipeline* createPipeline() = 0;
         virtual GPUCommands* createCommands() = 0;
