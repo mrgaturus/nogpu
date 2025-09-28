@@ -76,8 +76,8 @@ GPUMemoryBarrier operator&(GPUMemoryBarrier a, GPUMemoryBarrier b) {
 
 int computeUniformBytes(GPUUniformType type) {
     switch (type) {
-        case GPUUniformType::UNIFORM_BLOCK_SAMPLER:
-        case GPUUniformType::UNIFORM_BLOCK_BUFFER:
+        case GPUUniformType::UNIFORM_TEXTURE_SAMPLER:
+        case GPUUniformType::UNIFORM_BLOCK_BUFFER_OBJECT:
         case GPUUniformType::UNIFORM_BLOCK_SHADER_STORAGE:
         case GPUUniformType::UNIFORM_BLOCK_ATOMIC_COUNTER:
             return sizeof(unsigned int) * 1;

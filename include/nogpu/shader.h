@@ -48,8 +48,8 @@ class GPUShader {
 // ----------------------------
 
 enum class GPUUniformType : int {
-    UNIFORM_BLOCK_SAMPLER,
-    UNIFORM_BLOCK_BUFFER,
+    UNIFORM_TEXTURE_SAMPLER,
+    UNIFORM_BLOCK_BUFFER_OBJECT,
     UNIFORM_BLOCK_SHADER_STORAGE,
     UNIFORM_BLOCK_ATOMIC_COUNTER,
 
@@ -96,21 +96,20 @@ enum class GPUUniformType : int {
 class GPUProgram;
 class GPUUniform {
     public: // GPU Sampler Attributes: Value
-        virtual void setValueRaw(void *src) = 0;
+        virtual void setValueRaw(void *data) = 0;
         virtual void setValueBoolean(bool value) = 0;
         virtual void setValueInteger(int value) = 0;
         virtual void setValueFloat(float value) = 0;
-
     public: // GPU Sampler Attributes: Sampler
-        virtual void setBlockSampler(int index) = 0;
-        virtual void setBlockBuffer(int index) = 0;
+        virtual void setTextureSampler(int index) = 0;
+        virtual void setBlockBufferObject(int index) = 0;
         virtual void setBlockShaderStorage(int index) = 0;
         virtual void setBlockAtomicCounter(int index) = 0;
 
     public: // GPU Sampler Attributes: Getter
         virtual GPUProgram* getProgram() = 0;
         virtual GPUUniformType getType() = 0;
-        virtual void getValue(void *dest) = 0;
+        virtual void getValue(void *output) = 0;
         virtual int getBytes() = 0;
 };
 

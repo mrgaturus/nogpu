@@ -41,29 +41,29 @@ class GLUniform : GPUUniform {
     unsigned int m_value[16];
     GLProgram* m_program;
     GLContext* m_ctx;
-    GPUUniformType m_type;
     GLuint m_uniform;
+    GPUUniformType m_type;
 
     // GPU Sampler Attributes: Value
-    void setValueRaw(void *src) override;
+    void setValueRaw(void *data) override;
     void setValueBoolean(bool value) override;
     void setValueInteger(int value) override;
     void setValueFloat(float value) override;
-
     // GPU Sampler Attributes: Sampler
-    void setBlockSampler(int index) override;
-    void setBlockBuffer(int index) override;
+    void setTextureSampler(int index) override;
+    void setBlockBufferObject(int index) override;
     void setBlockShaderStorage(int index) override;
     void setBlockAtomicCounter(int index) override;
 
     // GPU Sampler Attributes: Getter
     GPUProgram* getProgram() override;
     GPUUniformType getType() override;
-    void getValue(void *dest) override;
+    void getValue(void *output) override;
     int getBytes() override;
 
     protected: // OpenGL Uniform Constructor
         GLUniform(GLProgram* program, GPUUniformType type, const char* name, bool &result);
+        void setBlockIndex(int index, GPUUniformType type, const char* msg);
         void destroy();
         friend GLProgram;
         friend GLContext;
