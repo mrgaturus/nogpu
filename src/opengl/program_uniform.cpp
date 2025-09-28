@@ -3,7 +3,7 @@
 #include "private/shader.h"
 #include "private/context.h"
 
-GLUniform::GLUniform(GLProgram* program, unsigned int name, GPUUniformType type) {
+GLUniform::GLUniform(GLProgram* program, GPUUniformType type, const char* name, bool &result) {
 
 }
 

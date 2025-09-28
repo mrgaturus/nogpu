@@ -2,6 +2,7 @@
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #ifndef OPENGL_SHADER_H
 #define OPENGL_SHADER_H
+#include <nogpu_map.h>
 #include <nogpu/shader.h>
 #include "glad.h"
 
@@ -9,6 +10,7 @@
 // OpenGL GPU Shader
 // -----------------
 
+class GLProgram;
 class GLContext;
 class GLShader : GPUShader {
     GLContext* m_ctx;
@@ -28,19 +30,19 @@ class GLShader : GPUShader {
         GLShader(GLContext* ctx, GPUShaderType type, GPUShaderSource data);
         void destroy() override;
         friend GLContext;
+        friend GLProgram;
 };
 
 // ------------------
 // OpenGL GPU Uniform
 // ------------------
 
-class GLProgram;
 class GLUniform : GPUUniform {
     unsigned int m_value[16];
     GLProgram* m_program;
     GLContext* m_ctx;
+    GPUUniformType m_type;
     GLuint m_uniform;
-    unsigned int m_name;
 
     // GPU Sampler Attributes: Value
     void setValueRaw(void *src) override;
@@ -61,7 +63,7 @@ class GLUniform : GPUUniform {
     int getBytes() override;
 
     protected: // OpenGL Uniform Constructor
-        GLUniform(GLProgram* program, unsigned int name, GPUUniformType type);
+        GLUniform(GLProgram* program, GPUUniformType type, const char* name, bool &result);
         void destroy();
         friend GLProgram;
         friend GLContext;
@@ -71,9 +73,18 @@ class GLUniform : GPUUniform {
 // OpenGL GPU Program
 // ------------------
 
+enum class GLProgramStatus : int {
+    STATUS_NONE,
+    STATUS_COMPILED,
+    STATUS_ERROR
+};
+
 class GLProgram : GPUProgram {
+    GPUHashmap<GLUniform*> m_uniforms;
     GLContext* m_ctx;
+    GLProgramStatus m_status;
     GLuint m_program;
+    char* m_report;
 
     // GPU Program Shaders
     void attachVertex(GPUShader *vertex) override;
@@ -84,13 +95,16 @@ class GLProgram : GPUProgram {
 
     // GPU Program Uniforms
     GPUUniform* createUniform(const char* label, GPUUniformType type) override;
-    void removeUniformObject(GPUUniform* uniform) override;
-    void removeUniformLabel(const char* label) override;
+    GPUUniform* getUniform(const char* label) override;
+    bool removeUniform(const char* label) override;
 
-    protected: // OpenGL Program Constructor
+    protected: // OpenGL Program
         GLProgram(GLContext* ctx);
         void destroy() override;
+        void attachShader(GPUShader *shader, GPUShaderType type, const char* msg);
         friend GLContext;
+        friend GLUniform;
+        friend GLShader;
 };
 
 #endif // OPENGL_SHADER_H

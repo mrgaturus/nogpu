@@ -129,8 +129,8 @@ class GPUProgram {
 
     public: // GPU Program Uniforms
         virtual GPUUniform* createUniform(const char* label, GPUUniformType type) = 0;
-        virtual void removeUniformObject(GPUUniform* uniform) = 0;
-        virtual void removeUniformLabel(const char* label) = 0;
+        virtual GPUUniform* getUniform(const char* label) = 0;
+        virtual bool removeUniform(const char* label) = 0;
 };
 
 #endif // NOGPU_SHADER_H
