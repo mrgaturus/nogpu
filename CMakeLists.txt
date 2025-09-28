@@ -18,6 +18,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(nogpu STATIC
     src/map.cpp
     src/nogpu.cpp
+    src/private_texture.cpp
     src/private.cpp
     src/report.cpp)
 

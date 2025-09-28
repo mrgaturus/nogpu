@@ -4,17 +4,19 @@
 #define NOGPU_PRIVATE_H
 #include <nogpu/device.h>
 #include <nogpu/texture.h>
+#include <nogpu/shader.h>
 
 unsigned int next_power_of_two(unsigned int v);
 unsigned int levels_power_of_two(int w, int h, int limit);
 unsigned int driver_option_flag(GPUDriverOption driver);
 unsigned int driver_feature_flag(GPUDriverFeature feature);
+int computeUniformBytes(GPUUniformType type);
 // Texture Pixel Types: Operations
 bool canTextureBuffer(GPUTexturePixelType type);
 bool canTransferChange(GPUTexturePixelType type);
 GPUTextureTransferFormat computeTransferFormat(GPUTexturePixelType type);
 GPUTextureTransferSize computeTransferSize(GPUTexturePixelType type);
-int computeBytesPerPixel(GPUTextureTransferFormat format, GPUTextureTransferSize size);
+int computeTransferBytesPerPixel(GPUTextureTransferFormat format, GPUTextureTransferSize size);
 
 // ---------------------
 // GPU Driver: Reporting

@@ -46,7 +46,7 @@ void GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth, i
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 
     unsigned char* dst = static_cast<unsigned char*>(data);
-    int transfer_bytes = computeBytesPerPixel(m_transfer_format, m_transfer_size);
+    int transfer_bytes = computeTransferBytesPerPixel(m_transfer_format, m_transfer_size);
     int layer_bytes = transfer_bytes * w * h;
 
     // Read Framebuffer for Layers
