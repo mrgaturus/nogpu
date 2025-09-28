@@ -22,9 +22,15 @@ enum class GPUShaderDriver : int {
 };
 
 typedef struct {
-    const char* buffer;
     GPUShaderDriver driver;
-    int bytes;
+    // Shader Buffer
+    int buffer_bytes;
+    const char* buffer;
+    const char* entrypoint;
+    // Specialized Constants
+    int specialized_count;
+    const unsigned int* specialized_constants;
+    const unsigned int* specialized_indices;
 } GPUShaderSource;
 
 class GPUShader {

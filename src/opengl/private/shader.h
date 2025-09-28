@@ -13,6 +13,9 @@ class GLContext;
 class GLShader : GPUShader {
     GLContext* m_ctx;
     GLuint m_shader;
+    GPUShaderType m_type;
+    GPUShaderDriver m_driver;
+    char* m_report;
 
     // GPU Shader: Check
     bool compileCheck() override;
