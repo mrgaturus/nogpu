@@ -4,10 +4,6 @@
 #define NOGPU_PIPELINE_H
 #include "shader.h"
 
-// -----------------------------
-// GPU Context: State Primitives
-// -----------------------------
-
 typedef struct {
     bool x, y, w, h;
 } GPURectangle;
@@ -16,13 +12,9 @@ typedef struct {
     float r, g, b, a;
 } GPUColor;
 
-typedef struct {
-    bool r, g, b, a;
-} GPUColorMask;
-
-// ---------------------------
-// GPU Context: Pipeline State
-// ---------------------------
+// ----------------------------
+// GPU Pipeline: Blending State
+// ----------------------------
 
 enum class GPUBlendEquation : int {
     BLEND_FUNC_ADD,
@@ -50,56 +42,7 @@ enum class GPUBlendFactor : int {
     BLEND_SRC_ALPHA_SATURATE,
 };
 
-enum class GPUConditionFunc : int {
-    CONDITION_NEVER,
-    CONDITION_EQUAL,
-    CONDITION_NOTEQUAL,
-    CONDITION_LESS,
-    CONDITION_LEQUAL,
-    CONDITION_GREATER,
-    CONDITION_GEQUAL,
-    CONDITION_ALWAYS,
-};
-
-enum class GPUStencilFunc : int {
-    STENCIL_KEEP,
-    STENCIL_ZERO,
-    STENCIL_REPLACE,
-    STENCIL_INCR,
-    STENCIL_INCR_WRAP,
-    STENCIL_DECR,
-    STENCIL_DECR_WRAP,
-    STENCIL_INVERT
-};
-
-enum class GPUFaceMode : int {
-    FACE_BACK,
-    FACE_FRONT,
-    FACE_FRONT_AND_BACK
-};
-
-enum class GPUWindingMode : int {
-    WINDING_CW,
-    WINDING_CCW,
-};
-
-// ---------------------
-// GPU Context: Pipeline
-// ---------------------
-
-enum class GPUPipelineCapability : int {
-    CAPABILITY_BLENDING,
-    CAPABILITY_FACE_CULL,
-    CAPABILITY_DEPTH_TEST,
-    CAPABILITY_DEPTH_BIAS,
-    CAPABILITY_PRIMITIVE_RESTART,
-    CAPABILITY_RASTERIZER_DISCARD,
-    CAPABILITY_SCISSOR_TEST,
-    CAPABILITY_STENCIL_TEST,
-    CAPABILITY_MULTISAMPLE,
-};
-
-typedef struct {
+typedef struct GPUPipelineBlending {
     struct GPUPipelineBlendingEquation {
         GPUBlendEquation rgb;
         GPUBlendEquation alpha;
@@ -110,17 +53,47 @@ typedef struct {
         GPUBlendFactor dstRGB, dstAlpha;
     } factor;
 
-    GPUColor constantColor;
+    GPUColor color;
 } GPUPipelineBlending;
 
-typedef struct {
+// --------------------------
+// GPU Pipeline: Face Winding
+// --------------------------
+
+enum class GPUFaceMode : int {
+    FACE_BACK,
+    FACE_FRONT,
+    FACE_FRONT_AND_BACK
+};
+
+enum class GPUFaceWinding : int {
+    FACE_WINDING_CW,
+    FACE_WINDING_CCW,
+};
+
+typedef struct GPUPipelineFace {
     GPUFaceMode cull;
-    GPUWindingMode front;
+    GPUFaceWinding winding;
 } GPUPipelineFace;
 
-typedef struct {
-    GPUConditionFunc func;
-    bool mask;
+// ------------------------
+// GPU Pipeline: Depth Mode
+// ------------------------
+
+enum class GPUConditionMode : int {
+    CONDITION_NEVER,
+    CONDITION_EQUAL,
+    CONDITION_NOTEQUAL,
+    CONDITION_LESS,
+    CONDITION_LEQUAL,
+    CONDITION_GREATER,
+    CONDITION_GEQUAL,
+    CONDITION_ALWAYS,
+};
+
+typedef struct GPUPipelineDepth {
+    GPUConditionMode condition;
+    unsigned int mask;
 
     struct GPUPipelineDepthBias {
         float constantFactor;
@@ -129,76 +102,90 @@ typedef struct {
     } bias;
 } GPUPipelineDepth;
 
-typedef struct {
-    struct GPUPipelineStencilFunc {
+// -------------------------
+// GPU Context: Stencil Mode
+// -------------------------
+
+enum class GPUStencilMode : int {
+    STENCIL_KEEP,
+    STENCIL_ZERO,
+    STENCIL_REPLACE,
+    STENCIL_INCR,
+    STENCIL_INCR_WRAP,
+    STENCIL_DECR,
+    STENCIL_DECR_WRAP,
+    STENCIL_INVERT
+};
+
+typedef struct GPUPipelineStencil {
+    struct GPUPipelineStencilFunction {
         GPUFaceMode face;
-        GPUConditionFunc func;
-        int test; unsigned int mask;
-    } func;
+        GPUConditionMode condition;
+        unsigned int mask;
+        int test;
+    } function;
 
     struct GPUPipelineStencilMask {
         GPUFaceMode face;
         unsigned int mask;
     } mask;
 
-    struct GPUPipelineStencilOp {
+    struct GPUPipelineStencilMode {
         GPUFaceMode face;
-        GPUStencilFunc fail;
-        GPUStencilFunc pass;
-        GPUStencilFunc depth_pass;
-    } op;
+        GPUStencilMode fail;
+        GPUStencilMode pass;
+        GPUStencilMode depth_pass;
+    } mode;
 } GPUPipelineStencil;
 
+// ---------------------
+// GPU Context: Pipeline
+// ---------------------
+
+enum class GPUPipelineCapability : int {
+    CAPABILITY_BLENDING,
+    CAPABILITY_FACE_CULL,
+    CAPABILITY_DEPTH,
+    CAPABILITY_DEPTH_BIAS,
+    CAPABILITY_SCISSOR,
+    CAPABILITY_STENCIL,
+    CAPABILITY_PRIMITIVE_RESTART,
+    CAPABILITY_RASTERIZE_DISCARD,
+    CAPABILITY_MULTISAMPLE,
+};
+
 class GPUPipeline {
-    GPUProgram* m_program;
-
-    unsigned int m_capabilities;
-    GPUPipelineBlending m_blending;
-    GPUPipelineFace m_face;
-    GPUPipelineDepth m_depth;
-    GPUPipelineStencil m_stencil;
-
-    float m_lineWidth;
-    GPUColor m_clearColor;
-    GPUColorMask m_maskColor;
-    GPURectangle m_scissor;
-    GPURectangle m_viewport;
-
-    // Pipeline Constructor
-    protected:
-        GPUPipeline(GPUProgram* program);
-        ~GPUPipeline();
-    public: virtual void destroy() { delete this; };
-
     public: // Pipeline Capabilites
-        bool check(GPUPipelineCapability cap) { return (m_capabilities & (1 << (unsigned int) cap)) != 0; }
-        virtual void enable(GPUPipelineCapability cap) { m_capabilities |= (1 << (unsigned int) cap); }
-        virtual void disable(GPUPipelineCapability cap) { m_capabilities &= ~(1 << (unsigned int) cap); }
+        virtual void destroy() = 0;
+        virtual bool checkCapability(GPUPipelineCapability cap) = 0;
+        virtual void enableCapability(GPUPipelineCapability cap) = 0;
+        virtual void disableCapability(GPUPipelineCapability cap) = 0;
 
     public: // Pipeline Attributes: Setters
-        virtual void setProgram(GPUProgram* program) { m_program = program; };
-        virtual void setBlending(GPUPipelineBlending blending) { m_blending = blending; }
-        virtual void setFace(GPUPipelineFace face) { m_face = face; }
-        virtual void setDepth(GPUPipelineDepth depth) { m_depth = depth; }
-        virtual void setStencil(GPUPipelineStencil stencil) { m_stencil = stencil; }
+        virtual void setProgram(GPUProgram *program) = 0;
+        virtual void setBlending(GPUPipelineBlending blending) = 0;
+        virtual void setFace(GPUPipelineFace face) = 0;
+        virtual void setDepth(GPUPipelineDepth depth) = 0;
+        virtual void setStencil(GPUPipelineStencil stencil) = 0;
         // GPU Context State: Viewport
-        virtual void setLineWidth(float width) { m_lineWidth = width; }
-        virtual void setClearColor(GPUColor color) { m_clearColor = color; }
-        virtual void setMaskColor(GPUColorMask mask) { m_maskColor = mask; }
-        virtual void setViewport(GPURectangle rect) { m_viewport = rect; }
-        virtual void setScissor(GPURectangle rect) { m_scissor = rect; }
+        virtual void setLineWidth(float width) = 0;
+        virtual void setClearColor(GPUColor color) = 0;
+        virtual void setMaskColor(GPUColor mask) = 0;
+        virtual void setViewport(GPURectangle rect) = 0;
+        virtual void setScissor(GPURectangle rect) = 0;
 
     public: // Pipeline Attributes: Getters
-        GPUPipelineBlending getBlending() { return m_blending; }
-        GPUPipelineFace getFace() { return m_face; }
-        GPUPipelineDepth getDepth() { return m_depth; }
-        GPUPipelineStencil getStencil() { return m_stencil; }
+        virtual GPUProgram* getProgram() = 0;
+        virtual GPUPipelineBlending getBlending() = 0;
+        virtual GPUPipelineFace getFace() = 0;
+        virtual GPUPipelineDepth getDepth() = 0;
+        virtual GPUPipelineStencil getStencil() = 0;
         // GPU Context State: Viewport
-        float getLineWidth() { return m_lineWidth; }
-        GPUColor getClearColor() { return m_clearColor; }
-        GPUColorMask getMaskColor() { return m_maskColor; }
-        GPURectangle getViewport() { return m_viewport; }
-        GPURectangle getScissor() { return m_scissor; }
+        virtual float getLineWidth() = 0;
+        virtual GPUColor getClearColor() = 0;
+        virtual GPUColor getMaskColor() = 0;
+        virtual GPURectangle getViewport() = 0;
+        virtual GPURectangle getScissor() = 0;
 };
 
 #endif // NOGPU_PIPELINE_H
