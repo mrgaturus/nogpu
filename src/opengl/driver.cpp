@@ -42,6 +42,13 @@ unsigned int GLDriver::initializeGL(void* getProcAddress) {
     if (GLAD_GL_KHR_texture_compression_astc_ldr || GLAD_GL_KHR_texture_compression_astc_hdr)
         features |= driver_feature_flag(GPUDriverFeature::DRIVER_TEXTURE_COMPRESSED_ASTC);
 
+    // Check Extra Extensions: Uniforms
+    if (GLAD_GL_ARB_uniform_buffer_object)
+        features |= driver_feature_flag(GPUDriverFeature::DRIVER_UNIFORM_BUFFER_OBJECT);
+    if (GLAD_GL_ARB_shader_storage_buffer_object)
+        features |= driver_feature_flag(GPUDriverFeature::DRIVER_UNIFORM_SHADER_STORAGE);
+    if (GLAD_GL_ARB_shader_atomic_counters)
+        features |= driver_feature_flag(GPUDriverFeature::DRIVER_UNIFORM_ATOMIC_COUNTER);
     // Check Extra Extensions: SPIR-V
     if (GLAD_GL_ARB_gl_spirv)
         features |= driver_feature_flag(GPUDriverFeature::DRIVER_SHADER_SPIRV);

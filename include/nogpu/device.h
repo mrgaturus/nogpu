@@ -72,6 +72,10 @@ enum class GPUDriverFeature : int {
     DRIVER_TEXTURE_COMPRESSED_ETC2,
     DRIVER_TEXTURE_COMPRESSED_ASTC,
 
+    // Shader Uniform Blocks
+    DRIVER_UNIFORM_BUFFER_OBJECT,
+    DRIVER_UNIFORM_SHADER_STORAGE,
+    DRIVER_UNIFORM_ATOMIC_COUNTER,
     // Built-in Shader Compiling
     DRIVER_SHADER_GLSL, // OpenGL
     DRIVER_SHADER_SPIRV, // Vulkan
