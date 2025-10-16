@@ -41,10 +41,7 @@ void GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth, i
         return;
     }
 
-    GLint read = 0;
-    glGetIntegerv(GL_READ_BUFFER, &read);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
-
     unsigned char* dst = static_cast<unsigned char*>(data);
     int transfer_bytes = computeTransferBytesPerPixel(m_transfer_format, m_transfer_size);
     int layer_bytes = transfer_bytes * w * h;
@@ -58,9 +55,6 @@ void GLTexture::compatDownload3D(int x, int y, int z, int w, int h, int depth, i
             toValue(m_transfer_size),
             dst); dst += layer_bytes;
     }
-
-    // Restore Read Buffer
-    glReadBuffer(read);
 }
 
 void GLTexture::compatDownload2D(int x, int y, int w, int h, int level, void* data) {
@@ -79,17 +73,12 @@ void GLTexture::compatDownload2D(int x, int y, int w, int h, int level, void* da
         return;
     }
 
-    GLint read = 0;
-    glGetIntegerv(GL_READ_BUFFER, &read);
     // Read Framebuffer Pixels
     glReadBuffer(GL_COLOR_ATTACHMENT0);
     glReadPixels(x, y, w, h,
         toValue(m_transfer_format),
         toValue(m_transfer_size),
         data);
-
-    // Restore Read Buffer
-    glReadBuffer(read);
 }
 
 void GLTexture::compatDownload1D(int x, int size, int level, void* data) {
@@ -108,17 +97,12 @@ void GLTexture::compatDownload1D(int x, int size, int level, void* data) {
         return;
     }
 
-    GLint read = 0;
-    glGetIntegerv(GL_READ_BUFFER, &read);
     // Read Framebuffer Pixels
     glReadBuffer(GL_COLOR_ATTACHMENT0);
     glReadPixels(x, 0, size, 1,
         toValue(m_transfer_format),
         toValue(m_transfer_size),
         data);
-
-    // Restore Read Buffer
-    glReadBuffer(read);
 }
 
 // --------------------------------
