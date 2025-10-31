@@ -91,7 +91,7 @@ static void GLAD_API_PTR nogpu_debugCallback(
     }
 }
 
-void GLDevice::prepareDebugContext(GPUDriverMode mode) {
+void GLDevice::prepareContextDebug(GPUDriverMode mode) {
     switch (mode) {
         case GPUDriverMode::DRIVER_MODE_REPORT:
         case GPUDriverMode::DRIVER_MODE_LOGGER:
@@ -111,13 +111,32 @@ void GLDevice::prepareDebugContext(GPUDriverMode mode) {
 // OpenGL Texture Stole
 // --------------------
 
-void GLDevice::prepareStoleTexture() {
+void GLDevice::prepareContextState() {
     GLint max_texture_units = 0;
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
         &max_texture_units);
 
     // Prepare Stole Texture Unit
-    m_stole = GL_TEXTURE0;
+    GLuint stole = GL_TEXTURE0;
     if (max_texture_units > 0)
-        m_stole += max_texture_units - 1;
+        stole += max_texture_units - 1;
+    // Prepare Initial State
+    m_state = GLState();
+    m_state.stole_texture = stole;
+    m_state.commands_effects = 0xFFFFFFFF;
+    m_state.pipeline_effects = 0xFFFFFFFF;
+
+    // Disable all Capabilites by Default
+    glDisable(GL_BLEND); /* CAPABILITY_BLENDING */
+    glDisable(GL_CULL_FACE); /* CAPABILITY_CULLING */
+    glDisable(GL_DEPTH_TEST); /* CAPABILITY_DEPTH */
+    glDisable(GL_POLYGON_OFFSET_FILL); /* CAPABILITY_DEPTH_OFFSET */
+    glDisable(GL_POLYGON_OFFSET_LINE);
+    glDisable(GL_POLYGON_OFFSET_POINT);
+    glDepthMask(GL_TRUE); /* CAPABILITY_DEPTH_READ_ONLY */
+    glDisable(GL_STENCIL_TEST); /* CAPABILITY_STENCIL */
+    glDisable(GL_SCISSOR_TEST); /* CAPABILITY_SCISSOR */
+    glDisable(GL_PRIMITIVE_RESTART); /* CAPABILITY_PRIMITIVE_RESTART */
+    glDisable(GL_RASTERIZER_DISCARD); /* CAPABILITY_RASTERIZE_DISCARD */
+    glDisable(GL_MULTISAMPLE); /* CAPABILITY_MULTISAMPLE */
 }

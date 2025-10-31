@@ -3,6 +3,7 @@
 #ifndef OPENGL_DRIVER_H
 #define OPENGL_DRIVER_H
 #include <nogpu/device.h>
+#include "state.hpp"
 
 #if defined(__unix__)
 #include <EGL/egl.h>
@@ -52,9 +53,9 @@ typedef struct LinuxEGLContext {
 
 #endif // __unix__
 
-// ------------------------------
-// OpenGL Driver & Device Classes
-// ------------------------------
+// -------------
+// OpenGL Driver
+// -------------
 
 class GLDevice;
 class GLContext;
@@ -86,6 +87,10 @@ class GLDriver : public GPUDriver {
         friend GLDevice;
 };
 
+// -------------
+// OpenGL Device
+// -------------
+
 class GLDevice : public GPUDevice {
     #if defined(__unix__)
         LinuxEGLDevice m_egl_device{};
@@ -94,8 +99,8 @@ class GLDevice : public GPUDevice {
     GPUContextCache m_ctx_cache{};
     GPUDeviceOption m_option;
     GLDriver* m_driver;
+    GLState m_state;
     int m_samples;
-    int m_stole;
     bool m_rgba;
     bool m_vsync;
 
@@ -116,10 +121,13 @@ class GLDevice : public GPUDevice {
 
     protected: // OpenGL Device Constructor
         GLDevice(GLDriver* driver, GPUDeviceOption device, int samples, bool rgba);
-        void prepareDebugContext(GPUDriverMode mode);
-        void prepareStoleTexture();
+        void prepareContextDebug(GPUDriverMode mode);
+        void prepareContextState();
+
         friend GLDriver;
         friend GLContext;
+        friend class GLPipeline;
+        friend class GLCommands;
 };
 
 #endif // OPENGL_DRIVER_H

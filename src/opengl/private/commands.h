@@ -3,6 +3,7 @@
 #ifndef OPENGL_COMMANDS_H
 #define OPENGL_COMMANDS_H
 #include <nogpu/commands.h>
+#include "state.hpp"
 
 class GLContext;
 class GLFence : GPUFence {
@@ -21,6 +22,10 @@ class GLFence : GPUFence {
 
 class GLContext;
 class GLCommands : GPUCommands {
+    GLCommandsState m_state;
+    GLState *m_ctx_state;
+    GLContext* m_ctx;
+
     // GPU Command Record
     void beginCommands() override;
     void endCommands() override;

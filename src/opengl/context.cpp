@@ -6,6 +6,7 @@
 #include "private/texture.h"
 #include "private/compressed.h"
 #include "private/framebuffer.h"
+#include "private/pipeline.h"
 #include "private/shader.h"
 #include "private/glad.h"
 
@@ -94,7 +95,7 @@ GPUProgram* GLContext::createProgram() {
 }
 
 GPUPipeline* GLContext::createPipeline() {
-    return nullptr;
+    return new GLPipeline(this);
 }
 
 GPUCommands* GLContext::createCommands() {
@@ -113,5 +114,14 @@ void GLContext::makeCurrent(void* object) {
 void GLContext::makeCurrentTexture(void* object) {
     GPUReport::setObject(object);
     m_driver->makeCurrent(this);
-    glActiveTexture(m_stole);
+    // Set Active Texture to Stoled Texture Unit
+    glActiveTexture(m_device->m_state.stole_texture);
+}
+
+// -------------------------
+// GPU Context: Global State
+// -------------------------
+
+GLState* GLContext::manipulateState() {
+    return &m_device->m_state;
 }

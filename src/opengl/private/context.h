@@ -3,6 +3,7 @@
 #ifndef OPENGL_CONTEXT_H
 #define OPENGL_CONTEXT_H
 #include <nogpu/context.h>
+#include "state.hpp"
 #include "driver.h"
 
 // ------------------
@@ -12,7 +13,6 @@
 class GLContext : GPUContext {
     GLDriver* m_driver;
     GLDevice* m_device;
-    unsigned int m_stole;
     #if defined(__unix__)
         LinuxEGLContext m_egl_context;
     #endif
@@ -48,12 +48,16 @@ class GLContext : GPUContext {
     int surfaceSamples() override;
     bool surfaceRGBA() override;
 
-    public: void makeCurrent(void* object);
-    public: void makeCurrentTexture(void* object);
+    public: // Make Current
+        void makeCurrent(void* object);
+        void makeCurrentTexture(void* object);
+        GLState* manipulateState();
     protected: // Commands Constructor
         void destroy() override;
         friend GLDriver;
         friend GLDevice;
+        friend class GLPipeline;
+        friend class GLCommands;
 };
 
 #endif // OPENGL_CONTEXT_H

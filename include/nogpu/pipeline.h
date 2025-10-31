@@ -2,7 +2,6 @@
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #ifndef NOGPU_PIPELINE_H
 #define NOGPU_PIPELINE_H
-#include "shader.h"
 
 typedef struct {
     bool x, y, w, h;
@@ -11,6 +10,10 @@ typedef struct {
 typedef struct {
     float r, g, b, a;
 } GPUColor;
+
+typedef struct {
+    int r, g, b, a;
+} GPUColorMask;
 
 // ----------------------------
 // GPU Pipeline: Blending State
@@ -63,16 +66,16 @@ typedef struct GPUPipelineBlending {
 enum class GPUFaceMode : int {
     FACE_BACK,
     FACE_FRONT,
-    FACE_FRONT_AND_BACK
+    FACE_BOTH
 };
 
 enum class GPUFaceWinding : int {
-    FACE_WINDING_CW,
     FACE_WINDING_CCW,
+    FACE_WINDING_CW,
 };
 
 typedef struct GPUPipelineFace {
-    GPUFaceMode cull;
+    GPUFaceMode mode;
     GPUFaceWinding winding;
 } GPUPipelineFace;
 
@@ -93,13 +96,16 @@ enum class GPUConditionMode : int {
 
 typedef struct GPUPipelineDepth {
     GPUConditionMode condition;
-    unsigned int mask;
+    struct GPUPipelineDepthRange {
+        float nearMin;
+        float farMax;
+    } range;
 
-    struct GPUPipelineDepthBias {
-        float constantFactor;
-        float slopeFactor;
+    struct GPUPipelineDepthOffset {
+        float factor;
+        float units;
         float clamp;
-    } bias;
+    } offset;
 } GPUPipelineDepth;
 
 // -------------------------
@@ -119,22 +125,22 @@ enum class GPUStencilMode : int {
 
 typedef struct GPUPipelineStencil {
     struct GPUPipelineStencilFunction {
-        GPUFaceMode face;
         GPUConditionMode condition;
+        GPUFaceMode face;
+        unsigned int test;
         unsigned int mask;
-        int test;
     } function;
 
     struct GPUPipelineStencilMask {
-        GPUFaceMode face;
-        unsigned int mask;
+        unsigned int front;
+        unsigned int back;
     } mask;
 
     struct GPUPipelineStencilMode {
         GPUFaceMode face;
         GPUStencilMode fail;
         GPUStencilMode pass;
-        GPUStencilMode depth_pass;
+        GPUStencilMode pass_depth;
     } mode;
 } GPUPipelineStencil;
 
@@ -144,16 +150,18 @@ typedef struct GPUPipelineStencil {
 
 enum class GPUPipelineCapability : int {
     CAPABILITY_BLENDING,
-    CAPABILITY_FACE_CULL,
+    CAPABILITY_CULLING,
     CAPABILITY_DEPTH,
-    CAPABILITY_DEPTH_BIAS,
-    CAPABILITY_SCISSOR,
+    CAPABILITY_DEPTH_OFFSET,
+    CAPABILITY_DEPTH_READ_ONLY,
     CAPABILITY_STENCIL,
+    CAPABILITY_SCISSOR,
     CAPABILITY_PRIMITIVE_RESTART,
     CAPABILITY_RASTERIZE_DISCARD,
     CAPABILITY_MULTISAMPLE,
 };
 
+class GPUProgram;
 class GPUPipeline {
     public: // Pipeline Capabilites
         virtual void destroy() = 0;
@@ -161,31 +169,35 @@ class GPUPipeline {
         virtual void enableCapability(GPUPipelineCapability cap) = 0;
         virtual void disableCapability(GPUPipelineCapability cap) = 0;
 
-    public: // Pipeline Attributes: Setters
+    public: // GPU Pipeline State: Basics
         virtual void setProgram(GPUProgram *program) = 0;
         virtual void setBlending(GPUPipelineBlending blending) = 0;
-        virtual void setFace(GPUPipelineFace face) = 0;
+        virtual void setCulling(GPUPipelineFace face) = 0;
         virtual void setDepth(GPUPipelineDepth depth) = 0;
         virtual void setStencil(GPUPipelineStencil stencil) = 0;
-        // GPU Context State: Viewport
-        virtual void setLineWidth(float width) = 0;
+        // GPU Pipeline State: Viewport
+        virtual void setClearDepth(float depth) = 0;
+        virtual void setClearStencil(int mask) = 0;
         virtual void setClearColor(GPUColor color) = 0;
-        virtual void setMaskColor(GPUColor mask) = 0;
+        virtual void setColorMask(GPUColorMask mask) = 0;
         virtual void setViewport(GPURectangle rect) = 0;
         virtual void setScissor(GPURectangle rect) = 0;
+        virtual void setLineWidth(float width) = 0;
 
     public: // Pipeline Attributes: Getters
         virtual GPUProgram* getProgram() = 0;
         virtual GPUPipelineBlending getBlending() = 0;
-        virtual GPUPipelineFace getFace() = 0;
+        virtual GPUPipelineFace getCulling() = 0;
         virtual GPUPipelineDepth getDepth() = 0;
         virtual GPUPipelineStencil getStencil() = 0;
-        // GPU Context State: Viewport
-        virtual float getLineWidth() = 0;
+        // GPU Pipeline State: Viewport
+        virtual float getClearDepth() = 0;
+        virtual int getClearStencil() = 0;
         virtual GPUColor getClearColor() = 0;
-        virtual GPUColor getMaskColor() = 0;
+        virtual GPUColorMask getColorMask() = 0;
         virtual GPURectangle getViewport() = 0;
         virtual GPURectangle getScissor() = 0;
+        virtual float getLineWidth() = 0;
 };
 
 #endif // NOGPU_PIPELINE_H

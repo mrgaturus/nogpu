@@ -12,7 +12,7 @@
 
 class GLProgram;
 class GLContext;
-class GLShader : GPUShader {
+class GLShader : public GPUShader {
     GLContext* m_ctx;
     GLuint m_shader;
     GPUShaderType m_type;
@@ -37,7 +37,7 @@ class GLShader : GPUShader {
 // OpenGL GPU Uniform
 // ------------------
 
-class GLUniform : GPUUniform {
+class GLUniform : public GPUUniform {
     unsigned int m_value[16];
     GLProgram* m_program;
     GLContext* m_ctx;
@@ -79,7 +79,7 @@ enum class GLProgramStatus : int {
     STATUS_ERROR
 };
 
-class GLProgram : GPUProgram {
+class GLProgram : public GPUProgram {
     GPUHashmap<GLUniform*> m_uniforms;
     GLContext* m_ctx;
     GLProgramStatus m_status;

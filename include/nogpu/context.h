@@ -3,7 +3,10 @@
 #ifndef NOGPU_CONTEXT_H
 #define NOGPU_CONTEXT_H
 #include "device.h"
+#include "buffer.h"
+#include "texture.h"
 #include "compressed.h"
+#include "shader.h"
 #include "commands.h"
 
 // -----------

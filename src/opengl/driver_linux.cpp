@@ -409,8 +409,8 @@ DEBUG_CONTEXT: {
 
     // Initialize: EGL Debug Context
     eglMakeCurrent(egl->display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl->context);
-    this->prepareDebugContext(m_driver->m_mode);
-    this->prepareStoleTexture();
+    this->prepareContextDebug(m_driver->m_mode);
+    this->prepareContextState();
     eglMakeCurrent(egl_dpy0, egl_draw0, egl_read0, egl_ctx0);
 }
 
