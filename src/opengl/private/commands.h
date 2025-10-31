@@ -24,16 +24,17 @@ class GLCommands : GPUCommands {
     // GPU Command Record
     void beginCommands() override;
     void endCommands() override;
+    // GPU Command Fence
+    GPUFence* syncFence() override;
     void syncFlush() override;
     void syncFinish() override;
-    virtual GPUFence* syncFence() override;
 
     // GPU Command State
     void usePipeline(GPUPipeline *pipeline) override;
     void useVertexArray(GPUVertexArray *vertex_array) override;
-    void useTexture(GPUTexture *texture, int index) override;
     void useBlockBinding(GPUBuffer *buffer, GPUBlockBinding bind, int index) override;
     void useBlockBindingRange(GPUBuffer *buffer, GPUBlockBinding bind, int index, int offset, int size) override;
+    void useTexture(GPUTexture *texture, int index) override;
     void useFrameBuffer(GPUFrameBuffer *framebuffer) override;
     void useFrameBufferDraw(GPUFrameBuffer *framebuffer) override;
     void useFrameBufferRead(GPUFrameBuffer *framebuffer) override;
@@ -47,8 +48,8 @@ class GLCommands : GPUCommands {
     void drawArraysInstanced(GPUDrawPrimitive type, int offset, int count, int instance_count) override;
     void drawElementsInstanced(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element, int instance_count) override;
     void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count) override;
-    void executeComputeSync(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) override;
-    void executeCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) override;
+    void executeComputeSync(int x, int y, int z) override;
+    void executeCompute(int x, int y, int z) override;
     void memoryBarrier(GPUMemoryBarrier from, GPUMemoryBarrier to) override;
 
     protected: // Commands Constructor

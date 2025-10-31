@@ -15,7 +15,7 @@ enum class GPUBlockBinding : int {
     BLOCK_ATOMIC_COUNTER,
 };
 
-enum class GPUDrawClear : unsigned int {
+enum class GPUDrawClear : int {
     CLEAR_COLOR = 1 << 0,
     CLEAR_DEPTH = 1 << 1,
     CLEAR_STENCIL = 1 << 2
@@ -41,13 +41,13 @@ enum class GPUDrawElementsType : int {
 // GPU Context: Syncronization
 // ---------------------------
 
-enum class GPUMemoryBarrier : unsigned int {
+enum class GPUMemoryBarrier : int {
     BARRIER_BUFFER = 1 << 0,
     BARRIER_TEXTURE = 1 << 1,
     BARRIER_TRANSFER = 1 << 2,
     BARRIER_RENDER = 1 << 3,
     BARRIER_COMPUTE = 1 << 4,
-    BARRIER_ALL = 0xFFFFFFFF
+    BARRIER_ALL = (1 << 5) - 1
 };
 
 class GPUFence {
@@ -66,16 +66,17 @@ class GPUCommands {
         virtual void destroy() = 0;
         virtual void beginCommands() = 0;
         virtual void endCommands() = 0;
+    public: // GPU Command Fence
+        virtual GPUFence* syncFence() = 0;
         virtual void syncFlush() = 0;
         virtual void syncFinish() = 0;
-        virtual GPUFence* syncFence() = 0;
 
     public: // GPU Command State
         virtual void usePipeline(GPUPipeline *pipeline) = 0;
         virtual void useVertexArray(GPUVertexArray *vertex) = 0;
-        virtual void useTexture(GPUTexture *texture, int index) = 0;
         virtual void useBlockBinding(GPUBuffer *buffer, GPUBlockBinding bind, int index) = 0;
         virtual void useBlockBindingRange(GPUBuffer *buffer, GPUBlockBinding bind, int index, int offset, int size) = 0;
+        virtual void useTexture(GPUTexture *texture, int index) = 0;
         virtual void useFrameBuffer(GPUFrameBuffer *framebuffer) = 0;
         virtual void useFrameBufferDraw(GPUFrameBuffer *framebuffer) = 0;
         virtual void useFrameBufferRead(GPUFrameBuffer *framebuffer) = 0;
@@ -89,8 +90,8 @@ class GPUCommands {
         virtual void drawArraysInstanced(GPUDrawPrimitive type, int offset, int count, int instance_count) = 0;
         virtual void drawElementsInstanced(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element, int instance_count) = 0;
         virtual void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count) = 0;
-        virtual void executeComputeSync(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) = 0;
-        virtual void executeCompute(unsigned int num_groups_x, unsigned int num_groups_y, unsigned int num_groups_z) = 0;
+        virtual void executeComputeSync(int x, int y, int z) = 0;
+        virtual void executeCompute(int x, int y, int z) = 0;
         virtual void memoryBarrier(GPUMemoryBarrier from, GPUMemoryBarrier to) = 0;
 };
 
