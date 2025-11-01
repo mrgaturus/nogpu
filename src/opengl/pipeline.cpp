@@ -2,7 +2,7 @@
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include "private/pipeline.h"
 #include "private/context.h"
-#include "private/shader.h"
+#include "private/program.h"
 
 GLPipeline::GLPipeline(GLContext* ctx) {
     ctx->makeCurrent(this);

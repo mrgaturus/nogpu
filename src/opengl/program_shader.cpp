@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include <nogpu_private.h>
-#include "private/shader.h"
+#include "private/program.h"
 #include "private/context.h"
 #include <cstdlib>
 

@@ -7,7 +7,7 @@
 #include "private/compressed.h"
 #include "private/framebuffer.h"
 #include "private/pipeline.h"
-#include "private/shader.h"
+#include "private/program.h"
 #include "private/glad.h"
 
 // -------------------

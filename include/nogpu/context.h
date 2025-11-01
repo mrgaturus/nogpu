@@ -6,7 +6,7 @@
 #include "buffer.h"
 #include "texture.h"
 #include "compressed.h"
-#include "shader.h"
+#include "program.h"
 #include "commands.h"
 
 // -----------

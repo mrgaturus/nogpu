@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
-#ifndef OPENGL_SHADER_H
-#define OPENGL_SHADER_H
+#ifndef OPENGL_PROGRAM_H
+#define OPENGL_PROGRAM_H
 #include <nogpu_map.h>
-#include <nogpu/shader.h>
+#include <nogpu/program.h>
 #include "glad.h"
 
 // -----------------
@@ -107,4 +107,4 @@ class GLProgram : public GPUProgram {
         friend GLShader;
 };
 
-#endif // OPENGL_SHADER_H
+#endif // OPENGL_PROGRAM_H

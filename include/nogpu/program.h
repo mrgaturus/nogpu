@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
-#ifndef NOGPU_SHADER_H
-#define NOGPU_SHADER_H
+#ifndef NOGPU_PROGRAM_H
+#define NOGPU_PROGRAM_H
 
 // ---------------------------
 // GPU Objects: Program Shader
@@ -132,4 +132,4 @@ class GPUProgram {
         virtual bool removeUniform(const char* label) = 0;
 };
 
-#endif // NOGPU_SHADER_H
+#endif // NOGPU_PROGRAM_H
