@@ -3,6 +3,7 @@
 #ifndef OPENGL_DRIVER_H
 #define OPENGL_DRIVER_H
 #include <nogpu/device.h>
+#include <nogpu_private.h>
 #include "state.hpp"
 
 #if defined(__unix__)

@@ -95,7 +95,7 @@ GPUDriverOption GPUDriver::getDriverOption() {
 // Context Creation: Window Cached
 // -------------------------------
 
-GPUContext* GPUDevice::GPUContextCache::find(void* window) {
+GPUContext* GPUContextCache::find(void* window) {
     GPUContext* ctx = m_list;
     // Find if there is already a Context
     while (ctx) {
@@ -108,7 +108,7 @@ GPUContext* GPUDevice::GPUContextCache::find(void* window) {
     return ctx;
 }
 
-void GPUDevice::GPUContextCache::add(GPUContext* ctx) {
+void GPUContextCache::add(GPUContext* ctx) {
     if (m_list) m_list->m_prev = ctx;
     // Add Context at First
     ctx->m_next = m_list;
@@ -116,7 +116,7 @@ void GPUDevice::GPUContextCache::add(GPUContext* ctx) {
     m_list = ctx;
 }
 
-void GPUDevice::GPUContextCache::remove(GPUContext* ctx) {
+void GPUContextCache::remove(GPUContext* ctx) {
     if (m_list == ctx)
         m_list = m_list->m_next;
     if (ctx->m_next) ctx->m_next->m_prev = ctx->m_prev;

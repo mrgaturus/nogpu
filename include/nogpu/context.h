@@ -15,7 +15,8 @@
 
 class GPUContext {
     protected: // Context List
-        friend GPUDevice;
+        friend class GPUDevice;
+        friend class GPUContextCache;
         GPUContext* m_next;
         GPUContext* m_prev;
         void* m_native;

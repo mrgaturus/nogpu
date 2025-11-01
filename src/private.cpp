@@ -2,6 +2,7 @@
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include "nogpu_private.h"
 #include <nogpu/buffer.h>
+#include <nogpu/shader.h>
 #include <nogpu/commands.h>
 #include <cmath>
 

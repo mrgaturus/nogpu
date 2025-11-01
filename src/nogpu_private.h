@@ -3,15 +3,26 @@
 #ifndef NOGPU_PRIVATE_H
 #define NOGPU_PRIVATE_H
 #include <nogpu/device.h>
-#include <nogpu/texture.h>
-#include <nogpu/shader.h>
+
+class GPUContextCache {
+    public: // Context Cache
+        GPUContext* m_list;
+        GPUContext* find(void* window);
+        void add(GPUContext* ctx);
+        void remove(GPUContext* ctx);
+};
 
 unsigned int next_power_of_two(unsigned int v);
 unsigned int levels_power_of_two(int w, int h, int limit);
 unsigned int driver_option_flag(GPUDriverOption driver);
 unsigned int driver_feature_flag(GPUDriverFeature feature);
+
+enum class GPUUniformType;
 int computeUniformBytes(GPUUniformType type);
 // Texture Pixel Types: Operations
+enum class GPUTexturePixelType;
+enum class GPUTextureTransferFormat;
+enum class GPUTextureTransferSize;
 bool canTextureBuffer(GPUTexturePixelType type);
 bool canTransferChange(GPUTexturePixelType type);
 GPUTextureTransferFormat computeTransferFormat(GPUTexturePixelType type);

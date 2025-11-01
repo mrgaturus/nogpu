@@ -147,13 +147,6 @@ class GPUDriver {
 };
 
 class GPUDevice {
-    protected: class GPUContextCache {
-        public: GPUContext* m_list;
-        public: GPUContext* find(void* window);
-        public: void add(GPUContext* ctx);
-        public: void remove(GPUContext* ctx);
-    };
-
     public: // Basic Device Info
         virtual void setVerticalSync(bool value) = 0;
         virtual bool getVerticalSync() = 0;
