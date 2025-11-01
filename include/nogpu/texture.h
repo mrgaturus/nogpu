@@ -2,7 +2,6 @@
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #ifndef NOGPU_TEXTURE_H
 #define NOGPU_TEXTURE_H
-#include "buffer.h"
 
 // --------------------------
 // GPU Enums: Texture Formats
@@ -135,6 +134,7 @@ typedef struct {
     int size;
 } GPUTextureBufferRange;
 
+class GPUBuffer;
 class GPUTextureBuffer {
     protected:
         int m_offset;

@@ -2,8 +2,6 @@
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #ifndef NOGPU_COMMANDS_H
 #define NOGPU_COMMANDS_H
-#include "framebuffer.h"
-#include "pipeline.h"
 
 // --------------------------
 // GPU Context: Command Enums
@@ -61,6 +59,11 @@ class GPUFence {
 // GPU Context: Commands
 // ---------------------
 
+class GPUPipeline;
+class GPUVertexArray;
+class GPUBuffer;
+class GPUTexture;
+class GPUFrameBuffer;
 class GPUCommands {
     public: // GPU Command Issue
         virtual void destroy() = 0;

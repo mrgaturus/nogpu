@@ -6,7 +6,9 @@
 #include "buffer.h"
 #include "texture.h"
 #include "compressed.h"
+#include "framebuffer.h"
 #include "program.h"
+#include "pipeline.h"
 #include "commands.h"
 
 // -----------
@@ -20,10 +22,9 @@ class GPUContext {
         GPUContext* m_next;
         GPUContext* m_prev;
         void* m_native;
-    protected: static GPUContext* m_current;
-    public: virtual void destroy() = 0;
 
     public: // GPU Buffer Objects
+        virtual void destroy() = 0;
         virtual GPUBuffer* createBuffer() = 0;
         virtual GPUVertexArray* createVertexArray() = 0;
         virtual GPUTextureBuffer* createTextureBuffer(GPUBuffer* buffer, GPUTexturePixelType type) = 0;
