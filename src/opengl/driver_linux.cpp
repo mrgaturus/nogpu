@@ -448,6 +448,10 @@ typedef void (*x11_XResizeWindow_t)(
 );
 
 GPUContext* GLDevice::createContextX11(GPUWindowX11 win) {
+    GPUContext *cached = m_ctx_cache.find((void*) win.window);
+    if (cached != nullptr)
+        return cached;
+
     LinuxEGLDriver *driver = &m_driver->m_egl_driver;
     LinuxEGLDevice *device = &m_egl_device;
     if (!createContextEGL(win.display, LinuxEGLOption::LINUX_X11))
@@ -499,8 +503,9 @@ GPUContext* GLDevice::createContextX11(GPUWindowX11 win) {
     gtx->linux_is_rgba = attribs.depth == 32;
     gtx->linux_is_x11 = true;
 
-    // Return Created Context
     m_ctx_cache.add(ctx);
+    ctx->m_native = (void*) win.window;
+    // Return Created Context
     this->setVerticalSync(m_driver->m_vsync);
     GPUReport::success("[opengl] EGL X11 surface created for XID:0x%lx", win.window);
     return ctx;
@@ -517,6 +522,10 @@ typedef void (*wl_egl_window_get_attached_size_t) (wl_egl_window* win, int *w, i
 typedef void (*wl_egl_window_destroy_t) (wl_egl_window* win);
 
 GPUContext* GLDevice::createContextWayland(GPUWindowWayland win) {
+    GPUContext *cached = m_ctx_cache.find((void*) win.surface);
+    if (cached != nullptr)
+        return cached;
+
     LinuxEGLDriver *driver = &m_driver->m_egl_driver;
     LinuxEGLDevice *device = &m_egl_device;
     if (!createContextEGL(win.display, LinuxEGLOption::LINUX_WAYLAND))
@@ -569,8 +578,9 @@ GPUContext* GLDevice::createContextWayland(GPUWindowWayland win) {
     gtx->wl_destroy_proc = dlsym(driver->so_wayland, "wl_egl_window_destroy");
     gtx->wl_surface = wl_surface;
 
-    // Return Created Context
     m_ctx_cache.add(ctx);
+    ctx->m_native = (void*) win.surface;
+    // Return Created Context
     this->setVerticalSync(m_driver->m_vsync);
     GPUReport::success("[opengl] EGL Wayland surface created for wl_surface:%p", win.surface);
     return ctx;
