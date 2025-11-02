@@ -20,7 +20,7 @@ enum class GLPipelineEffect : unsigned int {
     PIPELINE_EFFECT_CLEAR_DEPTH,
     PIPELINE_EFFECT_CLEAR_STENCIL,
     PIPELINE_EFFECT_CLEAR_COLOR,
-    PIPELINE_EFFECT_MASK_COLOR,
+    PIPELINE_EFFECT_COLOR_MASK,
     PIPELINE_EFFECT_VIEWPORT,
     PIPELINE_EFFECT_SCISSOR,
     PIPELINE_EFFECT_LINE_WIDTH
@@ -39,7 +39,7 @@ typedef struct GLPipelineState {
     float clear_depth;
     int clear_stencil;
     GPUColor clear_color;
-    GPUColorMask mask_color;
+    GPUColorMask color_mask;
     GPURectangle viewport;
     GPURectangle scissor;
     float line_width;

@@ -149,8 +149,8 @@ void GLState::reactPipelineEffects(GLPipelineState &check) {
         markPipelineEffect(GLPipelineEffect::PIPELINE_EFFECT_CLEAR_STENCIL);
     if (memcmp(&state->clear_color, &check.clear_color, sizeof(GPUColor)) != 0)
         markPipelineEffect(GLPipelineEffect::PIPELINE_EFFECT_CLEAR_COLOR);
-    if (memcmp(&state->mask_color, &check.mask_color, sizeof(GPUColorMask)) != 0)
-        markPipelineEffect(GLPipelineEffect::PIPELINE_EFFECT_MASK_COLOR);
+    if (memcmp(&state->color_mask, &check.color_mask, sizeof(GPUColorMask)) != 0)
+        markPipelineEffect(GLPipelineEffect::PIPELINE_EFFECT_COLOR_MASK);
     if (memcmp(&state->viewport, &check.viewport, sizeof(GPURectangle)) != 0)
         markPipelineEffect(GLPipelineEffect::PIPELINE_EFFECT_VIEWPORT);
     if (memcmp(&state->scissor, &check.scissor, sizeof(GPURectangle)) != 0)

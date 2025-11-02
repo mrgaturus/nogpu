@@ -48,6 +48,7 @@ class GLPipeline : GPUPipeline {
 
     protected:
         GLPipeline(GLContext* ctx);
+        void markEffect(GLPipelineEffect effect);
         void destroy() override;
         friend GLContext;
 };

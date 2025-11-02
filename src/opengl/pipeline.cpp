@@ -6,7 +6,14 @@
 
 GLPipeline::GLPipeline(GLContext* ctx) {
     ctx->makeCurrent(this);
+    m_state = GLPipelineState{};
+    m_ctx_state = &ctx->m_device->m_state;
     m_ctx = ctx;
+}
+
+void GLPipeline::markEffect(GLPipelineEffect effect) {
+    if (m_ctx_state->pipeline_current == this)
+        m_ctx_state->markPipelineEffect(effect);
 }
 
 void GLPipeline::destroy() {
@@ -27,10 +34,14 @@ bool GLPipeline::checkCapability(GPUPipelineCapability cap) {
 
 void GLPipeline::enableCapability(GPUPipelineCapability cap) {
     m_ctx->makeCurrent(this);
+    markEffect(GLPipelineEffect::PIPELINE_EFFECT_CAPABILITIES);
+    m_state.capabilities |= 1 << static_cast<unsigned int>(cap);
 }
 
 void GLPipeline::disableCapability(GPUPipelineCapability cap) {
     m_ctx->makeCurrent(this);
+    markEffect(GLPipelineEffect::PIPELINE_EFFECT_CAPABILITIES);
+    m_state.capabilities &= ~(1 << static_cast<unsigned int>(cap));
 }
 
 // --------------------------
@@ -39,22 +50,33 @@ void GLPipeline::disableCapability(GPUPipelineCapability cap) {
 
 void GLPipeline::setProgram(GPUProgram *program) {
     m_ctx->makeCurrent(this);
+    markEffect(GLPipelineEffect::PIPELINE_EFFECT_PROGRAM);
+    GLProgram* pro = static_cast<GLProgram*>(program);
+    m_state.program = pro;
 }
 
 void GLPipeline::setBlending(GPUPipelineBlending blending) {
     m_ctx->makeCurrent(this);
+    markEffect(GLPipelineEffect::PIPELINE_EFFECT_BLENDING);
+    m_state.blending = blending;
 }
 
 void GLPipeline::setCulling(GPUPipelineFace face) {
     m_ctx->makeCurrent(this);
+    markEffect(GLPipelineEffect::PIPELINE_EFFECT_CULLING);
+    m_state.culling = face;
 }
 
 void GLPipeline::setDepth(GPUPipelineDepth depth) {
     m_ctx->makeCurrent(this);
+    markEffect(GLPipelineEffect::PIPELINE_EFFECT_DEPTH);
+    m_state.depth = depth;
 }
 
 void GLPipeline::setStencil(GPUPipelineStencil stencil) {
     m_ctx->makeCurrent(this);
+    markEffect(GLPipelineEffect::PIPELINE_EFFECT_STENCIL);
+    m_state.stencil = stencil;
 }
 
 // ----------------------------
@@ -63,30 +85,44 @@ void GLPipeline::setStencil(GPUPipelineStencil stencil) {
 
 void GLPipeline::setClearDepth(float depth) {
     m_ctx->makeCurrent(this);
+    markEffect(GLPipelineEffect::PIPELINE_EFFECT_CLEAR_DEPTH);
+    m_state.clear_depth = depth;
 }
 
 void GLPipeline::setClearStencil(int mask) {
     m_ctx->makeCurrent(this);
+    markEffect(GLPipelineEffect::PIPELINE_EFFECT_CLEAR_STENCIL);
+    m_state.clear_stencil = mask;
 }
 
 void GLPipeline::setClearColor(GPUColor color) {
     m_ctx->makeCurrent(this);
+    markEffect(GLPipelineEffect::PIPELINE_EFFECT_CLEAR_COLOR);
+    m_state.clear_color = color;
 }
 
 void GLPipeline::setColorMask(GPUColorMask mask) {
     m_ctx->makeCurrent(this);
+    markEffect(GLPipelineEffect::PIPELINE_EFFECT_COLOR_MASK);
+    m_state.color_mask = mask;
 }
 
 void GLPipeline::setViewport(GPURectangle rect) {
     m_ctx->makeCurrent(this);
+    markEffect(GLPipelineEffect::PIPELINE_EFFECT_VIEWPORT);
+    m_state.viewport = rect;
 }
 
 void GLPipeline::setScissor(GPURectangle rect) {
     m_ctx->makeCurrent(this);
+    markEffect(GLPipelineEffect::PIPELINE_EFFECT_SCISSOR);
+    m_state.scissor = rect;
 }
 
 void GLPipeline::setLineWidth(float width) {
     m_ctx->makeCurrent(this);
+    markEffect(GLPipelineEffect::PIPELINE_EFFECT_LINE_WIDTH);
+    m_state.line_width = width;
 }
 
 // ----------------------------
@@ -140,7 +176,7 @@ GPUColor GLPipeline::getClearColor() {
 
 GPUColorMask GLPipeline::getColorMask() {
     m_ctx->makeCurrent(this);
-    return m_state.mask_color;
+    return m_state.color_mask;
 }
 
 GPURectangle GLPipeline::getViewport() {
