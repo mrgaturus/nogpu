@@ -10,8 +10,8 @@
 // ---------------------
 
 enum class GLPipelineEffect : unsigned int {
-    PIPELINE_EFFECT_PROGRAM,
     PIPELINE_EFFECT_CAPABILITIES,
+    PIPELINE_EFFECT_PROGRAM,
     PIPELINE_EFFECT_BLENDING,
     PIPELINE_EFFECT_CULLING,
     PIPELINE_EFFECT_DEPTH,
@@ -77,28 +77,35 @@ typedef struct GLCommandsState {
 // OpenGL Global State
 // -------------------
 
-typedef struct GLState {
-    // OpenGL State Effects: Pipeline
-    unsigned int pipeline_effects = 0;
-    GLPipelineState pipeline_state {};
-    GLPipeline* pipeline_current = nullptr;
-    GLPipeline* pipeline_cached = nullptr;
-    bool checkCapability(GPUPipelineCapability cap);
-    void enableCapability(GPUPipelineCapability cap);
-    void disableCapability(GPUPipelineCapability cap);
-    void markPipelineEffect(GLPipelineEffect effect);
-    void unmarkPipelineEffect(GLPipelineEffect effect);
-    void reactPipelineEffects(GLPipelineState &check);
+class GLState {
+    public: // OpenGL Capabilites
+        bool checkCapability(GPUPipelineCapability cap);
+        void enableCapability(GPUPipelineCapability cap);
+        void disableCapability(GPUPipelineCapability cap);
+        bool resolveEffects();
 
-    // OpenGL State Effects: Commands
-    unsigned int stole_texture = 0;
-    unsigned int commands_effects = 0;
-    GLCommandsState commands_state {};
-    GLCommands* commands_current = nullptr;
-    GLCommands* commands_cached = nullptr;
-    void markCommandsEffect(GLCommandsEffect effect);
-    void unmarkCommandsEffect(GLCommandsEffect effect);
-    void reactCommandsEffects(GLCommandsState &check);
-} GLState;
+    public: // OpenGL State: Pipeline
+        unsigned int m_pipeline_effects = 0;
+        GLPipelineState m_pipeline_state {};
+        GLPipeline* m_pipeline_current = nullptr;
+        GLPipeline* m_pipeline_cached = nullptr;
+        void markPipelineEffect(GLPipelineEffect effect);
+        void unmarkPipelineEffect(GLPipelineEffect effect);
+        void checkPipelineEffects(GLPipelineState &check);
+
+    public: // OpenGL State: Commands
+        unsigned int m_stole_texture = 0;
+        unsigned int m_commands_effects = 0;
+        GLCommandsState m_commands_state {};
+        GLCommands* m_commands_current = nullptr;
+        GLCommands* m_commands_cached = nullptr;
+        void markCommandsEffect(GLCommandsEffect effect);
+        void unmarkCommandsEffect(GLCommandsEffect effect);
+        void checkCommandsEffects(GLCommandsState &check);
+
+    private: // OpenGL State: Effects
+        void resolvePipelineEffect(GLPipelineEffect effect);
+        void resolvePipelineEffects();
+};
 
 #endif // OPENGL_STATE_H

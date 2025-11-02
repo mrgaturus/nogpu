@@ -5,11 +5,11 @@
 #include <cstring>
 
 bool GLState::checkCapability(GPUPipelineCapability cap) {
-    return (pipeline_state.capabilities & (1 << static_cast<unsigned int>(cap))) != 0;
+    return (m_pipeline_state.capabilities & (1 << static_cast<unsigned int>(cap))) != 0;
 }
 
 void GLState::enableCapability(GPUPipelineCapability cap) {
-    GLPipelineState* state = &pipeline_state;
+    GLPipelineState *state = &m_pipeline_state;
     // Avoid Already Enabled
     unsigned int flag = 1 << static_cast<unsigned int>(cap);
     if (flag & state->capabilities)
@@ -63,7 +63,7 @@ void GLState::enableCapability(GPUPipelineCapability cap) {
 }
 
 void GLState::disableCapability(GPUPipelineCapability cap) {
-    GLPipelineState* state = &pipeline_state;
+    GLPipelineState *state = &m_pipeline_state;
     // Avoid Already Disabled
     unsigned int flag = 1 << static_cast<unsigned int>(cap);
     if ((flag & state->capabilities) == 0)
@@ -119,20 +119,20 @@ void GLState::disableCapability(GPUPipelineCapability cap) {
 // ------------------------------
 
 void GLState::markPipelineEffect(GLPipelineEffect effect) {
-    this->pipeline_effects |= 1 << static_cast<unsigned int>(effect);
+    m_pipeline_effects |= 1 << static_cast<unsigned int>(effect);
 }
 
 void GLState::unmarkPipelineEffect(GLPipelineEffect effect) {
-    this->pipeline_effects &= ~(1 << static_cast<unsigned int>(effect));
+    m_pipeline_effects &= ~(1 << static_cast<unsigned int>(effect));
 }
 
-void GLState::reactPipelineEffects(GLPipelineState &check) {
-    GLPipelineState *state = &this->pipeline_state;
+void GLState::checkPipelineEffects(GLPipelineState &check) {
+    GLPipelineState *state = &m_pipeline_state;
 
-    if (state->program != check.program)
-        markPipelineEffect(GLPipelineEffect::PIPELINE_EFFECT_PROGRAM);
     if (state->capabilities != check.capabilities)
         markPipelineEffect(GLPipelineEffect::PIPELINE_EFFECT_CAPABILITIES);
+    if (state->program != check.program)
+        markPipelineEffect(GLPipelineEffect::PIPELINE_EFFECT_PROGRAM);
     if (memcmp(&state->blending, &check.blending, sizeof(GPUPipelineBlending)) != 0)
         markPipelineEffect(GLPipelineEffect::PIPELINE_EFFECT_BLENDING);
     if (memcmp(&state->culling, &check.culling, sizeof(GPUPipelineFace)) != 0)
@@ -164,13 +164,13 @@ void GLState::reactPipelineEffects(GLPipelineState &check) {
 // ------------------------------
 
 void GLState::markCommandsEffect(GLCommandsEffect effect) {
-    this->commands_effects |= 1 << static_cast<unsigned int>(effect);
+    m_commands_effects |= 1 << static_cast<unsigned int>(effect);
 }
 
 void GLState::unmarkCommandsEffect(GLCommandsEffect effect) {
-    this->commands_effects &= ~(1 << static_cast<unsigned int>(effect));
+    m_commands_effects &= ~(1 << static_cast<unsigned int>(effect));
 }
 
-void GLState::reactCommandsEffects(GLCommandsState &check) {
+void GLState::checkCommandsEffects(GLCommandsState &check) {
 
 }

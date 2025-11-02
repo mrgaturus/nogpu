@@ -104,7 +104,6 @@ typedef struct GPUPipelineDepth {
     struct GPUPipelineDepthOffset {
         float factor;
         float units;
-        float clamp;
     } offset;
 } GPUPipelineDepth;
 
@@ -125,8 +124,8 @@ enum class GPUStencilMode : int {
 
 typedef struct GPUPipelineStencil {
     struct GPUPipelineStencilFunction {
-        GPUConditionMode condition;
         GPUFaceMode face;
+        GPUConditionMode condition;
         unsigned int test;
         unsigned int mask;
     } function;

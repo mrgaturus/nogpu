@@ -115,7 +115,8 @@ void GLContext::makeCurrentTexture(void* object) {
     GPUReport::setObject(object);
     m_driver->makeCurrent(this);
     // Set Active Texture to Stoled Texture Unit
-    glActiveTexture(m_device->m_state.stole_texture);
+    GLState *state = &m_device->m_state;
+    glActiveTexture(state->m_stole_texture);
 }
 
 // -------------------------

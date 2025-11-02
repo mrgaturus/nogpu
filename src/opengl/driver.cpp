@@ -122,9 +122,9 @@ void GLDevice::prepareContextState() {
         stole += max_texture_units - 1;
     // Prepare Initial State
     m_state = GLState();
-    m_state.stole_texture = stole;
-    m_state.commands_effects = 0xFFFFFFFF;
-    m_state.pipeline_effects = 0xFFFFFFFF;
+    m_state.m_stole_texture = stole;
+    m_state.m_pipeline_effects = 0x1FFF;
+    m_state.m_commands_effects = 0x3F;
 
     // Disable all Capabilites by Default
     glDisable(GL_BLEND); /* CAPABILITY_BLENDING */

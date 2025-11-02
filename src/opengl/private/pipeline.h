@@ -3,6 +3,14 @@
 #ifndef OPENGL_PIPELINE_H
 #define OPENGL_PIPELINE_H
 #include "state.hpp"
+#include "glad.h"
+
+GLenum toValue(GPUBlendEquation equation);
+GLenum toValue(GPUBlendFactor factor);
+GLenum toValue(GPUFaceMode mode);
+GLenum toValue(GPUFaceWinding winding);
+GLenum toValue(GPUConditionMode condition);
+GLenum toValue(GPUStencilMode mode);
 
 class GLContext;
 class GLProgram;
@@ -51,6 +59,7 @@ class GLPipeline : GPUPipeline {
         void markEffect(GLPipelineEffect effect);
         void destroy() override;
         friend GLContext;
+        friend GLState;
 };
 
 #endif // OPENGL_PIPELINE_H

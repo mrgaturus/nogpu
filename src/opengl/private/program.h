@@ -102,6 +102,7 @@ class GLProgram : public GPUProgram {
         GLProgram(GLContext* ctx);
         void destroy() override;
         void attachShader(GPUShader *shader, GPUShaderType type, const char* msg);
+        friend class GLState;
         friend GLContext;
         friend GLUniform;
         friend GLShader;

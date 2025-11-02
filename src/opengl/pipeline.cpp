@@ -12,7 +12,7 @@ GLPipeline::GLPipeline(GLContext* ctx) {
 }
 
 void GLPipeline::markEffect(GLPipelineEffect effect) {
-    if (m_ctx_state->pipeline_current == this)
+    if (m_ctx_state->m_pipeline_current == this)
         m_ctx_state->markPipelineEffect(effect);
 }
 
