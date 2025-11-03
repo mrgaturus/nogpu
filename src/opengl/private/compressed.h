@@ -5,8 +5,6 @@
 #include <nogpu/compressed.h>
 #include "texture.h"
 
-GLenum toValue(GPUTextureCompressedType type);
-
 class GLCompressed1D : GLTexture, GPUCompressed1D {
     // Texture Buffer Manipulation
     void allocate(int size, int levels) override;

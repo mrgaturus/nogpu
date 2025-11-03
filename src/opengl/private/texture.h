@@ -6,6 +6,7 @@
 #include "buffer.h"
 
 GLenum toValue(GPUTexturePixelType type);
+GLenum toValue(GPUTextureCompressedType type);
 GLenum toValue(GPUTextureTransferSize type);
 GLenum toValue(GPUTextureTransferFormat format);
 
