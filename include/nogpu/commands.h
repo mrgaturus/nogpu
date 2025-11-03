@@ -3,15 +3,15 @@
 #ifndef NOGPU_COMMANDS_H
 #define NOGPU_COMMANDS_H
 
-// --------------------------
-// GPU Context: Command Enums
-// --------------------------
-
 enum class GPUBlockBinding : int {
     BLOCK_BUFFER_OBJECT,
     BLOCK_SHADER_STORAGE,
     BLOCK_ATOMIC_COUNTER,
 };
+
+// -----------------------
+// GPU Context: Draw Modes
+// -----------------------
 
 enum class GPUDrawClear : int {
     CLEAR_COLOR = 1 << 0,
@@ -29,7 +29,7 @@ enum class GPUDrawPrimitive : int {
     PRIMITIVE_TRIANGLE_FAN,
 };
 
-enum class GPUDrawElementsType : int {
+enum class GPUDrawElements : int {
     ELEMENTS_UNSIGNED_BYTE,
     ELEMENTS_UNSIGNED_SHORT,
     ELEMENTS_UNSIGNED_INT
@@ -39,6 +39,13 @@ enum class GPUDrawElementsType : int {
 // GPU Context: Syncronization
 // ---------------------------
 
+class GPUFence {
+    public: // Fence Signaling
+        virtual void destroy() = 0;
+        virtual void syncCPU() = 0;
+        virtual void syncGPU() = 0;
+};
+
 enum class GPUMemoryBarrier : int {
     BARRIER_BUFFER = 1 << 0,
     BARRIER_TEXTURE = 1 << 1,
@@ -46,13 +53,6 @@ enum class GPUMemoryBarrier : int {
     BARRIER_RENDER = 1 << 3,
     BARRIER_COMPUTE = 1 << 4,
     BARRIER_ALL = (1 << 5) - 1
-};
-
-class GPUFence {
-    public: // Fence Signaling
-        virtual void destroy() = 0;
-        virtual void syncCPU() = 0;
-        virtual void syncGPU() = 0;
 };
 
 // ---------------------
@@ -88,11 +88,11 @@ class GPUCommands {
     public: // GPU Command Rendering
         virtual void drawClear(GPUDrawClear clear) = 0;
         virtual void drawArrays(GPUDrawPrimitive type, int offset, int count) = 0;
-        virtual void drawElements(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element) = 0;
-        virtual void drawElementsBaseVertex(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element) = 0;
+        virtual void drawElements(GPUDrawPrimitive type, int offset, int count, GPUDrawElements element) = 0;
+        virtual void drawElementsBaseVertex(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElements element) = 0;
         virtual void drawArraysInstanced(GPUDrawPrimitive type, int offset, int count, int instance_count) = 0;
-        virtual void drawElementsInstanced(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element, int instance_count) = 0;
-        virtual void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count) = 0;
+        virtual void drawElementsInstanced(GPUDrawPrimitive type, int offset, int count, GPUDrawElements element, int instance_count) = 0;
+        virtual void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElements element, int instance_count) = 0;
         virtual void executeComputeSync(int x, int y, int z) = 0;
         virtual void executeCompute(int x, int y, int z) = 0;
         virtual void memoryBarrier(GPUMemoryBarrier from, GPUMemoryBarrier to) = 0;

@@ -4,6 +4,13 @@
 #define OPENGL_COMMANDS_H
 #include <nogpu/commands.h>
 #include "state.hpp"
+#include "glad.h"
+
+GLenum toValue(GPUBlockBinding type);
+GLbitfield toValue(GPUDrawClear flags);
+GLenum toValue(GPUDrawPrimitive primitive);
+GLenum toValue(GPUDrawElements mode);
+GLbitfield toValue(GPUMemoryBarrier flags);
 
 class GLContext;
 class GLFence : GPUFence {
@@ -20,7 +27,6 @@ class GLFence : GPUFence {
 // OpenGL GPU Commands
 // -------------------
 
-class GLContext;
 class GLCommands : GPUCommands {
     GLCommandsState m_state;
     GLState *m_ctx_state;
@@ -48,11 +54,11 @@ class GLCommands : GPUCommands {
     // GPU Command Rendering
     void drawClear(GPUDrawClear clear) override;
     void drawArrays(GPUDrawPrimitive type, int offset, int count) override;
-    void drawElements(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element) override;
-    void drawElementsBaseVertex(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element) override;
+    void drawElements(GPUDrawPrimitive type, int offset, int count, GPUDrawElements element) override;
+    void drawElementsBaseVertex(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElements element) override;
     void drawArraysInstanced(GPUDrawPrimitive type, int offset, int count, int instance_count) override;
-    void drawElementsInstanced(GPUDrawPrimitive type, int offset, int count, GPUDrawElementsType element, int instance_count) override;
-    void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElementsType element, int instance_count) override;
+    void drawElementsInstanced(GPUDrawPrimitive type, int offset, int count, GPUDrawElements element, int instance_count) override;
+    void drawElementsBaseVertexInstanced(GPUDrawPrimitive type, int offset, int count, int base, GPUDrawElements element, int instance_count) override;
     void executeComputeSync(int x, int y, int z) override;
     void executeCompute(int x, int y, int z) override;
     void memoryBarrier(GPUMemoryBarrier from, GPUMemoryBarrier to) override;
