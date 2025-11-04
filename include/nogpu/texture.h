@@ -182,6 +182,7 @@ typedef struct {
     int height;
 } GPUTextureSize;
 
+class GPUFence;
 class GPUTexture {
     protected:
         GPUTexturePixelType m_pixel_type;
@@ -205,11 +206,7 @@ class GPUTexture {
         virtual void setFilter(GPUTextureFilter filter) = 0;
         virtual void setWrap(GPUTextureWrap wrap) = 0;
         virtual void generateMipmaps() = 0;
-
-    public: // GPU Texture Fences
-        virtual void syncEnable(bool value) = 0;
-        virtual void syncCPU() = 0;
-        virtual void syncGPU() = 0;
+        virtual GPUFence* syncFence() = 0;
 
     public: // GPU Texture Attributes: Size
         int getWidth() { return m_width; }

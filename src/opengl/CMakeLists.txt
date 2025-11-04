@@ -5,6 +5,7 @@ add_library(nogpu_opengl OBJECT
     private/glad.c
     buffer_vao.cpp
     buffer.cpp
+    commands_fence.cpp
     commands_values.cpp
     commands.cpp
     context.cpp

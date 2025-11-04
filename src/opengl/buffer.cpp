@@ -64,14 +64,12 @@ GLBuffer::GLBuffer(GLContext* ctx) {
     // Create OpenGL Buffer
     glGenBuffers(1, &m_vbo);
     m_mapping = nullptr;
-    m_sync = nullptr;
     m_bytes = 0;
 }
 
 void GLBuffer::destroy() {
     m_ctx->makeCurrent(this);
     if (m_mapping) unmap();
-    if (m_sync) glDeleteSync(m_sync);
     glDeleteBuffers(1, &m_vbo);
 
     // Dealloc Object
@@ -148,6 +146,11 @@ void GLBuffer::clear(int offset, int bytes) {
 // OpenGL GPU Buffer: Mapping
 // --------------------------
 
+GPUFence* GLBuffer::syncFence() {
+    m_ctx->makeCurrent(this);
+    return m_ctx->syncFence();
+}
+
 void* GLBuffer::map(int bytes, int offset, GPUBufferMapping flags) {
     m_ctx->makeCurrent(this);
     if (m_mapping) {
@@ -158,11 +161,6 @@ void* GLBuffer::map(int bytes, int offset, GPUBufferMapping flags) {
     GLenum flags0 = toValue(flags);
     glBindBuffer(GL_COPY_WRITE_BUFFER, m_vbo);
     void* map = glMapBufferRange(GL_COPY_WRITE_BUFFER, offset, bytes, flags0);
-    // Create Sync Object when Unsynchronized
-    if ((flags0 & GL_MAP_UNSYNCHRONIZED_BIT) && m_sync_check) {
-        if (m_sync) glDeleteSync(m_sync);
-        m_sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-    }
 
     // Return Mapping
     m_mapping = map;
@@ -181,32 +179,3 @@ void GLBuffer::unmap() {
     glUnmapBuffer(GL_COPY_WRITE_BUFFER);
     m_mapping = nullptr;
 };
-
-// ------------------------------
-// OpenGL GPU Buffer: Buffer Sync
-// ------------------------------
-
-void GLBuffer::syncEnable(bool value) {
-    m_ctx->makeCurrent(this);
-    m_sync_check = value;
-
-    // Remove Sync Object
-    if (value == false && m_sync) {
-        glDeleteSync(m_sync);
-        m_sync = nullptr;
-    }
-}
-
-void GLBuffer::syncCPU() {
-    m_ctx->makeCurrent(this);
-    // Stall CPU until Fence Signaled
-    if (m_sync_check && m_sync)
-        glClientWaitSync(m_sync, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
-}
-
-void GLBuffer::syncGPU() {
-    m_ctx->makeCurrent(this);
-    // Stall GL Queue until Fence Signaled
-    if (m_sync_check && m_sync)
-        glWaitSync(m_sync, 0, GL_TIMEOUT_IGNORED);
-}

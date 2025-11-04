@@ -97,7 +97,6 @@ void GLTexture1D::unpack(int x, int size, int level, GPUBuffer *pbo, int offset)
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf->m_vbo);
     this->upload(x, size, level, reinterpret_cast<void*>(offset));
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    this->generateSync();
 }
 
 void GLTexture1D::pack(int x, int size, int level, GPUBuffer *pbo, int offset) {
@@ -108,5 +107,4 @@ void GLTexture1D::pack(int x, int size, int level, GPUBuffer *pbo, int offset) {
     glBindBuffer(GL_PIXEL_PACK_BUFFER, buf->m_vbo);
     this->download(x, size, level, reinterpret_cast<void*>(offset));
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-    this->generateSync();
 }

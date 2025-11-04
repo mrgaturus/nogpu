@@ -52,6 +52,7 @@ class GLContext : GPUContext {
         void makeCurrent(void* object);
         void makeCurrentTexture(void* object);
         GLState* manipulateState();
+        GPUFence* syncFence();
     protected: // Commands Constructor
         void destroy() override;
         friend GLDriver;

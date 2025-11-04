@@ -30,6 +30,7 @@ enum class GPUBufferMapping : int {
     BUFFER_MAP_UNSYNCHRONIZED_BIT = 1 << 5
 };
 
+class GPUFence;
 class GPUBuffer {
     protected: int m_bytes;
     public: virtual void destroy() = 0;
@@ -43,13 +44,9 @@ class GPUBuffer {
         virtual void copy(GPUBuffer *dest, int bytes, int offset_read, int offset_write) = 0;
         virtual void clear(int offset, int bytes) = 0;
     public: // GPU Buffer Usage: Mapping
+        virtual GPUFence* syncFence() = 0;
         virtual void* map(int bytes, int offset, GPUBufferMapping flags) = 0;
         virtual void unmap() = 0;
-
-    public: // GPU Buffer Fences
-        virtual void syncEnable(bool value) = 0;
-        virtual void syncCPU() = 0;
-        virtual void syncGPU() = 0;
 };
 
 // -------------------------

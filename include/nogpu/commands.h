@@ -42,8 +42,9 @@ enum class GPUDrawElements : int {
 class GPUFence {
     public: // Fence Signaling
         virtual void destroy() = 0;
-        virtual void syncCPU() = 0;
-        virtual void syncGPU() = 0;
+        virtual void waitCPU() = 0;
+        virtual void waitGPU() = 0;
+        virtual bool completed() = 0;
 };
 
 enum class GPUMemoryBarrier : int {
@@ -70,9 +71,9 @@ class GPUCommands {
         virtual void beginCommands() = 0;
         virtual void endCommands() = 0;
     public: // GPU Command Fence
-        virtual GPUFence* syncFence() = 0;
         virtual void syncFlush() = 0;
         virtual void syncFinish() = 0;
+        virtual GPUFence* syncFence() = 0;
 
     public: // GPU Command State
         virtual void usePipeline(GPUPipeline *pipeline) = 0;

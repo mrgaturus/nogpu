@@ -3,6 +3,7 @@
 #ifndef OPENGL_TEXTURE_H
 #define OPENGL_TEXTURE_H
 #include <nogpu/texture.h>
+#include <nogpu/compressed.h>
 #include "buffer.h"
 
 GLenum toValue(GPUTexturePixelType type);
@@ -59,18 +60,13 @@ class GLTexture : virtual public GPUTexture {
     void setFilter(GPUTextureFilter filter) override;
     void setWrap(GPUTextureWrap wrap) override;
     void generateMipmaps() override;
-    // GPU Texture Fences
-    void syncEnable(bool value) override;
-    void syncCPU() override;
-    void syncGPU() override;
+    GPUFence* syncFence() override;
 
     public: // Texture Attributes
         GLContext* m_ctx;
         GLenum m_tex_target;
         GLuint m_tex_fbo;
         GLuint m_tex;
-        GLuint m_sync_check;
-        GLsync m_sync;
 
     protected: // Texture Compatible: Downloading
         void compatDownload3D(int x, int y, int z, int w, int h, int depth, int level, void* data);
@@ -85,7 +81,6 @@ class GLTexture : virtual public GPUTexture {
         GLTexture(GLContext* ctx);
         void destroy() override;
         void generateTexture();
-        void generateSync();
         friend GLContext;
         friend GLRenderBuffer;
 };

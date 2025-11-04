@@ -4,7 +4,12 @@
 #define OPENGL_COMMANDS_H
 #include <nogpu/commands.h>
 #include "state.hpp"
-#include "glad.h"
+
+typedef int GLint;
+typedef unsigned int GLuint;
+typedef unsigned int GLenum;
+typedef unsigned int GLbitfield;
+typedef struct __GLsync *GLsync;
 
 GLenum toValue(GPUBlockBinding type);
 GLbitfield toValue(GPUDrawClear flags);
@@ -13,12 +18,18 @@ GLenum toValue(GPUDrawElements mode);
 GLbitfield toValue(GPUMemoryBarrier flags);
 
 class GLContext;
+class GLCommands;
 class GLFence : GPUFence {
-    // Fence Signaling
-    void syncCPU() override;
-    void syncGPU() override;
+    GLContext* m_ctx;
+    GLsync m_sync;
+    // Fence Syncronization
+    void waitCPU() override;
+    void waitGPU() override;
+    bool completed() override;
 
     protected:
+        friend GLContext;
+        friend GLCommands;
         GLFence(GLContext* ctx);
         void destroy() override;
 };
@@ -36,9 +47,9 @@ class GLCommands : GPUCommands {
     void beginCommands() override;
     void endCommands() override;
     // GPU Command Fence
-    GPUFence* syncFence() override;
     void syncFlush() override;
     void syncFinish() override;
+    GPUFence* syncFence() override;
 
     // GPU Command State
     void usePipeline(GPUPipeline *pipeline) override;
