@@ -4,7 +4,11 @@
 #define OPENGL_PROGRAM_H
 #include <nogpu_map.h>
 #include <nogpu/program.h>
-#include "glad.h"
+
+typedef int GLint;
+typedef unsigned int GLuint;
+typedef unsigned int GLenum;
+typedef unsigned int GLbitfield;
 
 // -----------------
 // OpenGL GPU Shader

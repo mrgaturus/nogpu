@@ -3,8 +3,8 @@
 #ifndef OPENGL_PIPELINE_H
 #define OPENGL_PIPELINE_H
 #include "state.hpp"
-#include "glad.h"
 
+typedef unsigned int GLenum;
 GLenum toValue(GPUBlendEquation equation);
 GLenum toValue(GPUBlendFactor factor);
 GLenum toValue(GPUFaceMode mode);

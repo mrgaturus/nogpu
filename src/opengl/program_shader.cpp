@@ -3,6 +3,7 @@
 #include <nogpu_private.h>
 #include "private/program.h"
 #include "private/context.h"
+#include "private/glad.h"
 #include <cstdlib>
 
 static void compileShaderGLSL(GLuint shader, GPUShaderSource &data) {

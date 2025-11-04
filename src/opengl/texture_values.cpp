@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Cristian Camilo Ruiz <mrgaturus>
 #include "private/texture.h"
-#include "private/compressed.h"
 #include "private/glad.h"
 
 // ---------------------------
